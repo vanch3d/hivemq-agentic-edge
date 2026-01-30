@@ -9,6 +9,10 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
@@ -24,5 +28,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/components/ui/rich-text-editor.tsx",
+    "src/components/ui/rich-text-editor-control.tsx",
+    "src/components/ui/rich-text-editor-context.tsx",
+    "src/components/ui/rich-text-editor-menu.tsx"
+  ]
 }

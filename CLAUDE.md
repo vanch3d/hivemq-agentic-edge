@@ -1,0 +1,46 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build & Development Commands
+
+- **Dev server**: `pnpm dev` (Vite with HMR)
+- **Build**: `pnpm build` (runs `tsc -b && vite build`, output in `dist/`)
+- **Lint**: `pnpm lint` (ESLint)
+- **Format check**: `pnpm format:check` (Prettier)
+- **Format write**: `pnpm format:write` (Prettier)
+- **Lint + format check**: `pnpm lint:all`
+- **Preview production build**: `pnpm preview`
+
+No test framework is currently configured.
+
+## Architecture
+
+React 19 + TypeScript 5.9 single-page application built with Vite 7.
+
+**Entry flow**: `index.html` → `src/main.tsx` (creates React root + router) → `src/routes/__root.tsx` (Chakra Provider) → route tree
+
+**Key libraries**:
+- **UI**: Chakra UI v3 — pre-built snippet components live in `src/components/ui/` (generated, do not edit manually)
+- **Routing**: TanStack Router with file-based routing — routes live in `src/routes/`, route tree is auto-generated at `src/routeTree.gen.ts`
+- **Auth**: Mock context in `src/context/auth-context.tsx`, injected into router context for `beforeLoad` guards
+
+**Routing layout**:
+- `__root.tsx` — Chakra Provider wrapper
+- `_authenticated.tsx` — pathless layout route acting as auth guard
+- `_authenticated/workspace.tsx` — workspace shell (toolbar + sidebar + outlet)
+
+**Tooling**:
+- Package manager: pnpm
+- ESLint flat config with typescript-eslint, react-hooks, react-refresh, and eslint-config-prettier
+- Prettier for formatting
+- Separate tsconfig files: `tsconfig.app.json` (app code, ES2022) and `tsconfig.node.json` (build tooling, ES2023)
+- Path alias: `@/*` maps to `./src/*`
+
+**TypeScript constraints** (`erasableSyntaxOnly` enabled):
+- No enums, no constructor parameter properties, no namespaces
+- Use `import type` for type-only imports (`verbatimModuleSyntax`)
+
+## Task Tracking
+
+All tasks are tracked in `.tasks/` — see [.tasks/CONVENTIONS.md](.tasks/CONVENTIONS.md) for the structure and rules that all agents must follow.

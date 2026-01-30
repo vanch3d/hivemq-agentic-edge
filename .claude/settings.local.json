@@ -5,7 +5,12 @@
       "WebFetch(domain:tanstack.com)",
       "WebSearch",
       "Bash(pnpm add:*)",
-      "Bash(npx @chakra-ui/cli snippet add:*)"
+      "Bash(npx @chakra-ui/cli snippet add:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(timeout 10 pnpm dev:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(findstr:*)"
     ]
   }
 }
