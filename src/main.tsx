@@ -21,10 +21,20 @@ function InnerApp() {
   return <RouterProvider router={router} context={{ auth }} />;
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <AuthProvider>
-      <InnerApp />
-    </AuthProvider>
-  </StrictMode>,
-);
+async function enableMocking() {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+  const { worker } = await import("./mocks/browser");
+  return worker.start();
+}
+
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <AuthProvider>
+        <InnerApp />
+      </AuthProvider>
+    </StrictMode>,
+  );
+});

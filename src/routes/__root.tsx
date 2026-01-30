@@ -1,11 +1,14 @@
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "@/components/ui/provider";
 import type { AuthContextValue } from "@/context/auth-context";
 
 type RouterContext = {
   auth: AuthContextValue;
 };
+
+const queryClient = new QueryClient();
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
@@ -14,8 +17,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootComponent() {
   return (
     <Provider>
-      <Outlet />
-      <TanStackRouterDevtools position="bottom-right" />
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+        <TanStackRouterDevtools position="bottom-right" />
+      </QueryClientProvider>
     </Provider>
   );
 }

@@ -10,7 +10,13 @@
       "Bash(pnpm lint:*)",
       "Bash(timeout 10 pnpm dev:*)",
       "WebFetch(domain:github.com)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "WebFetch(domain:heyapi.dev)",
+      "WebFetch(domain:mswjs.io)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pnpm api:generate:*)",
+      "Bash(npx msw init public/ --save)"
     ]
   }
 }
