@@ -5,10 +5,11 @@ export default defineConfig({
   output: "src/api",
   plugins: [
     "@hey-api/typescript",
+    { name: "@hey-api/schemas", type: "json" },
     "@hey-api/sdk",
     {
       name: "@hey-api/client-axios",
-      runtimeConfigPath: "./client-config.ts",
+      runtimeConfigPath: "../api-config.ts",
     },
     "@tanstack/react-query",
   ],

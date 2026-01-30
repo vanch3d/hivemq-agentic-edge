@@ -1,7 +1,10 @@
 import { http, HttpResponse } from "msw";
+import { API_BASE_URL } from "@/api-config";
+import type { ApiBearerToken } from "@/api/types.gen";
+import { unauthorizedError } from "../fixtures/errors";
 import { users } from "../db";
 
-const API_BASE = "/api/v1";
+const API_BASE = `${API_BASE_URL}/api/v1`;
 
 function createMockJwt(username: string, roles: string[]): string {
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
@@ -33,37 +36,34 @@ export const authHandlers = [
     );
 
     if (!user) {
-      return HttpResponse.json(
-        { title: "Unauthorized", status: 401 },
-        { status: 401 },
-      );
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
 
-    return HttpResponse.json({ token: createMockJwt(user.username, user.roles) });
+    const response: ApiBearerToken = {
+      token: createMockJwt(user.username, user.roles),
+    };
+    return HttpResponse.json(response);
   }),
 
   http.post(`${API_BASE}/auth/refresh-token`, async ({ request }) => {
     const authHeader = request.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        { title: "Unauthorized", status: 401 },
-        { status: 401 },
-      );
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
 
-    // Return a fresh mock token
-    return HttpResponse.json({ token: createMockJwt("admin", ["admin"]) });
+    const response: ApiBearerToken = {
+      token: createMockJwt("admin", ["admin"]),
+    };
+    return HttpResponse.json(response);
   }),
 
   http.post(`${API_BASE}/auth/validate-token`, async ({ request }) => {
     const authHeader = request.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        { title: "Unauthorized", status: 401 },
-        { status: 401 },
-      );
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
 
-    return HttpResponse.json({ token: authHeader.slice(7) });
+    const response: ApiBearerToken = { token: authHeader.slice(7) };
+    return HttpResponse.json(response);
   }),
 ];

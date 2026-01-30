@@ -16,7 +16,15 @@
       "Bash(pnpm remove:*)",
       "Bash(pnpm approve-builds:*)",
       "Bash(pnpm api:generate:*)",
-      "Bash(npx msw init public/ --save)"
+      "Bash(npx msw init public/ --save)",
+      "Bash(timeout 8 pnpm dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\src\" -Recurse -File)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\" -File -Depth 0)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\.tasks\" -Recurse -File -ErrorAction SilentlyContinue)"
     ]
   }
 }

@@ -1,14 +1,17 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import { authenticate } from "@/api/sdk.gen";
+import { setAuthToken } from "@/auth-token";
 
 type User = {
   username: string;
+  token: string;
 };
 
 export type AuthContextValue = {
   isAuthenticated: boolean;
   user: User | null;
-  login: (username: string, password: string) => void;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -26,12 +29,21 @@ export function useAuth(): AuthContextValue {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback((username: string, _password: string) => {
-    void _password;
-    setUser({ username });
+  const login = useCallback(async (username: string, password: string) => {
+    const { data, error } = await authenticate({
+      body: { userName: username, password },
+    });
+
+    if (error || !data?.token) {
+      throw new Error("Invalid credentials");
+    }
+
+    setAuthToken(data.token);
+    setUser({ username, token: data.token });
   }, []);
 
   const logout = useCallback(() => {
+    setAuthToken(null);
     setUser(null);
   }, []);
 

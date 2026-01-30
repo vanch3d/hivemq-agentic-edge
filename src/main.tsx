@@ -3,11 +3,15 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { AuthProvider, useAuth } from "@/context/auth-context";
+import { setupAuthInterceptor } from "@/api-config";
+import { client } from "@/api/client.gen";
 
 const router = createRouter({
   routeTree,
   context: { auth: undefined! },
 });
+
+setupAuthInterceptor(client.instance);
 
 declare module "@tanstack/react-router" {
   interface Register {
