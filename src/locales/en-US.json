@@ -23,6 +23,23 @@
       }
     }
   },
+  "chat": {
+    "title": "AI Assistant",
+    "toggle": "Toggle AI chat",
+    "send": "Send message",
+    "inputPlaceholder": "Ask about your HiveMQ Edge setup…",
+    "noResults": "No results.",
+    "tableSearch": "Filter…",
+    "formSubmit": "Submit",
+    "formCancel": "Cancel",
+    "formShowAll": "Show all fields",
+    "approve": "Approve",
+    "reject": "Reject",
+    "thinking": "Thinking…",
+    "error": "Something went wrong",
+    "dismissError": "Dismiss error",
+    "errorTitle": "Chat failed to load"
+  },
   "schemas": {
     "usernamePasswordCredentials": {
       "fields": {

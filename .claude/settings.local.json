@@ -32,7 +32,15 @@
       "Bash(pnpm lint:all:*)",
       "Bash(pnpm format:write:*)",
       "Bash(pnpm prettier:*)",
-      "Bash(pnpm eslint:*)"
+      "Bash(pnpm eslint:*)",
+      "Bash(dir /s \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\src\\\\mocks\")",
+      "WebFetch(domain:hono.dev)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pnpm tsc:*)",
+      "Bash(timeout 15 pnpm dev:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

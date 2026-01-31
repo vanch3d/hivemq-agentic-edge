@@ -195,11 +195,11 @@ Public endpoints providing UI metadata:
 
 JWT-based authentication with three operations:
 
-| Operation | Endpoint | Input | Output |
-| --- | --- | --- | --- |
-| Login | `POST /api/v1/auth/authenticate` | `UsernamePasswordCredentials` (`userName`, `password`) | `ApiBearerToken` (`token`) |
-| Refresh | `POST /api/v1/auth/refresh-token` | Existing token in header | `ApiBearerToken` |
-| Validate | `POST /api/v1/auth/validate-token` | `ApiBearerToken` | 200 (valid) or 401 (invalid) |
+| Operation | Endpoint                           | Input                                                  | Output                       |
+| --------- | ---------------------------------- | ------------------------------------------------------ | ---------------------------- |
+| Login     | `POST /api/v1/auth/authenticate`   | `UsernamePasswordCredentials` (`userName`, `password`) | `ApiBearerToken` (`token`)   |
+| Refresh   | `POST /api/v1/auth/refresh-token`  | Existing token in header                               | `ApiBearerToken`             |
+| Validate  | `POST /api/v1/auth/validate-token` | `ApiBearerToken`                                       | 200 (valid) or 401 (invalid) |
 
 **Public endpoints** (no token): auth, health, frontend, root.
 **All other endpoints** require `Authorization: Bearer <token>` header.
@@ -286,30 +286,30 @@ ManagedAsset (Pulse)
 
 ## Endpoint Inventory by Domain
 
-| Domain | Endpoints | Base Path | Auth Required |
-| --- | --- | --- | --- |
-| Authentication | 3 | `/api/v1/auth/` | No |
-| Health | 2 | `/api/v1/health/` | No |
-| Frontend | 3 | `/api/v1/frontend/` | No |
-| Gateway | 2 | `/api/v1/gateway/` | Yes |
-| Bridges | 8 | `/api/v1/management/bridges/` | Yes |
-| Protocol Adapters | 27 | `/api/v1/management/protocol-adapters/` | Yes |
-| Events | 1 | `/api/v1/management/events` | Yes |
-| Topic Filters | 7 | `/api/v1/management/topic-filters/` | Yes |
-| Combiners | 7 | `/api/v1/management/combiners/` | Yes |
-| Payload Sampling | 3 | `/api/v1/management/sampling/` | Yes |
-| UNS | 2 | `/api/v1/management/uns/` | Yes |
-| Metrics | 2 | `/api/v1/metrics/` | Yes |
-| Pulse | 14 | `/api/v1/management/pulse/` | Yes |
-| Data Hub — Behavior Policies | 5 | `/api/v1/data-hub/behavior-validation/` | Yes |
-| Data Hub — Data Policies | 5 | `/api/v1/data-hub/data-validation/` | Yes |
-| Data Hub — Schemas | 4 | `/api/v1/data-hub/schemas/` | Yes |
-| Data Hub — Scripts | 4 | `/api/v1/data-hub/scripts/` | Yes |
-| Data Hub — State | 1 | `/api/v1/data-hub/behavior-validation/states/` | Yes |
-| Data Hub — FSM | 1 | `/api/v1/data-hub/fsm` | Yes |
-| Data Hub — Functions | 2 | `/api/v1/data-hub/functions`, `/function-specs` | Yes |
-| Data Hub — Interpolation | 1 | `/api/v1/data-hub/interpolation-variables` | Yes |
-| Root | 1 | `/` | No |
+| Domain                       | Endpoints | Base Path                                       | Auth Required |
+| ---------------------------- | --------- | ----------------------------------------------- | ------------- |
+| Authentication               | 3         | `/api/v1/auth/`                                 | No            |
+| Health                       | 2         | `/api/v1/health/`                               | No            |
+| Frontend                     | 3         | `/api/v1/frontend/`                             | No            |
+| Gateway                      | 2         | `/api/v1/gateway/`                              | Yes           |
+| Bridges                      | 8         | `/api/v1/management/bridges/`                   | Yes           |
+| Protocol Adapters            | 27        | `/api/v1/management/protocol-adapters/`         | Yes           |
+| Events                       | 1         | `/api/v1/management/events`                     | Yes           |
+| Topic Filters                | 7         | `/api/v1/management/topic-filters/`             | Yes           |
+| Combiners                    | 7         | `/api/v1/management/combiners/`                 | Yes           |
+| Payload Sampling             | 3         | `/api/v1/management/sampling/`                  | Yes           |
+| UNS                          | 2         | `/api/v1/management/uns/`                       | Yes           |
+| Metrics                      | 2         | `/api/v1/metrics/`                              | Yes           |
+| Pulse                        | 14        | `/api/v1/management/pulse/`                     | Yes           |
+| Data Hub — Behavior Policies | 5         | `/api/v1/data-hub/behavior-validation/`         | Yes           |
+| Data Hub — Data Policies     | 5         | `/api/v1/data-hub/data-validation/`             | Yes           |
+| Data Hub — Schemas           | 4         | `/api/v1/data-hub/schemas/`                     | Yes           |
+| Data Hub — Scripts           | 4         | `/api/v1/data-hub/scripts/`                     | Yes           |
+| Data Hub — State             | 1         | `/api/v1/data-hub/behavior-validation/states/`  | Yes           |
+| Data Hub — FSM               | 1         | `/api/v1/data-hub/fsm`                          | Yes           |
+| Data Hub — Functions         | 2         | `/api/v1/data-hub/functions`, `/function-specs` | Yes           |
+| Data Hub — Interpolation     | 1         | `/api/v1/data-hub/interpolation-variables`      | Yes           |
+| Root                         | 1         | `/`                                             | No            |
 
 **Total: 105 operations**
 
@@ -317,25 +317,25 @@ ManagedAsset (Pulse)
 
 ## Key Enums Reference
 
-| Enum | Values | Used In |
-| --- | --- | --- |
-| Connection status | `CONNECTED`, `DISCONNECTED`, `STATELESS`, `UNKNOWN`, `ERROR` | `Status.connection` |
-| Runtime status | `STARTED`, `STOPPED` | `Status.runtime` |
-| Status command | `START`, `STOP`, `RESTART` | `StatusTransitionCommand` |
-| Event severity | `INFO`, `WARN`, `ERROR`, `CRITICAL` | `Event.severity` |
-| Entity type | `BRIDGE`, `ADAPTER`, `ADAPTER_TYPE`, `EVENT`, `USER`, `DATA_COMBINING`, `COMBINER`, `EDGE` | `TypeIdentifier.type` |
-| Notification level | `NOTICE`, `WARNING`, `ERROR` | `Notification.level` |
-| QoS | `AT_MOST_ONCE`, `AT_LEAST_ONCE`, `EXACTLY_ONCE` | `NorthboundMapping.maxQoS` |
-| QoS (numeric) | `0`, `1`, `2` | `BridgeSubscription.maxQoS` |
-| Payload content type | `JSON`, `PLAIN_TEXT`, `XML`, `CSV` | `Payload.contentType` |
-| Transport | `TCP`, `UDP`, `DCCP`, `SCTP`, `RSVP`, `QUIC` | `Listener.transport` |
-| Adapter capability | `READ`, `DISCOVER`, `WRITE`, `COMBINE` | `ProtocolAdapter.capabilities` |
-| Data identifier type | `TAG`, `TOPIC_FILTER`, `PULSE_ASSET` | `DataIdentifierReference.type` |
-| Entity reference type | `ADAPTER`, `DEVICE`, `BRIDGE`, `EDGE_BROKER`, `PULSE_AGENT` | `EntityType` |
-| Pulse activation | `ACTIVATED`, `DEACTIVATED`, `ERROR` | `PulseStatus.activation` |
-| Pulse runtime | `CONNECTED`, `DISCONNECTED`, `ERROR` | `PulseStatus.runtime` |
-| Asset mapping status | `UNMAPPED`, `DRAFT`, `STREAMING`, `REQUIRES_REMAPPING`, `MISSING` | `AssetMapping.status` |
-| Script function type | `TRANSFORMATION` | `Script.functionType` |
-| Validator type | `SCHEMA` | `DataPolicyValidator.type` |
-| Policy type | `DATA_POLICY`, `BEHAVIOR_POLICY` | `PolicyType` |
-| Capability ID | `config-writeable`, `bi-directional protocol adapters`, `control-plane-connectivity`, `data-hub`, `mqtt-persistence`, `pulse-asset-management` | `Capability.id` |
+| Enum                  | Values                                                                                                                                         | Used In                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Connection status     | `CONNECTED`, `DISCONNECTED`, `STATELESS`, `UNKNOWN`, `ERROR`                                                                                   | `Status.connection`            |
+| Runtime status        | `STARTED`, `STOPPED`                                                                                                                           | `Status.runtime`               |
+| Status command        | `START`, `STOP`, `RESTART`                                                                                                                     | `StatusTransitionCommand`      |
+| Event severity        | `INFO`, `WARN`, `ERROR`, `CRITICAL`                                                                                                            | `Event.severity`               |
+| Entity type           | `BRIDGE`, `ADAPTER`, `ADAPTER_TYPE`, `EVENT`, `USER`, `DATA_COMBINING`, `COMBINER`, `EDGE`                                                     | `TypeIdentifier.type`          |
+| Notification level    | `NOTICE`, `WARNING`, `ERROR`                                                                                                                   | `Notification.level`           |
+| QoS                   | `AT_MOST_ONCE`, `AT_LEAST_ONCE`, `EXACTLY_ONCE`                                                                                                | `NorthboundMapping.maxQoS`     |
+| QoS (numeric)         | `0`, `1`, `2`                                                                                                                                  | `BridgeSubscription.maxQoS`    |
+| Payload content type  | `JSON`, `PLAIN_TEXT`, `XML`, `CSV`                                                                                                             | `Payload.contentType`          |
+| Transport             | `TCP`, `UDP`, `DCCP`, `SCTP`, `RSVP`, `QUIC`                                                                                                   | `Listener.transport`           |
+| Adapter capability    | `READ`, `DISCOVER`, `WRITE`, `COMBINE`                                                                                                         | `ProtocolAdapter.capabilities` |
+| Data identifier type  | `TAG`, `TOPIC_FILTER`, `PULSE_ASSET`                                                                                                           | `DataIdentifierReference.type` |
+| Entity reference type | `ADAPTER`, `DEVICE`, `BRIDGE`, `EDGE_BROKER`, `PULSE_AGENT`                                                                                    | `EntityType`                   |
+| Pulse activation      | `ACTIVATED`, `DEACTIVATED`, `ERROR`                                                                                                            | `PulseStatus.activation`       |
+| Pulse runtime         | `CONNECTED`, `DISCONNECTED`, `ERROR`                                                                                                           | `PulseStatus.runtime`          |
+| Asset mapping status  | `UNMAPPED`, `DRAFT`, `STREAMING`, `REQUIRES_REMAPPING`, `MISSING`                                                                              | `AssetMapping.status`          |
+| Script function type  | `TRANSFORMATION`                                                                                                                               | `Script.functionType`          |
+| Validator type        | `SCHEMA`                                                                                                                                       | `DataPolicyValidator.type`     |
+| Policy type           | `DATA_POLICY`, `BEHAVIOR_POLICY`                                                                                                               | `PolicyType`                   |
+| Capability ID         | `config-writeable`, `bi-directional protocol adapters`, `control-plane-connectivity`, `data-hub`, `mqtt-persistence`, `pulse-asset-management` | `Capability.id`                |

@@ -9,10 +9,10 @@
 
 ## Files Created
 
-| File                                       | Description                              |
-| ------------------------------------------ | ---------------------------------------- |
-| `.tasks/00005-ontology/INDEX.md`           | Task folder index                        |
-| `.tasks/00005-ontology/TASK_BRIEF.md`      | User requirements                        |
-| `.tasks/00005-ontology/TASK_PLAN.md`       | This file                                |
-| `.tasks/00005-ontology/SPEC_REVIEW.md`     | Spec completeness/correctness review     |
-| `.tasks/00005-ontology/DOMAIN_ONTOLOGY.md` | Agent-ready domain ontology reference    |
+| File                                       | Description                           |
+| ------------------------------------------ | ------------------------------------- |
+| `.tasks/00005-ontology/INDEX.md`           | Task folder index                     |
+| `.tasks/00005-ontology/TASK_BRIEF.md`      | User requirements                     |
+| `.tasks/00005-ontology/TASK_PLAN.md`       | This file                             |
+| `.tasks/00005-ontology/SPEC_REVIEW.md`     | Spec completeness/correctness review  |
+| `.tasks/00005-ontology/DOMAIN_ONTOLOGY.md` | Agent-ready domain ontology reference |

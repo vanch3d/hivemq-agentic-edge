@@ -12,6 +12,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@chakra-ui/react";
 import { LuLogOut } from "react-icons/lu";
+import { ChatToggleButton } from "@/components/chat/chat-toggle-button";
 
 export function Toolbar() {
   const { user, logout } = useAuth();
@@ -36,6 +37,7 @@ export function Toolbar() {
       <Heading size="md">{t("app.title")}</Heading>
 
       <Flex align="center" gap="2">
+        <ChatToggleButton />
         <ColorModeButton />
         <MenuRoot>
           <MenuTrigger asChild>
