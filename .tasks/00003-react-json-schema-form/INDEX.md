@@ -1,4 +1,4 @@
-# Task 00001: Core Application — Table of Contents
+# Task 00003: React JSON Schema Form — Table of Contents
 
 | Document                         | Purpose                                                        |
 | -------------------------------- | -------------------------------------------------------------- |

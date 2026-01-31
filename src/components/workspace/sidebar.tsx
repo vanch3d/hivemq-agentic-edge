@@ -1,15 +1,19 @@
 import { Box, Flex, Stack, Text } from "@chakra-ui/react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/auth-context";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@chakra-ui/react";
 import { LuHouse, LuLogOut } from "react-icons/lu";
 
-const navItems = [{ to: "/workspace", label: "Home", icon: LuHouse }] as const;
+const navItems = [
+  { to: "/workspace", labelKey: "nav.home", icon: LuHouse },
+] as const;
 
 export function Sidebar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
 
@@ -38,7 +42,7 @@ export function Sidebar() {
           >
             <Link to={item.to}>
               <item.icon />
-              <Text>{item.label}</Text>
+              <Text>{t(item.labelKey)}</Text>
             </Link>
           </Button>
         ))}
@@ -53,7 +57,7 @@ export function Sidebar() {
           onClick={handleLogout}
         >
           <LuLogOut />
-          <Text>Logout</Text>
+          <Text>{t("nav.logout")}</Text>
         </Button>
       </Box>
     </Flex>

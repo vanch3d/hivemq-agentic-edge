@@ -6,15 +6,19 @@ import {
   Card,
   Flex,
   Heading,
-  Input,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import { useAuth } from "@/context/auth-context";
 import { ColorModeButton } from "@/components/ui/color-mode";
+import { SchemaForm } from "@/components/schema-form";
 import { getNotificationsOptions } from "@/api/@tanstack/react-query.gen";
+import { UsernamePasswordCredentialsSchema } from "@/api/schemas.gen";
+import type { UsernamePasswordCredentials } from "@/api/types.gen";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: ({ context }) => {
@@ -25,25 +29,38 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+const loginSchema: RJSFSchema = {
+  ...UsernamePasswordCredentialsSchema,
+  required: ["userName", "password"],
+};
+
+const loginUiSchema: UiSchema = {
+  userName: {
+    "ui:autofocus": true,
+  },
+  password: {
+    "ui:widget": "password",
+  },
+  "ui:order": ["userName", "password"],
+};
+
 function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const notifications = useQuery(getNotificationsOptions());
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: UsernamePasswordCredentials) => {
     setError(null);
     setLoading(true);
 
     try {
-      await login(username, password);
+      await login(formData.userName ?? "", formData.password ?? "");
       navigate({ to: "/workspace" });
     } catch {
-      setError("Invalid username or password");
+      setError(t("login.errors.invalidCredentials"));
     } finally {
       setLoading(false);
     }
@@ -58,53 +75,34 @@ function LoginPage() {
         <Card.Root>
           <Card.Header>
             <Heading size="lg" textAlign="center">
-              Sign in
+              {t("login.title")}
             </Heading>
             <Text textAlign="center" color="fg.muted" fontSize="sm">
-              Enter your credentials to continue
+              {t("login.subtitle")}
             </Text>
           </Card.Header>
           <Card.Body>
-            <form onSubmit={handleSubmit}>
-              <Stack gap="4">
-                {error && (
-                  <Text color="fg.error" fontSize="sm" textAlign="center">
-                    {error}
-                  </Text>
-                )}
-                <Box>
-                  <Text fontWeight="medium" fontSize="sm" mb="1">
-                    Username
-                  </Text>
-                  <Input
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                </Box>
-                <Box>
-                  <Text fontWeight="medium" fontSize="sm" mb="1">
-                    Password
-                  </Text>
-                  <Input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </Box>
-                <Button
-                  type="submit"
-                  colorPalette="blue"
-                  w="full"
-                  loading={loading}
-                >
-                  Sign in
-                </Button>
-              </Stack>
-            </form>
+            {error && (
+              <Text color="fg.error" fontSize="sm" textAlign="center" mb="4">
+                {error}
+              </Text>
+            )}
+            <SchemaForm<UsernamePasswordCredentials>
+              schema={loginSchema}
+              uiSchema={loginUiSchema}
+              i18nPrefix="usernamePasswordCredentials"
+              onSubmit={handleSubmit}
+            >
+              <Button
+                type="submit"
+                colorPalette="blue"
+                w="full"
+                mt="4"
+                loading={loading}
+              >
+                {t("login.submit")}
+              </Button>
+            </SchemaForm>
           </Card.Body>
         </Card.Root>
 

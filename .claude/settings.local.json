@@ -24,7 +24,15 @@
       "Bash(Sort-Object FullName)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\" -File -Depth 0)",
-      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\.tasks\" -Recurse -File -ErrorAction SilentlyContinue)"
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\.tasks\" -Recurse -File -ErrorAction SilentlyContinue)",
+      "WebFetch(domain:rjsf-team.github.io)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:codesandbox.io)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "Bash(pnpm lint:all:*)",
+      "Bash(pnpm format:write:*)",
+      "Bash(pnpm prettier:*)",
+      "Bash(pnpm eslint:*)"
     ]
   }
 }

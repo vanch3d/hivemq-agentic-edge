@@ -5,6 +5,7 @@ import { routeTree } from "./routeTree.gen";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { setupAuthInterceptor } from "@/api-config";
 import { client } from "@/api/client.gen";
+import "@/i18n";
 
 const router = createRouter({
   routeTree,

@@ -1,0 +1,40 @@
+{
+  "app": {
+    "title": "App"
+  },
+  "nav": {
+    "home": "Home",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Enter your credentials to continue",
+    "submit": "Sign in",
+    "errors": {
+      "invalidCredentials": "Invalid username or password"
+    }
+  },
+  "workspace": {
+    "title": "Workspace",
+    "events": {
+      "title": "Events",
+      "errors": {
+        "failedToLoad": "Failed to load: {{message}}"
+      }
+    }
+  },
+  "schemas": {
+    "usernamePasswordCredentials": {
+      "fields": {
+        "userName": {
+          "title": "Username",
+          "placeholder": "Enter your username"
+        },
+        "password": {
+          "title": "Password",
+          "placeholder": "Enter your password"
+        }
+      }
+    }
+  }
+}

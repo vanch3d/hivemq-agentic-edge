@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading, Text, Box, Badge, Spinner, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { getEventsOptions } from "@/api/@tanstack/react-query.gen";
 
 export const Route = createFileRoute("/_authenticated/workspace/")({
@@ -8,22 +9,25 @@ export const Route = createFileRoute("/_authenticated/workspace/")({
 });
 
 function WorkspaceIndex() {
+  const { t } = useTranslation();
   const events = useQuery(getEventsOptions());
 
   return (
     <Box>
       <Heading size="xl" mb="4">
-        Workspace
+        {t("workspace.title")}
       </Heading>
 
       <Box>
         <Heading size="md" mb="2">
-          Events (authenticated endpoint)
+          {t("workspace.events.title")}
         </Heading>
         {events.isLoading && <Spinner size="sm" />}
         {events.isError && (
           <Text color="fg.error">
-            Failed to load: {events.error.message}
+            {t("workspace.events.errors.failedToLoad", {
+              message: events.error.message,
+            })}
           </Text>
         )}
         <Stack gap="2">

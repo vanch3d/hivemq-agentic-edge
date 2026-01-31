@@ -61,15 +61,16 @@ These files are imported by the generated `src/api/client.gen.ts` (via `runtimeC
 
 Handler and fixture files are named by **resource/entity**, not by URL path prefix. This gives a 1:1 pairing between handlers and fixtures.
 
-| Resource | Handler file | Fixture file | API path(s) |
-|----------|-------------|-------------|-------------|
-| auth | `handlers/auth.ts` | — (dynamic JWT) | `/api/v1/auth/*` |
-| notifications | `handlers/notifications.ts` | `fixtures/notifications.ts` | `/api/v1/frontend/notifications` |
-| events | `handlers/events.ts` | `fixtures/events.ts` | `/api/v1/management/events` |
-| bridges (future) | `handlers/bridges.ts` | `fixtures/bridges.ts` | `/api/v1/management/bridges/*` |
-| *(shared errors)* | — | `fixtures/errors.ts` | — |
+| Resource          | Handler file                | Fixture file                | API path(s)                      |
+| ----------------- | --------------------------- | --------------------------- | -------------------------------- |
+| auth              | `handlers/auth.ts`          | — (dynamic JWT)             | `/api/v1/auth/*`                 |
+| notifications     | `handlers/notifications.ts` | `fixtures/notifications.ts` | `/api/v1/frontend/notifications` |
+| events            | `handlers/events.ts`        | `fixtures/events.ts`        | `/api/v1/management/events`      |
+| bridges (future)  | `handlers/bridges.ts`       | `fixtures/bridges.ts`       | `/api/v1/management/bridges/*`   |
+| _(shared errors)_ | —                           | `fixtures/errors.ts`        | —                                |
 
 **Rules**:
+
 1. **Name by resource**, not by URL segment. The URL path is an implementation detail inside the handler file.
 2. **Handler and fixture share the same filename** for the same resource (e.g. `events.ts` + `events.ts`).
 3. **`auth` is a special case** — it produces dynamic JWTs so it has no static fixture, but uses `fixtures/errors.ts` for error responses.
@@ -90,6 +91,7 @@ Handler and fixture files are named by **resource/entity**, not by URL path pref
 Static mock response data lives in `src/mocks/fixtures/`, one file per resource. This data is shared between MSW handlers and tests.
 
 **Typing rules** — every fixture must:
+
 - Be explicitly typed using the generated types from `@/api/types.gen` (e.g. `NotificationList`, `EventList`, `ProblemDetails`).
 - Use `import type` for type imports.
 - Have no `any`, no `as const` casting, no untyped object literals. The TypeScript compiler must validate the data against the API schema.
@@ -102,3 +104,94 @@ Static mock response data lives in `src/mocks/fixtures/`, one file per resource.
 4. Add the handler array to `src/mocks/handlers.ts`.
 5. For authenticated endpoints, check the `Authorization` header and return `unauthorizedError` from `fixtures/errors.ts` with status 401 if missing.
 6. Type any dynamically constructed responses using the generated types (e.g. `const response: ApiBearerToken = { ... }`).
+
+---
+
+# Form Conventions (RJSF)
+
+## SchemaForm wrapper (`src/components/schema-form.tsx`)
+
+All forms driven by API schemas use the `SchemaForm` wrapper. It provides:
+
+- The Chakra UI v3 theme from `@rjsf/chakra-ui`
+- A shared `ajv8` validator instance (module-scope singleton)
+- Custom submit button support via `children` (hides the default RJSF button)
+
+## Building a form from a generated schema
+
+1. **Import the schema** from `@/api/schemas.gen` (e.g. `UsernamePasswordCredentialsSchema`).
+2. **Spread into a mutable object** and augment as needed (add `required`, override `title`, etc.):
+   ```ts
+   const mySchema: RJSFSchema = {
+     ...GeneratedSchema,
+     required: ["field1", "field2"],
+   };
+   ```
+3. **Define a `uiSchema`** for field-level UI customization (labels, placeholders, widget types, ordering):
+   ```ts
+   const myUiSchema: UiSchema = {
+     fieldName: { "ui:title": "Label", "ui:widget": "password" },
+     "ui:order": ["field1", "field2"],
+   };
+   ```
+4. **Type the `onSubmit` callback** with the generated TypeScript type (e.g. `UsernamePasswordCredentials`).
+5. **Pass a custom submit button** as `children` when you need control over button text, loading state, or styling.
+
+## Rules
+
+- Always use `SchemaForm` — never import `@rjsf/core` or `@rjsf/chakra-ui` Form directly in route/page components.
+- Always type `onSubmit` with the corresponding generated type from `@/api/types.gen`.
+- Schema and uiSchema constants should be defined outside the component (module scope) to avoid re-creation on every render.
+- Use `i18nPrefix` prop to auto-generate localized `ui:title`, `ui:description`, and `ui:placeholder` from i18n keys (see i18n section below).
+
+---
+
+# Internationalization (react-i18next)
+
+## Setup
+
+- **Config**: `src/i18n.ts` — imported as side-effect in `src/main.tsx`.
+- **Locale files**: `src/locales/<locale>.json` (currently only `en-US.json`).
+- **Default namespace**: `translation` (i18next default).
+
+## Rules
+
+1. **Every user-facing string** must be defined in `src/locales/en-US.json` and referenced via `t("key")`. No hardcoded strings in components.
+2. Use `const { t } = useTranslation()` in every component that renders text.
+3. Interpolation uses `{{variable}}` syntax: `t("key", { variable: value })`.
+
+## Translation Key Convention
+
+| Scope        | Pattern                                           | Example                                                     |
+| ------------ | ------------------------------------------------- | ----------------------------------------------------------- |
+| App-level    | `app.<element>`                                   | `app.title`                                                 |
+| Page text    | `<page>.<element>`                                | `login.title`, `login.submit`                               |
+| Page errors  | `<page>.errors.<errorName>`                       | `login.errors.invalidCredentials`                           |
+| Navigation   | `nav.<item>`                                      | `nav.home`, `nav.logout`                                    |
+| Schema field | `schemas.<schemaName>.fields.<field>.title`       | `schemas.usernamePasswordCredentials.fields.userName.title` |
+| Schema field | `schemas.<schemaName>.fields.<field>.description` | (same pattern)                                              |
+| Schema field | `schemas.<schemaName>.fields.<field>.placeholder` | (same pattern)                                              |
+
+## RJSF ↔ i18n Automatic Mapping
+
+The `createLocalizedUiSchema()` utility (`src/utils/create-localized-ui-schema.ts`) auto-generates uiSchema entries from i18n keys by convention. It:
+
+1. Iterates over `schema.properties` to discover field names.
+2. For each field, looks up `schemas.<schemaName>.fields.<field>.title`, `.description`, `.placeholder`.
+3. Only includes keys that have a non-empty translation.
+4. Deep-merges with explicit `uiSchema` overrides (overrides take precedence).
+
+### Usage
+
+Pass `i18nPrefix` to `SchemaForm` to enable automatic localization:
+
+```tsx
+<SchemaForm
+  schema={mySchema}
+  uiSchema={{ password: { "ui:widget": "password" } }}
+  i18nPrefix="usernamePasswordCredentials"
+  onSubmit={handleSubmit}
+/>
+```
+
+The `ui:title` and `ui:placeholder` values come from `schemas.usernamePasswordCredentials.fields.*` in the locale file. Explicit uiSchema entries (like `"ui:widget"`) are preserved and merged.

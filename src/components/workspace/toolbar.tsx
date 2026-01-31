@@ -1,5 +1,6 @@
 import { Flex, Heading, Text } from "@chakra-ui/react";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/auth-context";
 import { ColorModeButton } from "@/components/ui/color-mode";
 import {
@@ -15,6 +16,7 @@ import { LuLogOut } from "react-icons/lu";
 export function Toolbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -31,7 +33,7 @@ export function Toolbar() {
       borderBottomWidth="1px"
       flexShrink={0}
     >
-      <Heading size="md">App</Heading>
+      <Heading size="md">{t("app.title")}</Heading>
 
       <Flex align="center" gap="2">
         <ColorModeButton />
@@ -47,7 +49,7 @@ export function Toolbar() {
           <MenuContent>
             <MenuItem value="logout" onClick={handleLogout}>
               <LuLogOut />
-              Logout
+              {t("nav.logout")}
             </MenuItem>
           </MenuContent>
         </MenuRoot>
