@@ -1,32 +1,22 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
 import {
   getBridges,
   getBridgeByName,
   getBridgesStatus,
   getBridgeStatus,
 } from "@/api/sdk.gen";
+import { queryBridgesDef } from "@/agent/tool-definitions";
 
-const queryBridgesDef = toolDefinition({
-  name: "queryBridges",
-  description:
-    "Query MQTT bridge resources. Use 'list' to get all bridges, 'get' to get a single bridge by ID, 'listStatus' for all bridge statuses, 'getStatus' for a single bridge status.",
-  inputSchema: z.object({
-    operation: z.enum(["list", "get", "listStatus", "getStatus"]),
-    bridgeId: z.string().optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const queryBridges = queryBridgesDef.client(async (input) => {
   try {
     switch (input.operation) {
       case "list": {
         const { data, error } = await getBridges();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "get": {
         if (!input.bridgeId)
@@ -34,11 +24,14 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgeByName({
           path: { bridgeId: input.bridgeId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listStatus": {
         const { data, error } = await getBridgesStatus();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getStatus": {
         if (!input.bridgeId)
@@ -46,7 +39,7 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgeStatus({
           path: { bridgeId: input.bridgeId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
     }
   } catch (e) {

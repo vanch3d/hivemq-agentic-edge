@@ -47,6 +47,7 @@ export function ChatTable({ data, pageSize = 10 }: ChatTableProps) {
     );
   }, [data, columnHelper]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -134,7 +135,7 @@ export function ChatTable({ data, pageSize = 10 }: ChatTableProps) {
               as="button"
               cursor="pointer"
               onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              aria-disabled={!table.getCanPreviousPage()}
               color={table.getCanPreviousPage() ? "fg" : "fg.muted"}
             >
               ←
@@ -143,7 +144,7 @@ export function ChatTable({ data, pageSize = 10 }: ChatTableProps) {
               as="button"
               cursor="pointer"
               onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              aria-disabled={!table.getCanNextPage()}
               color={table.getCanNextPage() ? "fg" : "fg.muted"}
             >
               →

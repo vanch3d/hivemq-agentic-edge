@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { authenticate } from "@/api/sdk.gen";
-import { setAuthToken } from "@/auth-token";
+import { getAuthToken, setAuthToken } from "@/auth-token";
 
 type User = {
   username: string;
@@ -27,7 +27,10 @@ export function useAuth(): AuthContextValue {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const existing = getAuthToken();
+    return existing ? { username: "", token: existing } : null;
+  });
 
   const login = useCallback(async (username: string, password: string) => {
     const { data, error } = await authenticate({

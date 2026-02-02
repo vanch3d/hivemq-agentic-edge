@@ -31,6 +31,8 @@ export const Route = createFileRoute("/login")({
 
 const loginSchema: RJSFSchema = {
   ...UsernamePasswordCredentialsSchema,
+  title: "SSSSSSSS",
+  description: "SZZZZZZZZZZ",
   required: ["userName", "password"],
 };
 

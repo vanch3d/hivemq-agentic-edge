@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
+import { mutateSystemDef } from "@/agent/tool-definitions";
 import {
   addTopicFilters,
   updateTopicFilter,
@@ -11,28 +10,7 @@ import {
 } from "@/api/sdk.gen";
 import { requestApproval } from "@/agent/tool-context";
 
-const mutateSystemDef = toolDefinition({
-  name: "mutateSystem",
-  description:
-    "Mutate system resources. Operations: 'addTopicFilter', 'updateTopicFilter', 'deleteTopicFilter', 'addCombiner', 'updateCombiner', 'deleteCombiner', 'setIsa95'. All mutations require user confirmation.",
-  inputSchema: z.object({
-    operation: z.enum([
-      "addTopicFilter",
-      "updateTopicFilter",
-      "deleteTopicFilter",
-      "addCombiner",
-      "updateCombiner",
-      "deleteCombiner",
-      "setIsa95",
-    ]),
-    resourceId: z.string().optional(),
-    data: z.record(z.unknown()).optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const mutateSystem = mutateSystemDef.client(async (input) => {
   try {
@@ -47,15 +25,16 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await addTopicFilters({ body: input.data });
-        return { data, error: error?.title };
+        const { data, error } = await addTopicFilters({
+          body: input.data as never,
+        });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "updateTopicFilter": {
         if (!input.resourceId)
           return { data: null, error: "resourceId required" };
-        if (!input.data)
-          return { data: null, error: "data required" };
+        if (!input.data) return { data: null, error: "data required" };
 
         const approved = await requestApproval({
           title: "Update Topic Filter",
@@ -65,9 +44,9 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
 
         const { data, error } = await updateTopicFilter({
           path: { filter: input.resourceId },
-          body: input.data,
+          body: input.data as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "deleteTopicFilter": {
@@ -85,7 +64,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -99,8 +78,10 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await addCombiner({ body: input.data });
-        return { data, error: error?.title };
+        const { data, error } = await addCombiner({
+          body: input.data as never,
+        });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "updateCombiner": {
@@ -116,9 +97,9 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
 
         const { data, error } = await updateCombiner({
           path: { combinerId: input.resourceId },
-          body: input.data,
+          body: input.data as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "deleteCombiner": {
@@ -136,7 +117,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -150,8 +131,8 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await setIsa95({ body: input.data });
-        return { data, error: error?.title };
+        const { data, error } = await setIsa95({ body: input.data as never });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
     }
   } catch (e) {

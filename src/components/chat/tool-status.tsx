@@ -7,7 +7,8 @@ interface ToolCallStatusProps {
 }
 
 export function ToolCallStatus({ part }: ToolCallStatusProps) {
-  const isRunning = part.state === "pending" || part.state === "streaming";
+  const isRunning =
+    part.state === "awaiting-input" || part.state === "input-streaming";
 
   return (
     <Box display="flex" alignItems="center" gap="1" py="0.5">
@@ -25,15 +26,36 @@ interface ToolResultStatusProps {
 }
 
 export function ToolResultStatus({ part }: ToolResultStatusProps) {
-  const result = part.result as { data: unknown; error?: string } | undefined;
+  if (part.error) {
+    return (
+      <Text fontSize="xs" color="fg.error">
+        {part.error}
+      </Text>
+    );
+  }
 
-  if (!result) {
+  if (!part.content) {
     return (
       <Text fontSize="xs" color="fg.muted">
         {"\u2713"} {part.toolCallId}
       </Text>
     );
   }
+
+  // Parse the JSON string content
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(part.content);
+  } catch {
+    return (
+      <Text fontSize="xs" color="fg.muted" whiteSpace="pre-wrap">
+        {part.content}
+      </Text>
+    );
+  }
+
+  // Tools return { data, error? }
+  const result = parsed as { data?: unknown; error?: string };
 
   if (result.error) {
     return (
@@ -54,7 +76,7 @@ export function ToolResultStatus({ part }: ToolResultStatusProps) {
   // Fallback: JSON summary
   return (
     <Text fontSize="xs" color="fg.muted" whiteSpace="pre-wrap">
-      {JSON.stringify(result.data, null, 2)}
+      {JSON.stringify(result.data ?? parsed, null, 2)}
     </Text>
   );
 }

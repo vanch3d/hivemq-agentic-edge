@@ -32,7 +32,7 @@ export const dataHubHandlers = [
     ({ request, params }) => {
       const err = requireAuth(request);
       if (err) return err;
-      const policy = behaviorPolicyList.items.find(
+      const policy = behaviorPolicyList.items?.find(
         (p) => p.id === params["policyId"],
       );
       if (!policy) {
@@ -55,7 +55,7 @@ export const dataHubHandlers = [
     ({ request, params }) => {
       const err = requireAuth(request);
       if (err) return err;
-      const policy = dataPolicyList.items.find(
+      const policy = dataPolicyList.items?.find(
         (p) => p.id === params["policyId"],
       );
       if (!policy) {
@@ -76,7 +76,7 @@ export const dataHubHandlers = [
   http.get(`${API_BASE}/data-hub/schemas/:schemaId`, ({ request, params }) => {
     const err = requireAuth(request);
     if (err) return err;
-    const schema = schemaList.items.find((s) => s.id === params["schemaId"]);
+    const schema = schemaList.items?.find((s) => s.id === params["schemaId"]);
     if (!schema) {
       return HttpResponse.json(
         { title: "Schema not found", status: 404 },
@@ -94,7 +94,7 @@ export const dataHubHandlers = [
   http.get(`${API_BASE}/data-hub/scripts/:scriptId`, ({ request, params }) => {
     const err = requireAuth(request);
     if (err) return err;
-    const script = scriptList.items.find((s) => s.id === params["scriptId"]);
+    const script = scriptList.items?.find((s) => s.id === params["scriptId"]);
     if (!script) {
       return HttpResponse.json(
         { title: "Script not found", status: 404 },

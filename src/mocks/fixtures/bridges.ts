@@ -11,10 +11,18 @@ export const bridgeList: BridgeList = {
       sessionExpiry: 300,
       username: "edge-user",
       localSubscriptions: [
-        { filters: ["factory/line1/#"], maxQoS: "AT_LEAST_ONCE" },
+        {
+          filters: ["factory/line1/#"],
+          destination: "remote/factory/line1",
+          maxQoS: 1,
+        },
       ],
       remoteSubscriptions: [
-        { filters: ["cloud/commands/#"], maxQoS: "AT_LEAST_ONCE" },
+        {
+          filters: ["cloud/commands/#"],
+          destination: "local/cloud/commands",
+          maxQoS: 1,
+        },
       ],
       status: {
         id: "mqtt-bridge-01",
@@ -31,7 +39,9 @@ export const bridgeList: BridgeList = {
       cleanStart: false,
       keepAlive: 30,
       sessionExpiry: 600,
-      localSubscriptions: [{ filters: ["sensors/#"], maxQoS: "AT_MOST_ONCE" }],
+      localSubscriptions: [
+        { filters: ["sensors/#"], destination: "remote/sensors", maxQoS: 0 },
+      ],
       remoteSubscriptions: [],
       status: {
         id: "mqtt-bridge-02",

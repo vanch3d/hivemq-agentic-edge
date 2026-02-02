@@ -1,12 +1,17 @@
 import Form from "@rjsf/chakra-ui";
 import { customizeValidator } from "@rjsf/validator-ajv8";
 import { useTranslation } from "react-i18next";
-import type { RJSFSchema, UiSchema } from "@rjsf/utils";
+import type { RJSFSchema, UiSchema, TemplatesType } from "@rjsf/utils";
 import type { IChangeEvent, FormProps } from "@rjsf/core";
 import type { ReactNode } from "react";
 import { createLocalizedUiSchema } from "@/utils/create-localized-ui-schema";
+import { FieldTemplate } from "@/components/rjsf-templates/field-template";
 
 const validator = customizeValidator();
+
+const templates: Partial<TemplatesType> = {
+  FieldTemplate,
+};
 
 type SchemaFormProps<TFormData = unknown> = {
   schema: RJSFSchema;
@@ -81,6 +86,7 @@ export function SchemaForm<TFormData = unknown>({
       onSubmit={handleSubmit}
       onChange={handleChange}
       validator={validator}
+      templates={templates}
       {...rest}
     >
       {children}

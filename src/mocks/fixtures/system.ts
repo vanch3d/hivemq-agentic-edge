@@ -8,10 +8,10 @@ import type {
 
 export const metricList: MetricList = {
   items: [
-    { name: "com.hivemq.messages.incoming.total.count", value: 142587 },
-    { name: "com.hivemq.messages.outgoing.total.count", value: 139201 },
-    { name: "com.hivemq.networking.connections.current", value: 12 },
-    { name: "com.hivemq.system.os.global.memory.total", value: 8589934592 },
+    { name: "com.hivemq.messages.incoming.total.count" },
+    { name: "com.hivemq.messages.outgoing.total.count" },
+    { name: "com.hivemq.networking.connections.current" },
+    { name: "com.hivemq.system.os.global.memory.total" },
   ],
 };
 
@@ -34,13 +34,17 @@ export const combinerList: CombinerList = {
   items: [
     {
       id: "combiner-line1",
+      name: "Line 1 Combiner",
       description: "Combine line 1 sensor data",
+      sources: { items: [] },
+      mappings: { items: [] },
     },
   ],
 };
 
 export const pulseStatus: PulseStatus = {
-  enabled: false,
+  activation: "DEACTIVATED",
+  runtime: "DISCONNECTED",
 };
 
 export const capabilitiesList = {

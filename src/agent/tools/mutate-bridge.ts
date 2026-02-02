@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
+import { mutateBridgeDef } from "@/agent/tool-definitions";
 import {
   addBridge,
   updateBridge,
@@ -9,20 +8,7 @@ import {
 import { requestFormInput, requestApproval } from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
 
-const mutateBridgeDef = toolDefinition({
-  name: "mutateBridge",
-  description:
-    "Mutate MQTT bridge resources. Operations: 'create', 'update', 'delete', 'transitionStatus'. All mutations require user confirmation.",
-  inputSchema: z.object({
-    operation: z.enum(["create", "update", "delete", "transitionStatus"]),
-    bridgeId: z.string().optional(),
-    prefill: z.record(z.unknown()).optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const mutateBridge = mutateBridgeDef.client(async (input) => {
   try {
@@ -46,8 +32,8 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await addBridge({ body });
-        return { data, error: error?.title };
+        const { data, error } = await addBridge({ body: body as never });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "update": {
@@ -73,9 +59,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
 
         const { data, error } = await updateBridge({
           path: { bridgeId: input.bridgeId },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "delete": {
@@ -93,7 +79,7 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.bridgeId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -115,18 +101,18 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as { command?: string };
+        const body = formResult.data as Record<string, unknown>;
         const approved = await requestApproval({
           title: "Transition Bridge Status",
-          description: `${body.command} bridge "${input.bridgeId}"?`,
+          description: `${body["command"]} bridge "${input.bridgeId}"?`,
         });
         if (!approved) return { data: null, error: "Rejected" };
 
         const { data, error } = await transitionBridgeStatus({
           path: { bridgeId: input.bridgeId },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
     }
   } catch (e) {

@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
+import { mutateDataHubDef } from "@/agent/tool-definitions";
 import {
   createBehaviorPolicy,
   updateBehaviorPolicy,
@@ -15,31 +14,7 @@ import {
 import { requestFormInput, requestApproval } from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
 
-const mutateDataHubDef = toolDefinition({
-  name: "mutateDataHub",
-  description:
-    "Mutate Data Hub resources. Operations: 'createBehaviorPolicy', 'updateBehaviorPolicy', 'deleteBehaviorPolicy', 'createDataPolicy', 'updateDataPolicy', 'deleteDataPolicy', 'createSchema', 'deleteSchema', 'createScript', 'deleteScript'. All mutations require user confirmation.",
-  inputSchema: z.object({
-    operation: z.enum([
-      "createBehaviorPolicy",
-      "updateBehaviorPolicy",
-      "deleteBehaviorPolicy",
-      "createDataPolicy",
-      "updateDataPolicy",
-      "deleteDataPolicy",
-      "createSchema",
-      "deleteSchema",
-      "createScript",
-      "deleteScript",
-    ]),
-    resourceId: z.string().optional(),
-    prefill: z.record(z.unknown()).optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const mutateDataHub = mutateDataHubDef.client(async (input) => {
   try {
@@ -64,8 +39,10 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await createBehaviorPolicy({ body });
-        return { data, error: error?.title };
+        const { data, error } = await createBehaviorPolicy({
+          body: body as never,
+        });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "updateBehaviorPolicy": {
@@ -91,9 +68,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
 
         const { data, error } = await updateBehaviorPolicy({
           path: { policyId: input.resourceId },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "deleteBehaviorPolicy": {
@@ -111,7 +88,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -135,8 +112,8 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await createDataPolicy({ body });
-        return { data, error: error?.title };
+        const { data, error } = await createDataPolicy({ body: body as never });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "updateDataPolicy": {
@@ -162,9 +139,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
 
         const { data, error } = await updateDataPolicy({
           path: { policyId: input.resourceId },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "deleteDataPolicy": {
@@ -182,7 +159,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -206,8 +183,8 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await createSchema({ body });
-        return { data, error: error?.title };
+        const { data, error } = await createSchema({ body: body as never });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "deleteSchema": {
@@ -225,7 +202,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -249,8 +226,8 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!approved) return { data: null, error: "Rejected" };
 
-        const { data, error } = await createScript({ body });
-        return { data, error: error?.title };
+        const { data, error } = await createScript({ body: body as never });
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "deleteScript": {
@@ -268,7 +245,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
     }

@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
+import { queryDataHubDef } from "@/agent/tool-definitions";
 import {
   getAllBehaviorPolicies,
   getBehaviorPolicy,
@@ -14,38 +13,17 @@ import {
   getVariables,
 } from "@/api/sdk.gen";
 
-const queryDataHubDef = toolDefinition({
-  name: "queryDataHub",
-  description:
-    "Query Data Hub resources. Operations: 'listBehaviorPolicies', 'getBehaviorPolicy', 'listDataPolicies', 'getDataPolicy', 'listSchemas', 'getSchema', 'listScripts', 'getScript', 'listFsms', 'listFunctionSpecs', 'listVariables'.",
-  inputSchema: z.object({
-    operation: z.enum([
-      "listBehaviorPolicies",
-      "getBehaviorPolicy",
-      "listDataPolicies",
-      "getDataPolicy",
-      "listSchemas",
-      "getSchema",
-      "listScripts",
-      "getScript",
-      "listFsms",
-      "listFunctionSpecs",
-      "listVariables",
-    ]),
-    resourceId: z.string().optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const queryDataHub = queryDataHubDef.client(async (input) => {
   try {
     switch (input.operation) {
       case "listBehaviorPolicies": {
         const { data, error } = await getAllBehaviorPolicies();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getBehaviorPolicy": {
         if (!input.resourceId)
@@ -56,11 +34,14 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getBehaviorPolicy({
           path: { policyId: input.resourceId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listDataPolicies": {
         const { data, error } = await getAllDataPolicies();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getDataPolicy": {
         if (!input.resourceId)
@@ -71,11 +52,14 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getDataPolicy({
           path: { policyId: input.resourceId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listSchemas": {
         const { data, error } = await getAllSchemas();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getSchema": {
         if (!input.resourceId)
@@ -86,11 +70,14 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getSchema({
           path: { schemaId: input.resourceId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listScripts": {
         const { data, error } = await getAllScripts();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getScript": {
         if (!input.resourceId)
@@ -101,19 +88,28 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getScript({
           path: { scriptId: input.resourceId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listFsms": {
         const { data, error } = await getFsms();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "listFunctionSpecs": {
         const { data, error } = await getFunctionSpecs();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "listVariables": {
         const { data, error } = await getVariables();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
     }
   } catch (e) {

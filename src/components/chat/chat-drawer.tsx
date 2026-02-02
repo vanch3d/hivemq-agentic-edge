@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, IconButton } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, IconButton, Badge } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { LuX } from "react-icons/lu";
 import {
@@ -51,6 +51,8 @@ export function ChatDrawer() {
     activeApproval,
     error,
     dismissError,
+    model,
+    isLoading,
   } = useChatContext();
   const { t } = useTranslation();
 
@@ -72,12 +74,19 @@ export function ChatDrawer() {
         shadow="none"
       >
         <DrawerHeader borderBottomWidth="1px" py="2" px="3">
-          <Heading size="sm">{t("chat.title")}</Heading>
+          <Flex align="center" gap="2">
+            <Heading size="sm">{t("chat.title")}</Heading>
+            {model && (
+              <Badge size="xs" variant="outline" fontWeight="normal">
+                {model}
+              </Badge>
+            )}
+          </Flex>
         </DrawerHeader>
         <DrawerCloseTrigger />
         <DrawerBody p="0" display="flex" flexDirection="column">
           <Flex direction="column" flex="1" overflow="hidden">
-            <MessageList messages={messages} />
+            <MessageList messages={messages} isLoading={isLoading} />
             {error && (
               <Box
                 px="3"

@@ -1,5 +1,3 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
 import {
   getAdapters,
   getAdapter,
@@ -11,38 +9,19 @@ import {
   getAdapterStatus,
   getAdaptersStatus,
 } from "@/api/sdk.gen";
+import { queryAdaptersDef } from "@/agent/tool-definitions";
 
-const queryAdaptersDef = toolDefinition({
-  name: "queryAdapters",
-  description:
-    "Query protocol adapter resources. Use 'list' to get all adapters, 'get' for a single adapter, 'listTypes' for available adapter types, 'getType' for adapters of a specific type, 'listTags' for domain tags, 'listNorthbound'/'listSouthbound' for mappings, 'getStatus' for one adapter status, 'listAllStatus' for all statuses.",
-  inputSchema: z.object({
-    operation: z.enum([
-      "list",
-      "get",
-      "listTypes",
-      "getType",
-      "listTags",
-      "listNorthbound",
-      "listSouthbound",
-      "getStatus",
-      "listAllStatus",
-    ]),
-    adapterId: z.string().optional(),
-    adapterType: z.string().optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const queryAdapters = queryAdaptersDef.client(async (input) => {
   try {
     switch (input.operation) {
       case "list": {
         const { data, error } = await getAdapters();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "get": {
         if (!input.adapterId)
@@ -50,11 +29,14 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapter({
           path: { adapterId: input.adapterId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listTypes": {
         const { data, error } = await getAdapterTypes();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getType": {
         if (!input.adapterType)
@@ -62,7 +44,10 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdaptersForType({
           path: { adapterType: input.adapterType },
         });
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "listTags": {
         if (!input.adapterId)
@@ -73,7 +58,10 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapterDomainTags({
           path: { adapterId: input.adapterId },
         });
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "listNorthbound": {
         if (!input.adapterId)
@@ -84,7 +72,10 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapterNorthboundMappings({
           path: { adapterId: input.adapterId },
         });
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "listSouthbound": {
         if (!input.adapterId)
@@ -95,7 +86,10 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapterSouthboundMappings({
           path: { adapterId: input.adapterId },
         });
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
       case "getStatus": {
         if (!input.adapterId)
@@ -106,11 +100,14 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapterStatus({
           path: { adapterId: input.adapterId },
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
       case "listAllStatus": {
         const { data, error } = await getAdaptersStatus();
-        return { data: data?.items, error: error?.title };
+        return {
+          data: data?.items,
+          error: (error as ApiError | undefined)?.title,
+        };
       }
     }
   } catch (e) {

@@ -69,28 +69,22 @@ export const bridgeHandlers = [
     return HttpResponse.json(body, { status: 201 });
   }),
 
-  http.put(
-    `${API_BASE}/management/bridges/:bridgeId`,
-    async ({ request }) => {
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return HttpResponse.json(unauthorizedError, { status: 401 });
-      }
-      const body = (await request.json()) as Bridge;
-      return HttpResponse.json(body);
-    },
-  ),
+  http.put(`${API_BASE}/management/bridges/:bridgeId`, async ({ request }) => {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return HttpResponse.json(unauthorizedError, { status: 401 });
+    }
+    const body = (await request.json()) as Bridge;
+    return HttpResponse.json(body);
+  }),
 
-  http.delete(
-    `${API_BASE}/management/bridges/:bridgeId`,
-    ({ request }) => {
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return HttpResponse.json(unauthorizedError, { status: 401 });
-      }
-      return new HttpResponse(null, { status: 204 });
-    },
-  ),
+  http.delete(`${API_BASE}/management/bridges/:bridgeId`, ({ request }) => {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return HttpResponse.json(unauthorizedError, { status: 401 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   http.put(
     `${API_BASE}/management/bridges/:bridgeId/status`,

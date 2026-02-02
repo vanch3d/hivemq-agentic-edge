@@ -27,16 +27,14 @@ export function ChatForm({
   // When requiredOnly, filter schema to only required properties
   const displaySchema: RJSFSchema =
     !showAll && schema.required && schema.properties
-      ? {
+      ? ({
           ...schema,
           properties: Object.fromEntries(
-            Object.entries(
-              schema.properties as Record<string, unknown>,
-            ).filter(([key]) =>
-              (schema.required as string[]).includes(key),
+            Object.entries(schema.properties as Record<string, unknown>).filter(
+              ([key]) => (schema.required as string[]).includes(key),
             ),
           ),
-        }
+        } as unknown as RJSFSchema)
       : schema;
 
   return (

@@ -29,17 +29,17 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
     schema: {
       ...BridgeSchema,
       required: ["id", "host", "port"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
     requiredOnly: true,
   },
   "mutateBridge.update": {
-    schema: { ...BridgeSchema } as RJSFSchema,
+    schema: { ...BridgeSchema } as unknown as RJSFSchema,
   },
   "mutateBridge.transitionStatus": {
     schema: {
       ...StatusTransitionCommandSchema,
       required: ["command"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
   },
 
   // Adapter mutations
@@ -47,17 +47,17 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
     schema: {
       ...AdapterSchema,
       required: ["id", "type"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
     requiredOnly: true,
   },
   "mutateAdapter.update": {
-    schema: { ...AdapterSchema } as RJSFSchema,
+    schema: { ...AdapterSchema } as unknown as RJSFSchema,
   },
   "mutateAdapter.transitionStatus": {
     schema: {
       ...StatusTransitionCommandSchema,
       required: ["command"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
   },
 
   // Data Hub mutations
@@ -65,34 +65,34 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
     schema: {
       ...BehaviorPolicySchema,
       required: ["id", "matching", "behavior"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
     requiredOnly: true,
   },
   "mutateDataHub.updateBehaviorPolicy": {
-    schema: { ...BehaviorPolicySchema } as RJSFSchema,
+    schema: { ...BehaviorPolicySchema } as unknown as RJSFSchema,
   },
   "mutateDataHub.createDataPolicy": {
     schema: {
       ...DataPolicySchema,
       required: ["id", "matching"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
     requiredOnly: true,
   },
   "mutateDataHub.updateDataPolicy": {
-    schema: { ...DataPolicySchema } as RJSFSchema,
+    schema: { ...DataPolicySchema } as unknown as RJSFSchema,
   },
   "mutateDataHub.createSchema": {
     schema: {
       ...PolicySchemaSchema,
       required: ["id", "schemaDefinition", "type"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
     requiredOnly: true,
   },
   "mutateDataHub.createScript": {
     schema: {
       ...ScriptSchema,
       required: ["id", "functionType", "source"],
-    } as RJSFSchema,
+    } as unknown as RJSFSchema,
     requiredOnly: true,
   },
 };

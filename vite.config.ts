@@ -6,6 +6,9 @@ import devServer from "@hono/vite-dev-server";
 
 // https://vite.dev/config/
 export default defineConfig({
+  ssr: {
+    external: ["undici", "ollama"],
+  },
   plugins: [
     tanstackRouter({
       target: "react",

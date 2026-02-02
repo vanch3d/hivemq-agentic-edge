@@ -10,7 +10,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
 import { clientTools } from "@tanstack/ai-client";
-import type { UIMessage } from "@tanstack/ai";
+import type { UIMessage, StreamChunk } from "@tanstack/ai";
 import {
   queryBridges,
   queryAdapters,
@@ -70,6 +70,8 @@ type ChatContextValue = {
   onToggle: () => void;
   activeForm: ActiveForm | null;
   activeApproval: ActiveApproval | null;
+  /** Model identifier reported by the AI provider (e.g. "claude-sonnet-4-5", "qwen2.5:7b") */
+  model: string | null;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -86,8 +88,9 @@ export function useChatContext(): ChatContextValue {
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeForm, setActiveForm] = useState<ActiveForm | null>(null);
-  const [activeApproval, setActiveApproval] =
-    useState<ActiveApproval | null>(null);
+  const [activeApproval, setActiveApproval] = useState<ActiveApproval | null>(
+    null,
+  );
   const navigate = useNavigate();
 
   // Register router navigate for use by agent tools
@@ -125,9 +128,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  const [model, setModel] = useState<string | null>(null);
+
+  const onChunk = useCallback((chunk: StreamChunk) => {
+    if ("model" in chunk && typeof chunk.model === "string" && chunk.model) {
+      setModel(chunk.model);
+    }
+  }, []);
+
   const chatState = useChat({
     connection: fetchServerSentEvents("/api/chat"),
     tools,
+    onChunk,
   });
 
   // Track dismissed errors so the same error can be hidden by the user
@@ -178,6 +190,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         onToggle,
         activeForm,
         activeApproval,
+        model,
       }}
     >
       {children}

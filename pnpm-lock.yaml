@@ -38,6 +38,9 @@ importers:
       '@tanstack/ai-client':
         specifier: ^0.3.0
         version: 0.3.0
+      '@tanstack/ai-ollama':
+        specifier: ^0.3.0
+        version: 0.3.0(@tanstack/ai@0.3.0)(zod@4.3.6)
       '@tanstack/ai-react':
         specifier: ^0.3.0
         version: 0.3.0(@tanstack/ai@0.3.0)(@types/react@19.2.10)(react@19.2.4)
@@ -71,6 +74,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      ollama:
+        specifier: ^0.6.3
+        version: 0.6.3
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -83,6 +89,9 @@ importers:
       react-icons:
         specifier: ^5.5.0
         version: 5.5.0(react@19.2.4)
+      undici:
+        specifier: ^7.20.0
+        version: 7.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -861,6 +870,12 @@ packages:
 
   '@tanstack/ai-client@0.3.0':
     resolution: {integrity: sha512-ObQM53pOKyG95r2NJqNdm1NP9irAqi5LfFLLq7e6y6L6/n4EGaBnCVwo1n5hQeOtNnMUWP8Fn6xp10EQGVglwA==}
+
+  '@tanstack/ai-ollama@0.3.0':
+    resolution: {integrity: sha512-u/68bLsRehmFsfEcvmMS09yq5vuqOVJs51q1QvBLwxKwBoSzSIKFHArRSVW8W5RcBPdsYxnLyz9d0hcqUy2NjQ==}
+    peerDependencies:
+      '@tanstack/ai': ^0.2.1
+      zod: ^4.0.0
 
   '@tanstack/ai-react@0.3.0':
     resolution: {integrity: sha512-Omn8T050HhgsM2aiFRni3og8/WcNqC5JjDzSSCQ60kwEyWPHUd2CI+g9/SjHjHHUUVoZ+tSl/8/ZSYracZ8ySA==}
@@ -2146,6 +2161,9 @@ packages:
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
 
+  ollama@0.6.3:
+    resolution: {integrity: sha512-KEWEhIqE5wtfzEIZbDCLH51VFZ6Z3ZSa6sIOg/E/tBV8S51flyqBOXi+bRxlOYKDf8i327zG9eSTb8IJxvm3Zg==}
+
   open@11.0.0:
     resolution: {integrity: sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw==}
     engines: {node: '>=20'}
@@ -2590,6 +2608,10 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
+  undici@7.20.0:
+    resolution: {integrity: sha512-MJZrkjyd7DeC+uPZh+5/YaMDxFiiEEaDgbUSVMXayofAkDWF1088CDo+2RPg7B1BuS1qf1vgNE7xqwPxE0DuSQ==}
+    engines: {node: '>=20.18.1'}
+
   unplugin@2.3.11:
     resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
     engines: {node: '>=18.12.0'}
@@ -2677,6 +2699,9 @@ packages:
 
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
+
+  whatwg-fetch@3.6.20:
+    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -3463,6 +3488,12 @@ snapshots:
   '@tanstack/ai-client@0.3.0':
     dependencies:
       '@tanstack/ai': 0.3.0
+
+  '@tanstack/ai-ollama@0.3.0(@tanstack/ai@0.3.0)(zod@4.3.6)':
+    dependencies:
+      '@tanstack/ai': 0.3.0
+      ollama: 0.6.3
+      zod: 4.3.6
 
   '@tanstack/ai-react@0.3.0(@tanstack/ai@0.3.0)(@types/react@19.2.10)(react@19.2.4)':
     dependencies:
@@ -5121,6 +5152,10 @@ snapshots:
 
   ohash@2.0.11: {}
 
+  ollama@0.6.3:
+    dependencies:
+      whatwg-fetch: 3.6.20
+
   open@11.0.0:
     dependencies:
       default-browser: 5.4.0
@@ -5576,6 +5611,8 @@ snapshots:
 
   undici-types@7.16.0: {}
 
+  undici@7.20.0: {}
+
   unplugin@2.3.11:
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -5636,6 +5673,8 @@ snapshots:
   w3c-keyname@2.2.8: {}
 
   webpack-virtual-modules@0.6.2: {}
+
+  whatwg-fetch@3.6.20: {}
 
   which@2.0.2:
     dependencies:

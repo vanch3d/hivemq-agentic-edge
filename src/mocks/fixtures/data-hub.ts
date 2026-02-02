@@ -28,7 +28,9 @@ export const dataPolicyList: DataPolicyList = {
         topicFilter: "factory/+/temperature",
       },
       validation: {
-        validators: [{ type: "schema", schemaId: "temperature-schema" }],
+        validators: [
+          { type: "SCHEMA", arguments: { schemaId: "temperature-schema" } },
+        ],
       },
     },
   ],

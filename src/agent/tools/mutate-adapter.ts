@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { toolDefinition } from "@tanstack/ai";
+import { mutateAdapterDef } from "@/agent/tool-definitions";
 import {
   addAdapter,
   updateAdapter,
@@ -9,21 +8,7 @@ import {
 import { requestFormInput, requestApproval } from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
 
-const mutateAdapterDef = toolDefinition({
-  name: "mutateAdapter",
-  description:
-    "Mutate protocol adapter resources. Operations: 'create', 'update', 'delete', 'transitionStatus'. All mutations require user confirmation.",
-  inputSchema: z.object({
-    operation: z.enum(["create", "update", "delete", "transitionStatus"]),
-    adapterId: z.string().optional(),
-    adapterType: z.string().optional(),
-    prefill: z.record(z.unknown()).optional(),
-  }),
-  outputSchema: z.object({
-    data: z.unknown(),
-    error: z.string().optional(),
-  }),
-});
+type ApiError = { title?: string };
 
 export const mutateAdapter = mutateAdapterDef.client(async (input) => {
   try {
@@ -55,9 +40,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
 
         const { data, error } = await addAdapter({
           path: { adapterType: input.adapterType },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "update": {
@@ -83,9 +68,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
 
         const { data, error } = await updateAdapter({
           path: { adapterId: input.adapterId },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
 
       case "delete": {
@@ -103,7 +88,7 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.adapterId },
-          error: error?.title,
+          error: (error as ApiError | undefined)?.title,
         };
       }
 
@@ -134,9 +119,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
 
         const { data, error } = await transitionAdapterStatus({
           path: { adapterId: input.adapterId },
-          body,
+          body: body as never,
         });
-        return { data, error: error?.title };
+        return { data, error: (error as ApiError | undefined)?.title };
       }
     }
   } catch (e) {

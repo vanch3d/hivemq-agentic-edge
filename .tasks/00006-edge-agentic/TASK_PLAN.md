@@ -309,30 +309,34 @@ Forms render in a 400px drawer, so complex schemas (e.g. adapter configs with 20
 ```
 server/
   index.ts                     — Hono app entry
-  api/chat.ts                  — POST /api/chat handler
+  api/chat.ts                  — POST /api/chat handler (provider routing, tool registration)
   system-prompt.ts             — System prompt with ontology
+  ollama-agui-adapter.ts       — Ollama bug workaround (stream transform + system prompt injection)
   tsconfig.json                — Node target config
 
 src/
   context/
-    chat-context.tsx            — Chat state + drawer + form coordination
+    chat-context.tsx            — Chat state + drawer + form coordination + model tracking
   components/
     chat/
-      chat-drawer.tsx           — Main Drawer shell
+      chat-drawer.tsx           — Main Drawer shell (model badge, error banner)
       chat-toggle-button.tsx    — Toolbar icon button
-      message-list.tsx          — Scrollable message container
+      message-list.tsx          — Scrollable message container (loading indicator)
       message-bubble.tsx        — User/assistant message styling
       chat-input.tsx            — Input area
       chat-form.tsx             — Inline RJSF form for mutations (progressive: required-only → full)
       chat-table.tsx            — Generic TanStack Table for collection results (search, sort, paginate)
-      chat-graph.tsx            — React Flow graph renderer (future task — stubbed with text fallback)
       tool-status.tsx           — Tool call/result indicators
       thinking-part.tsx         — Collapsible thinking display
       approval-card.tsx         — Mutation confirmation card
+      chat-error-boundary.tsx   — Error boundary around ChatProvider
+    rjsf-templates/
+      field-template.tsx        — Custom RJSF FieldTemplate (descriptions as helper text below input)
   agent/
+    tool-definitions.ts         — Shared tool metadata (10 definitions, server-importable)
     tools/
       index.ts                  — Re-exports all tools
-      query-bridges.ts
+      query-bridges.ts          — Client executor (imports def from tool-definitions.ts)
       query-adapters.ts
       query-data-hub.ts
       query-system.ts
@@ -342,8 +346,15 @@ src/
       mutate-data-hub.ts
       mutate-system.ts
       navigate-to.ts
-    tool-context.ts             — Shared context (router ref, form request)
+    tool-context.ts             — Shared context (router ref, form request, approval request)
     form-schemas.ts             — Operation → JSON schema mapping
+  components/
+    schema-form.tsx             — SchemaForm with custom RJSF templates
+  mocks/
+    handlers/
+      chat.ts                   — MSW mock for /api/chat SSE (conditional via VITE_MOCK_AGENT_CHAT)
+    handlers.ts                 — Conditional handler aggregation (Edge API vs Agent mocks)
+  auth-token.ts                 — Token persistence via sessionStorage (survives HMR)
 ```
 
 **Modified files:**
@@ -352,84 +363,98 @@ src/
 - `src/routes/_authenticated/workspace.tsx` — ChatProvider + ChatDrawer
 - `src/components/workspace/toolbar.tsx` — chat toggle button
 - `src/locales/en-US.json` — `chat.*` keys
+- `src/context/auth-context.tsx` — Initialize from persisted token (HMR fix)
 - `package.json` — new deps
+- `.env` / `.env.example` — AI provider config, mock toggles
 - `.gitignore` — `.env`
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Infrastructure
+### Phase 1: Infrastructure ✅
 
-- [ ] Install packages
-- [ ] Create `server/index.ts` — Hono app entry
-- [ ] Create `server/api/chat.ts` — POST /api/chat handler
-- [ ] Configure `@hono/vite-dev-server` in `vite.config.ts`
-- [ ] Create `server/tsconfig.json`
-- [ ] Add `.env` with `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`, update `.gitignore`, add `.env.example`
-- [ ] Create `AGENTIC.md` — developer README covering setup, config, API key provisioning, architecture overview
+- [x] Install packages
+- [x] Create `server/index.ts` — Hono app entry
+- [x] Create `server/api/chat.ts` — POST /api/chat handler
+- [x] Configure `@hono/vite-dev-server` in `vite.config.ts`
+- [x] Create `server/tsconfig.json`
+- [x] Add `.env` with `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`, update `.gitignore`, add `.env.example`
+- [x] Create `AGENTIC.md` — developer README
 
-**Verify**: `pnpm dev` starts, `POST /api/chat` responds with SSE stream from Claude.
+### Phase 2: Basic Chat UI ✅
 
-### Phase 2: Basic Chat UI (text only, no tools)
+- [x] Create `src/context/chat-context.tsx` — wraps `useChat`, manages drawer state
+- [x] Create `src/components/chat/chat-drawer.tsx` — Chakra Drawer (right, 400px)
+- [x] Create `src/components/chat/message-list.tsx` — scrollable, auto-scroll
+- [x] Create `src/components/chat/message-bubble.tsx` — user vs assistant styling
+- [x] Create `src/components/chat/chat-input.tsx` — textarea + send, Enter/Shift+Enter
+- [x] Create `src/components/chat/chat-toggle-button.tsx` — toolbar icon button
+- [x] Modify `src/components/workspace/toolbar.tsx` — add toggle button
+- [x] Modify `src/routes/_authenticated/workspace.tsx` — ChatProvider + ChatDrawer
+- [x] Create `server/system-prompt.ts` — system prompt with full domain ontology
+- [x] Add i18n keys to `src/locales/en-US.json` — `chat.*` namespace
 
-- [ ] Create `src/context/chat-context.tsx` — wraps `useChat`, manages drawer state
-- [ ] Create `src/components/chat/chat-drawer.tsx` — Chakra Drawer (right, 400px)
-- [ ] Create `src/components/chat/message-list.tsx` — scrollable, auto-scroll
-- [ ] Create `src/components/chat/message-bubble.tsx` — user vs assistant styling
-- [ ] Create `src/components/chat/chat-input.tsx` — textarea + send, Enter/Shift+Enter
-- [ ] Create `src/components/chat/chat-toggle-button.tsx` — toolbar icon button
-- [ ] Modify `src/components/workspace/toolbar.tsx` — add toggle button
-- [ ] Modify `src/routes/_authenticated/workspace.tsx` — ChatProvider + ChatDrawer
-- [ ] Create `server/system-prompt.ts` — basic prompt with domain ontology
-- [ ] Add i18n keys to `src/locales/en-US.json` — `chat.*` namespace
+### Phase 3: Query Tools & Result Rendering ✅
 
-**Verify**: Open drawer, type message, get streamed Claude response. Persists across page nav.
+- [x] Create `src/agent/tool-context.ts` — shared context (router ref, form/approval requests)
+- [x] Create query tool definitions + client implementations (5 files)
+- [x] Create `src/agent/tools/index.ts` — re-exports
+- [x] Create `src/components/chat/chat-table.tsx` — generic TanStack Table (search, sort, paginate)
+- [x] Create `src/components/chat/tool-status.tsx` — call/result UI
+- [x] Update `message-bubble.tsx` to render tool results as tables
+- [x] Wire tools into `useChat` in chat context
+- [x] Update system prompt with tool descriptions
+- [x] Create MSW fixtures and handlers for all Edge API resources
+- [x] Register new handlers in `src/mocks/handlers.ts`
 
-### Phase 3: Query Tools & Result Rendering
+### Phase 4: Navigation Tool ✅
 
-- [ ] Create `src/agent/tool-context.ts` — shared context
-- [ ] Create query tool definitions + client implementations (5 files), with column defs per operation
-- [ ] Create `src/agent/tools/index.ts` — re-exports
-- [ ] Create `src/components/chat/chat-table.tsx` — generic TanStack Table (search, sort, paginate, column toggle)
-- [ ] Create `src/components/chat/tool-status.tsx` — call/result UI
-- [ ] Update `message-bubble.tsx` to detect `display: 'table'` results and render `ChatTable`
-- [ ] Wire tools into `useChat` in chat context
-- [ ] Update system prompt with tool descriptions and result rendering guidance
-- [ ] Create MSW fixtures: `bridges.ts`, `adapters.ts`, `data-hub.ts`, `system.ts`, `sampling.ts`
-- [ ] Create MSW handlers: `bridgeHandlers`, `adapterHandlers`, `dataHubHandlers`, `systemHandlers`, `samplingHandlers`
-- [ ] Register new handlers in `src/mocks/handlers.ts`
-- [ ] Create MSW handler for `/api/chat` — canned SSE stream for dev without API key
+- [x] Create `src/agent/tools/navigate-to.ts`
+- [x] Wire router reference into tool context
+- [x] Update system prompt
 
-**Verify**: "List my bridges" → agent calls queryBridges → MSW returns typed mock data → displays results.
+### Phase 5: Mutation Tools with Forms ✅
 
-### Phase 4: Navigation Tool
+- [x] Create `src/agent/form-schemas.ts` — operation → JSON schema mapping
+- [x] Add form request/response coordination to `chat-context.tsx`
+- [x] Create `src/components/chat/chat-form.tsx` — inline SchemaForm (progressive fields)
+- [x] Create `src/components/chat/approval-card.tsx` — confirmation UI
+- [x] Create mutation tool definitions + client implementations (4 files)
+- [x] Add mutation MSW handlers
+- [x] Wire mutation tools into useChat, update system prompt
 
-- [ ] Create `src/agent/tools/navigate-to.ts`
-- [ ] Wire router reference into tool context
-- [ ] Update system prompt
+### Phase 6: Polish ✅
 
-**Verify**: "Take me to the workspace" → app navigates.
+- [x] Create `src/components/chat/thinking-part.tsx`
+- [x] Keyboard shortcut (Ctrl+K / Cmd+K) to toggle drawer
+- [x] Error boundary around ChatProvider (`chat-error-boundary.tsx`)
+- [x] Chat error banner with dismiss + nested JSON parsing (Anthropic errors)
+- [x] Custom RJSF FieldTemplate (descriptions as helper text below inputs)
+- [x] Auth token persistence via sessionStorage (fixes HMR navigation loop)
+- [x] Run build + lint — all passing
 
-### Phase 5: Mutation Tools with Forms
+### Phase 7: Agent Chat Mocks ✅
 
-- [ ] Create `src/agent/form-schemas.ts` — operation → JSON schema mapping
-- [ ] Add form request/response coordination to `chat-context.tsx`
-- [ ] Create `src/components/chat/chat-form.tsx` — inline SchemaForm
-- [ ] Create `src/components/chat/approval-card.tsx` — confirmation UI
-- [ ] Create mutation tool definitions + client implementations (4 files)
-- [ ] Add mutation MSW handlers (POST/PUT/DELETE) to existing handler files, updating `db.ts` collections
-- [ ] Wire mutation tools into useChat, update system prompt
+- [x] Create `src/mocks/handlers/chat.ts` — MSW mock for `/api/chat` SSE
+- [x] Conditional mock toggles (`VITE_MOCK_EDGE_API`, `VITE_MOCK_AGENT_CHAT`)
+- [x] Fix tool execution in mocks (add `CUSTOM` event with `tool-input-available`)
+- [x] Fix `ToolResultStatus` to parse `part.content` (JSON string, not `part.result`)
+- [x] Fix `ToolCallStatus` state values (`awaiting-input`/`input-streaming`)
 
-**Verify**: "Create a new bridge" → form → submit → confirm → MSW accepts mutation → result.
+### Phase 8: Ollama Support — In Progress
 
-### Phase 6: Polish & Documentation
-
-- [ ] Create `src/components/chat/thinking-part.tsx`
-- [ ] Keyboard shortcut (Ctrl+K / Cmd+K) to toggle drawer
-- [ ] Error boundary around ChatProvider
-- [ ] Run build + lint, fix all issues
-- [ ] Update `CONVENTIONS.md` with agent architecture section
+- [x] Install `@tanstack/ai-ollama`
+- [x] Provider routing in `server/api/chat.ts` (`resolveAdapter()`)
+- [x] Bug workaround: AG-UI event type mismatch (`patchOllamaAdapter`)
+- [x] Bug workaround: System prompts dropped (inject `{ role: "system" }`)
+- [x] Extract shared tool definitions (`src/agent/tool-definitions.ts`)
+- [x] Pass `tools: allToolDefinitions` to server-side `chat()` call
+- [x] Model badge in chat header (via `onChunk` callback)
+- [x] Loading indicator ("Thinking...") while waiting for response
+- [ ] Verify native tool calling works with a capable model
+- [ ] Test with Anthropic to confirm no regressions
+- [ ] Document in AGENTIC.md developer README
 
 ---
 

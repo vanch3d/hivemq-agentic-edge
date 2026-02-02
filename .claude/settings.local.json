@@ -40,7 +40,13 @@
       "Bash(timeout 15 pnpm dev:*)",
       "Bash(npx eslint:*)",
       "Bash(npx prettier:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(node -e:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm exec prettier:*)",
+      "WebFetch(domain:docs.ollama.com)"
     ]
   }
 }

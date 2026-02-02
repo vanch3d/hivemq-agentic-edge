@@ -118,12 +118,9 @@ export const systemHandlers = [
     },
   ),
 
-  http.delete(
-    `${API_BASE}/management/topic-filters/:filter`,
-    ({ request }) => {
-      return requireAuth(request) ?? new HttpResponse(null, { status: 204 });
-    },
-  ),
+  http.delete(`${API_BASE}/management/topic-filters/:filter`, ({ request }) => {
+    return requireAuth(request) ?? new HttpResponse(null, { status: 204 });
+  }),
 
   http.post(`${API_BASE}/management/combiners`, async ({ request }) => {
     const err = requireAuth(request);
@@ -142,12 +139,9 @@ export const systemHandlers = [
     },
   ),
 
-  http.delete(
-    `${API_BASE}/management/combiners/:combinerId`,
-    ({ request }) => {
-      return requireAuth(request) ?? new HttpResponse(null, { status: 204 });
-    },
-  ),
+  http.delete(`${API_BASE}/management/combiners/:combinerId`, ({ request }) => {
+    return requireAuth(request) ?? new HttpResponse(null, { status: 204 });
+  }),
 
   http.post(`${API_BASE}/management/uns/isa95`, async ({ request }) => {
     const err = requireAuth(request);

@@ -38,7 +38,8 @@
     "thinking": "Thinking…",
     "error": "Something went wrong",
     "dismissError": "Dismiss error",
-    "errorTitle": "Chat failed to load"
+    "errorTitle": "Chat failed to load",
+    "loading": "Thinking…"
   },
   "schemas": {
     "usernamePasswordCredentials": {
