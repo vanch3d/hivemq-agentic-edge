@@ -25,14 +25,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Create Bridge",
-          description: `Create bridge "${body["id"]}"?`,
+        const { data, error } = await addBridge({
+          body: formResult.data as never,
         });
-        if (!approved) return { data: null, error: "Rejected" };
-
-        const { data, error } = await addBridge({ body: body as never });
         return { data, error: (error as ApiError | undefined)?.title };
       }
 
@@ -50,16 +45,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Update Bridge",
-          description: `Update bridge "${input.bridgeId}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await updateBridge({
           path: { bridgeId: input.bridgeId },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }
@@ -101,16 +89,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Transition Bridge Status",
-          description: `${body["command"]} bridge "${input.bridgeId}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await transitionBridgeStatus({
           path: { bridgeId: input.bridgeId },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }

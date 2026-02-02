@@ -32,15 +32,8 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Create Behavior Policy",
-          description: `Create policy "${body["id"]}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await createBehaviorPolicy({
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }
@@ -59,16 +52,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Update Behavior Policy",
-          description: `Update policy "${input.resourceId}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await updateBehaviorPolicy({
           path: { policyId: input.resourceId },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }
@@ -105,14 +91,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Create Data Policy",
-          description: `Create policy "${body["id"]}"?`,
+        const { data, error } = await createDataPolicy({
+          body: formResult.data as never,
         });
-        if (!approved) return { data: null, error: "Rejected" };
-
-        const { data, error } = await createDataPolicy({ body: body as never });
         return { data, error: (error as ApiError | undefined)?.title };
       }
 
@@ -130,16 +111,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Update Data Policy",
-          description: `Update policy "${input.resourceId}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await updateDataPolicy({
           path: { policyId: input.resourceId },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }
@@ -176,14 +150,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Create Schema",
-          description: `Create schema "${body["id"]}"?`,
+        const { data, error } = await createSchema({
+          body: formResult.data as never,
         });
-        if (!approved) return { data: null, error: "Rejected" };
-
-        const { data, error } = await createSchema({ body: body as never });
         return { data, error: (error as ApiError | undefined)?.title };
       }
 
@@ -219,14 +188,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Create Script",
-          description: `Create script "${body["id"]}"?`,
+        const { data, error } = await createScript({
+          body: formResult.data as never,
         });
-        if (!approved) return { data: null, error: "Rejected" };
-
-        const { data, error } = await createScript({ body: body as never });
         return { data, error: (error as ApiError | undefined)?.title };
       }
 

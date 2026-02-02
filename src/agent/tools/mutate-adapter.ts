@@ -31,16 +31,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Create Adapter",
-          description: `Create ${input.adapterType} adapter "${body["id"]}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await addAdapter({
           path: { adapterType: input.adapterType },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }
@@ -59,16 +52,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as Record<string, unknown>;
-        const approved = await requestApproval({
-          title: "Update Adapter",
-          description: `Update adapter "${input.adapterId}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await updateAdapter({
           path: { adapterId: input.adapterId },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }
@@ -110,16 +96,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const body = formResult.data as { command?: string };
-        const approved = await requestApproval({
-          title: "Transition Adapter Status",
-          description: `${body.command} adapter "${input.adapterId}"?`,
-        });
-        if (!approved) return { data: null, error: "Rejected" };
-
         const { data, error } = await transitionAdapterStatus({
           path: { adapterId: input.adapterId },
-          body: body as never,
+          body: formResult.data as never,
         });
         return { data, error: (error as ApiError | undefined)?.title };
       }

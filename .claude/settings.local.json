@@ -46,7 +46,9 @@
       "Bash(pnpm exec tsc:*)",
       "Bash(pnpm list:*)",
       "Bash(pnpm exec prettier:*)",
-      "WebFetch(domain:docs.ollama.com)"
+      "WebFetch(domain:docs.ollama.com)",
+      "Bash(dir /s \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\src\\\\agent\")",
+      "Bash(grep:*)"
     ]
   }
 }

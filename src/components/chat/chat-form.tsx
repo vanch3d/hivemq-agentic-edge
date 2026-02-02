@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { RJSFSchema } from "@rjsf/utils";
 import { SchemaForm } from "@/components/schema-form";
@@ -24,18 +24,21 @@ export function ChatForm({
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(!requiredOnly);
 
-  // When requiredOnly, filter schema to only required properties
-  const displaySchema: RJSFSchema =
-    !showAll && schema.required && schema.properties
-      ? ({
-          ...schema,
-          properties: Object.fromEntries(
-            Object.entries(schema.properties as Record<string, unknown>).filter(
-              ([key]) => (schema.required as string[]).includes(key),
-            ),
+  // When requiredOnly, filter schema to only required properties.
+  // Memoized to keep a stable reference for RJSF's internal diffing.
+  const displaySchema = useMemo<RJSFSchema>(() => {
+    if (!showAll && schema.required && schema.properties) {
+      return {
+        ...schema,
+        properties: Object.fromEntries(
+          Object.entries(schema.properties as Record<string, unknown>).filter(
+            ([key]) => (schema.required as string[]).includes(key),
           ),
-        } as unknown as RJSFSchema)
-      : schema;
+        ),
+      } as unknown as RJSFSchema;
+    }
+    return schema;
+  }, [schema, showAll]);
 
   return (
     <Box
@@ -50,6 +53,7 @@ export function ChatForm({
         {title}
       </Heading>
       <SchemaForm
+        key={showAll ? "full" : "required"}
         schema={displaySchema}
         formData={formData}
         onSubmit={onSubmit}
