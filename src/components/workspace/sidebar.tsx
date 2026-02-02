@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/auth-context";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@chakra-ui/react";
-import { LuHouse, LuLogOut } from "react-icons/lu";
+import { LuHouse, LuLogOut, LuNetwork } from "react-icons/lu";
 
 const navItems = [
   { to: "/workspace", labelKey: "nav.home", icon: LuHouse },
+  { to: "/workspace/graph", labelKey: "nav.graph", icon: LuNetwork },
 ] as const;
 
 export function Sidebar() {

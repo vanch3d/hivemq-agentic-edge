@@ -1,6 +1,7 @@
 import { Box, Spinner, Text } from "@chakra-ui/react";
 import type { ToolCallPart, ToolResultPart } from "@tanstack/ai";
 import { ChatTable } from "./chat-table";
+import { ChatGraph } from "@/graph/components/chat-graph";
 
 interface ToolCallStatusProps {
   part: ToolCallPart;
@@ -54,8 +55,8 @@ export function ToolResultStatus({ part }: ToolResultStatusProps) {
     );
   }
 
-  // Tools return { data, error? }
-  const result = parsed as { data?: unknown; error?: string };
+  // Tools return { data, error?, display? }
+  const result = parsed as { data?: unknown; error?: string; display?: string };
 
   if (result.error) {
     return (
@@ -63,6 +64,11 @@ export function ToolResultStatus({ part }: ToolResultStatusProps) {
         {result.error}
       </Text>
     );
+  }
+
+  // Graph display type
+  if (result.display === "graph") {
+    return <ChatGraph />;
   }
 
   // Render arrays as tables if items are objects

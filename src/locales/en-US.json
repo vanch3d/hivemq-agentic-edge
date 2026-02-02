@@ -4,6 +4,7 @@
   },
   "nav": {
     "home": "Home",
+    "graph": "Graph",
     "logout": "Logout"
   },
   "login": {
@@ -40,6 +41,19 @@
     "dismissError": "Dismiss error",
     "errorTitle": "Chat failed to load",
     "loading": "Thinking…"
+  },
+  "graph": {
+    "loading": "Loading domain graph...",
+    "error": "Failed to load domain data",
+    "empty": "No entities to display",
+    "selectNode": "Select a node to see details",
+    "status": "Status",
+    "connection": "Connection: {{value}}",
+    "runtime": "Runtime: {{value}}",
+    "properties": "Properties",
+    "loadingCompact": "Loading graph...",
+    "localSubs": "{{count}} local",
+    "remoteSubs": "{{count}} remote"
   },
   "schemas": {
     "usernamePasswordCredentials": {

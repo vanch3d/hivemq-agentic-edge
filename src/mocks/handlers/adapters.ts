@@ -5,6 +5,9 @@ import {
   adaptersList,
   adapterTypesList,
   adapterStatusList,
+  adapterDomainTags,
+  adapterNorthboundMappings,
+  adapterSouthboundMappings,
 } from "../fixtures/adapters";
 
 const API_BASE = `${API_BASE_URL}/api/v1`;
@@ -59,53 +62,78 @@ export const adapterHandlers = [
     },
   ),
 
+  // --- Per-adapter domain tags ---
   http.get(
     `${API_BASE}/management/protocol-adapters/adapters/:adapterId/tags`,
-    ({ request }) => {
-      return (
-        requireAuth(request) ??
-        HttpResponse.json({
-          items: [
-            {
-              name: "ns=3;s=Temperature",
-              description: "Temperature sensor reading",
-              definition: { dataType: "Float", accessLevel: "READ" },
-            },
-            {
-              name: "ns=3;s=Pressure",
-              description: "Pressure gauge reading",
-              definition: { dataType: "Float", accessLevel: "READ" },
-            },
-          ],
-        })
-      );
+    ({ request, params }) => {
+      const err = requireAuth(request);
+      if (err) return err;
+      const tags = adapterDomainTags[params["adapterId"] as string] ?? {
+        items: [],
+      };
+      return HttpResponse.json(tags);
     },
   ),
 
+  // --- Global domain tags (aggregated across all adapters) ---
+  http.get(`${API_BASE}/management/protocol-adapters/tags`, ({ request }) => {
+    const err = requireAuth(request);
+    if (err) return err;
+    const allTags = Object.values(adapterDomainTags).flatMap(
+      (list) => list.items,
+    );
+    return HttpResponse.json({ items: allTags });
+  }),
+
+  // --- Per-adapter northbound mappings ---
   http.get(
     `${API_BASE}/management/protocol-adapters/adapters/:adapterId/northboundMappings`,
-    ({ request }) => {
-      return (
-        requireAuth(request) ??
-        HttpResponse.json({
-          items: [
-            {
-              tagName: "ns=3;s=Temperature",
-              topic: "factory/line1/temperature",
-              maxQoS: "AT_LEAST_ONCE",
-              includeTimestamp: true,
-              includeTagNames: false,
-            },
-          ],
-        })
-      );
+    ({ request, params }) => {
+      const err = requireAuth(request);
+      if (err) return err;
+      const mappings = adapterNorthboundMappings[
+        params["adapterId"] as string
+      ] ?? { items: [] };
+      return HttpResponse.json(mappings);
     },
   ),
 
+  // --- Global northbound mappings (aggregated) ---
+  http.get(
+    `${API_BASE}/management/protocol-adapters/mappings/northboundMappings`,
+    ({ request }) => {
+      const err = requireAuth(request);
+      if (err) return err;
+      const allMappings = Object.values(adapterNorthboundMappings).flatMap(
+        (list) => list.items,
+      );
+      return HttpResponse.json({ items: allMappings });
+    },
+  ),
+
+  // --- Per-adapter southbound mappings ---
   http.get(
     `${API_BASE}/management/protocol-adapters/adapters/:adapterId/southboundMappings`,
+    ({ request, params }) => {
+      const err = requireAuth(request);
+      if (err) return err;
+      const mappings = adapterSouthboundMappings[
+        params["adapterId"] as string
+      ] ?? { items: [] };
+      return HttpResponse.json(mappings);
+    },
+  ),
+
+  // --- Global southbound mappings (aggregated) ---
+  http.get(
+    `${API_BASE}/management/protocol-adapters/mappings/southboundMappings`,
     ({ request }) => {
-      return requireAuth(request) ?? HttpResponse.json({ items: [] });
+      const err = requireAuth(request);
+      if (err) return err;
+      const allMappings = Object.values(adapterSouthboundMappings).flatMap(
+        (list) => list.items,
+      );
+      return HttpResponse.json({ items: allMappings });
     },
   ),
 

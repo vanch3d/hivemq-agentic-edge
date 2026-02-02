@@ -217,6 +217,29 @@ export const mutateSystemDef = toolDefinition({
   }),
 });
 
+export const queryGraphDef = toolDefinition({
+  name: "queryGraph",
+  description:
+    "Visualize the HiveMQ Edge domain ontology as an interactive graph. Scopes: 'full' (everything), 'dataFlow' (adapters → tags → topics → policies), 'adapterTopology' (adapters + tags + mappings), 'policyImpact' (policies → schemas/scripts), 'bridgeTopology' (bridges + topic filters), 'combinerSources' (combiners + sources). Optionally focus on a specific entity.",
+  inputSchema: z.object({
+    scope: z.enum([
+      "full",
+      "dataFlow",
+      "adapterTopology",
+      "policyImpact",
+      "bridgeTopology",
+      "combinerSources",
+    ]),
+    focusEntityId: z.string().optional(),
+  }),
+  outputSchema: z.object({
+    display: z.literal("graph"),
+    scope: z.string(),
+    nodeCount: z.number(),
+    edgeCount: z.number(),
+  }),
+});
+
 /** All tool definitions for server-side registration */
 export const allToolDefinitions = [
   queryBridgesDef,
@@ -229,4 +252,5 @@ export const allToolDefinitions = [
   mutateAdapterDef,
   mutateDataHubDef,
   mutateSystemDef,
+  queryGraphDef,
 ];

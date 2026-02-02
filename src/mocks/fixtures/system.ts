@@ -36,7 +36,12 @@ export const combinerList: CombinerList = {
       id: "combiner-line1",
       name: "Line 1 Combiner",
       description: "Combine line 1 sensor data",
-      sources: { items: [] },
+      sources: {
+        items: [
+          { id: "opcua-adapter-01", type: "ADAPTER" },
+          { id: "modbus-adapter-01", type: "ADAPTER" },
+        ],
+      },
       mappings: { items: [] },
     },
   ],

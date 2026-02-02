@@ -22,6 +22,7 @@ import {
   mutateAdapter,
   mutateDataHub,
   mutateSystem,
+  queryGraph,
 } from "@/agent/tools";
 import {
   setToolNavigate,
@@ -42,6 +43,7 @@ const tools = clientTools(
   mutateAdapter,
   mutateDataHub,
   mutateSystem,
+  queryGraph,
 );
 
 // --- Active form/approval state ---

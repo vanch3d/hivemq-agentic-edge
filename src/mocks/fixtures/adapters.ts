@@ -1,5 +1,8 @@
 import type {
   AdaptersList,
+  DomainTagList,
+  NorthboundMappingList,
+  SouthboundMappingList,
   ProtocolAdaptersList,
   StatusList,
 } from "@/api/types.gen";
@@ -51,6 +54,106 @@ export const adaptersList: AdaptersList = {
     },
   ],
 };
+
+// --- Per-adapter domain tags ---
+
+export const adapterDomainTags: Record<string, DomainTagList> = {
+  "opcua-adapter-01": {
+    items: [
+      {
+        name: "ns=3;s=Temperature",
+        description: "Temperature sensor reading",
+        definition: { dataType: "Float", accessLevel: "READ" },
+      },
+      {
+        name: "ns=3;s=Pressure",
+        description: "Pressure gauge reading",
+        definition: { dataType: "Float", accessLevel: "READ" },
+      },
+    ],
+  },
+  "modbus-adapter-01": {
+    items: [
+      {
+        name: "holding-register-0",
+        description: "Motor speed RPM",
+        definition: { dataType: "Int16", register: 0 },
+      },
+      {
+        name: "holding-register-1",
+        description: "Motor torque",
+        definition: { dataType: "Int16", register: 1 },
+      },
+    ],
+  },
+  "s7-adapter-01": {
+    items: [
+      {
+        name: "DB1.DBW0",
+        description: "PLC counter value",
+        definition: { dataType: "Int", area: "DB", dbNumber: 1, offset: 0 },
+      },
+    ],
+  },
+};
+
+// --- Per-adapter northbound mappings ---
+
+export const adapterNorthboundMappings: Record<string, NorthboundMappingList> =
+  {
+    "opcua-adapter-01": {
+      items: [
+        {
+          tagName: "ns=3;s=Temperature",
+          topic: "factory/line1/temperature",
+          maxQoS: "AT_LEAST_ONCE",
+          includeTimestamp: true,
+          includeTagNames: false,
+        },
+        {
+          tagName: "ns=3;s=Pressure",
+          topic: "factory/line1/pressure",
+          maxQoS: "AT_LEAST_ONCE",
+          includeTimestamp: true,
+          includeTagNames: false,
+        },
+      ],
+    },
+    "modbus-adapter-01": {
+      items: [
+        {
+          tagName: "holding-register-0",
+          topic: "factory/motors/speed",
+          maxQoS: "AT_MOST_ONCE",
+          includeTimestamp: false,
+          includeTagNames: false,
+        },
+      ],
+    },
+    "s7-adapter-01": {
+      items: [],
+    },
+  };
+
+// --- Per-adapter southbound mappings ---
+
+export const adapterSouthboundMappings: Record<string, SouthboundMappingList> =
+  {
+    "opcua-adapter-01": {
+      items: [],
+    },
+    "modbus-adapter-01": {
+      items: [
+        {
+          tagName: "holding-register-1",
+          topicFilter: "cloud/commands/#",
+        },
+      ],
+    },
+    "s7-adapter-01": {
+      items: [],
+    },
+  };
 
 export const adapterTypesList: ProtocolAdaptersList = {
   items: [

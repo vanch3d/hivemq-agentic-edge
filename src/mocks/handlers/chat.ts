@@ -230,6 +230,14 @@ const scenarios: Scenario[] = [
     followUp: "Here are the current system notifications.",
   },
 
+  // --- Graph visualization ---
+  {
+    match: (t) => /graph|visuali[sz]e|topology|ontology|data.?flow/i.test(t),
+    events: () => toolCallResponse("queryGraph", { scope: "dataFlow" }),
+    followUp:
+      "Here is the data flow graph showing adapters, tags, topics, and policies.",
+  },
+
   // --- Navigation ---
   {
     match: (t) => /navigate|go to|take me/i.test(t),

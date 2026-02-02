@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace/index'
+import { Route as AuthenticatedWorkspaceGraphRouteImport } from './routes/_authenticated/workspace/graph'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -40,16 +41,24 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedWorkspaceGraphRoute =
+  AuthenticatedWorkspaceGraphRouteImport.update({
+    id: '/graph',
+    path: '/graph',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
+  '/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
 }
 export interface FileRoutesById {
@@ -58,19 +67,21 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
+  '/_authenticated/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/workspace' | '/workspace/'
+  fullPaths: '/' | '/login' | '/workspace' | '/workspace/graph' | '/workspace/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/workspace'
+  to: '/' | '/login' | '/workspace/graph' | '/workspace'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
     | '/_authenticated/workspace'
+    | '/_authenticated/workspace/graph'
     | '/_authenticated/workspace/'
   fileRoutesById: FileRoutesById
 }
@@ -117,15 +128,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/workspace/graph': {
+      id: '/_authenticated/workspace/graph'
+      path: '/graph'
+      fullPath: '/workspace/graph'
+      preLoaderRoute: typeof AuthenticatedWorkspaceGraphRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
   }
 }
 
 interface AuthenticatedWorkspaceRouteChildren {
+  AuthenticatedWorkspaceGraphRoute: typeof AuthenticatedWorkspaceGraphRoute
   AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
 }
 
 const AuthenticatedWorkspaceRouteChildren: AuthenticatedWorkspaceRouteChildren =
   {
+    AuthenticatedWorkspaceGraphRoute: AuthenticatedWorkspaceGraphRoute,
     AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
   }
 

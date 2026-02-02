@@ -8,3 +8,4 @@ export { mutateBridge } from "./mutate-bridge";
 export { mutateAdapter } from "./mutate-adapter";
 export { mutateDataHub } from "./mutate-data-hub";
 export { mutateSystem } from "./mutate-system";
+export { queryGraph } from "./query-graph";

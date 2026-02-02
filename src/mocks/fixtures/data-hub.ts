@@ -16,6 +16,42 @@ export const behaviorPolicyList: BehaviorPolicyList = {
         id: "Mqtt.events",
         arguments: { maxConnects: { limit: 10, timeFrame: "1h" } },
       },
+      deserialization: {
+        publish: { schema: { schemaId: "temperature-schema", version: "1" } },
+      },
+      onTransitions: [
+        {
+          fromState: "Connected",
+          toState: "Disconnected",
+          "Connection.OnDisconnect": {
+            pipeline: [
+              {
+                id: "log-disconnect",
+                functionId: "System.log",
+                arguments: { level: "WARN", message: "Device disconnected" },
+              },
+              {
+                id: "transform-disconnect",
+                functionId: "transform-celsius",
+                arguments: {},
+              },
+            ],
+          },
+        },
+        {
+          fromState: "Any",
+          toState: "Any",
+          "Mqtt.OnInboundPublish": {
+            pipeline: [
+              {
+                id: "deserialize-publish",
+                functionId: "Serdes.deserialize",
+                arguments: { schemaId: "temperature-schema" },
+              },
+            ],
+          },
+        },
+      ],
     },
   ],
 };
@@ -30,6 +66,24 @@ export const dataPolicyList: DataPolicyList = {
       validation: {
         validators: [
           { type: "SCHEMA", arguments: { schemaId: "temperature-schema" } },
+        ],
+      },
+      onSuccess: {
+        pipeline: [
+          {
+            id: "log-valid",
+            functionId: "System.log",
+            arguments: { level: "INFO", message: "Payload valid" },
+          },
+        ],
+      },
+      onFailure: {
+        pipeline: [
+          {
+            id: "transform-fallback",
+            functionId: "transform-celsius",
+            arguments: {},
+          },
         ],
       },
     },
