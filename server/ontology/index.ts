@@ -1,20 +1,22 @@
 /**
  * Ontology module registry.
  *
- * Each module exports a string constant containing domain knowledge
- * formatted for LLM system prompt injection.
+ * Each constant reads its adjacent `.md` file at startup.
+ * The markdown is injected into the LLM system prompt and
+ * served via GET /api/ontology for the configuration UI.
  *
  * Phase 1 strategy: always inject core + datahub.
  * Selective injection based on conversation topic is a future optimization.
  */
 
-import { CORE_ONTOLOGY } from "./core.js";
-import { DATAHUB_ONTOLOGY } from "./datahub.js";
-import { ADAPTERS_ONTOLOGY } from "./adapters.js";
+import { readFileSync } from "node:fs";
 
-export { CORE_ONTOLOGY } from "./core.js";
-export { DATAHUB_ONTOLOGY } from "./datahub.js";
-export { ADAPTERS_ONTOLOGY } from "./adapters.js";
+const read = (file: string) =>
+  readFileSync(new URL(file, import.meta.url), "utf-8");
+
+export const CORE_ONTOLOGY = read("./core.md");
+export const DATAHUB_ONTOLOGY = read("./datahub.md");
+export const ADAPTERS_ONTOLOGY = read("./adapters.md");
 
 /**
  * Assemble the full domain ontology for system prompt injection.

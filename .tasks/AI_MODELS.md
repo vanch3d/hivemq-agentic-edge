@@ -62,15 +62,28 @@ Adding a new provider = `pnpm add @tanstack/ai-<provider>` + a new branch in `re
 
 ## Anthropic Models
 
-| Model | Model ID | Input $/MTok | Output $/MTok | Tool Use | Notes |
-|-------|----------|-------------|--------------|----------|-------|
-| Opus 4.5 | `claude-opus-4-5` | $5.00 | $25.00 | Excellent | Top-tier reasoning, overkill for most agent tasks |
-| **Sonnet 4.5** | `claude-sonnet-4-5` | **$3.00** | **$15.00** | **Excellent** | **Current default** — best balance of cost and capability |
-| Sonnet 4 | `claude-sonnet-4` | $3.00 | $15.00 | Excellent | Same price tier as 4.5, slightly less capable |
-| Haiku 4.5 | `claude-haiku-4-5` | $1.00 | $5.00 | Good | ~3x cheaper, fast — worth testing for simpler queries |
-| Haiku 3.5 | `claude-3-5-haiku` | $0.80 | $4.00 | Fair | Budget option, may struggle with complex multi-tool flows |
+> Model IDs from [platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview). Prices as of Feb 2026.
 
-> Prices as of Feb 2026. Extended thinking tokens are billed as output tokens.
+### Current models
+
+| Model | API ID | API Alias | Input $/MTok | Output $/MTok | Tool Use | Notes |
+|-------|--------|-----------|-------------|--------------|----------|-------|
+| Opus 4.6 | `claude-opus-4-6` | `claude-opus-4-6` | $5.00 | $25.00 | Excellent | Latest generation, top-tier reasoning |
+| Sonnet 4.6 | `claude-sonnet-4-6` | `claude-sonnet-4-6` | $3.00 | $15.00 | Excellent | Latest balanced model, improved agentic search |
+| Haiku 4.5 | `claude-haiku-4-5-20251001` | `claude-haiku-4-5` | $1.00 | $5.00 | Good | Fastest model, ~3x cheaper — good for simpler queries |
+
+### Legacy models (still available)
+
+| Model | API ID | API Alias | Input $/MTok | Output $/MTok | Tool Use | Notes |
+|-------|--------|-----------|-------------|--------------|----------|-------|
+| Opus 4.5 | `claude-opus-4-5-20251101` | `claude-opus-4-5` | $5.00 | $25.00 | Excellent | Previous gen top-tier |
+| **Sonnet 4.5** | `claude-sonnet-4-5-20250929` | **`claude-sonnet-4-5`** | **$3.00** | **$15.00** | **Excellent** | **Current default** — best balance of cost and capability |
+| Opus 4.1 | `claude-opus-4-1-20250805` | `claude-opus-4-1` | $15.00 | $75.00 | Excellent | Expensive, superseded by Opus 4.5+ |
+| Sonnet 4 | `claude-sonnet-4-20250514` | `claude-sonnet-4-0` | $3.00 | $15.00 | Excellent | Same price tier as 4.5, slightly less capable |
+| Opus 4 | `claude-opus-4-20250514` | `claude-opus-4-0` | $15.00 | $75.00 | Excellent | Expensive, superseded |
+| Haiku 3 | `claude-3-haiku-20240307` | — | $0.25 | $1.25 | Fair | **Deprecated** — retiring April 19, 2026. Migrate to Haiku 4.5 |
+
+> **Naming history**: Claude 3.5 Haiku was rebranded to **Haiku 4.5** (`claude-haiku-4-5`). Claude 3.7 Sonnet was rebranded to **Sonnet 4** (`claude-sonnet-4`). The old IDs (`claude-3-5-haiku`, `claude-3-7-sonnet`) do not work in the API.
 
 ### Cost-saving features
 
@@ -172,8 +185,8 @@ Gateway to 400+ models from all providers through a single API. No markup on pro
 
 | Use Case | Model | Cost |
 |----------|-------|------|
-| Development / testing | Gemini 2.5 Flash or GPT-4o-mini | $0.15–0.30 / MTok in |
-| Demo / production | `claude-sonnet-4-5` | $3.00 / MTok in |
+| Development / testing | `claude-haiku-4-5` or Gemini 2.5 Flash | $0.30–1.00 / MTok in |
+| Demo / production | `claude-sonnet-4-5` (or `claude-sonnet-4-6`) | $3.00 / MTok in |
 | Budget production | Gemini 2.5 Flash | $0.30 / MTok in |
 | Offline / air-gapped | Ollama `qwen3:8b` | Free |
 | Multi-provider resilience | OpenRouter | Varies |

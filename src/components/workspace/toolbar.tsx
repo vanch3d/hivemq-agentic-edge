@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@chakra-ui/react";
-import { LuLogOut } from "react-icons/lu";
+import { LuLogOut, LuSettings } from "react-icons/lu";
 import { ChatToggleButton } from "@/components/chat/chat-toggle-button";
 
 export function Toolbar() {
@@ -49,6 +49,13 @@ export function Toolbar() {
             </Button>
           </MenuTrigger>
           <MenuContent>
+            <MenuItem
+              value="configuration"
+              onClick={() => navigate({ to: "/workspace/configuration" })}
+            >
+              <LuSettings />
+              {t("nav.configuration")}
+            </MenuItem>
             <MenuItem value="logout" onClick={handleLogout}>
               <LuLogOut />
               {t("nav.logout")}

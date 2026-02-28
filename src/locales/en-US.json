@@ -5,6 +5,7 @@
   "nav": {
     "home": "Home",
     "graph": "Graph",
+    "configuration": "Configuration",
     "logout": "Logout"
   },
   "login": {
@@ -19,6 +20,35 @@
     "title": "Workspace",
     "events": {
       "title": "Events",
+      "errors": {
+        "failedToLoad": "Failed to load: {{message}}"
+      }
+    }
+  },
+  "configuration": {
+    "title": "Configuration",
+    "subtitle": "View and manage system configuration.",
+    "about": {
+      "title": "About",
+      "description": "Technical documentation, architecture, and build history.",
+      "pageDescription": "Architecture overview, build phases, and technical documentation for the HiveMQ Edge Agentic system.",
+      "errors": {
+        "failedToLoad": "Failed to load: {{message}}"
+      }
+    },
+    "tools": {
+      "title": "AI Tools",
+      "description": "Tools available to the AI agent for querying and managing resources.",
+      "pageDescription": "Browse the tools registered with the AI assistant. Each tool defines operations, parameters, and output schemas that the model can invoke.",
+      "totalCount": "{{count}} tools registered",
+      "optional": "optional",
+      "operations": "Operations",
+      "parameters": "Parameters"
+    },
+    "ontology": {
+      "title": "Domain Ontology",
+      "description": "Domain knowledge injected into the AI agent's system prompt.",
+      "pageDescription": "Browse the domain ontology modules that guide the AI assistant.",
       "errors": {
         "failedToLoad": "Failed to load: {{message}}"
       }
@@ -54,6 +84,17 @@
     "loadingCompact": "Loading graph...",
     "localSubs": "{{count}} local",
     "remoteSubs": "{{count}} remote"
+  },
+  "settings": {
+    "title": "AI Settings",
+    "subtitle": "Configure the AI assistant provider and model.",
+    "description": "AI provider, model, and related options.",
+    "resetDefaults": "Reset to server defaults",
+    "saved": "Settings updated",
+    "providerChangeTitle": "Switch AI provider?",
+    "providerChangeDescription": "This will clear the current chat conversation. The new provider has no context of previous messages.",
+    "providerChangeConfirm": "Switch & clear chat",
+    "providerChangeCancel": "Cancel"
   },
   "schemas": {
     "usernamePasswordCredentials": {

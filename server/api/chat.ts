@@ -10,16 +10,17 @@ import { allToolDefinitions } from "@/agent/tool-definitions";
 
 // --- Anthropic model resolution ---
 
-const ANTHROPIC_MODELS = [
+// Valid API model IDs from https://platform.claude.com/docs/en/about-claude/models/overview
+export const ANTHROPIC_MODELS = [
+  "claude-opus-4-6",
+  "claude-sonnet-4-6",
   "claude-opus-4-5",
   "claude-sonnet-4-5",
-  "claude-haiku-4-5",
   "claude-opus-4-1",
   "claude-sonnet-4",
-  "claude-3-7-sonnet",
   "claude-opus-4",
-  "claude-3-5-haiku",
-  "claude-3-haiku",
+  "claude-haiku-4-5",
+  "claude-3-haiku-20240307",
 ] as const;
 
 type AnthropicModel = (typeof ANTHROPIC_MODELS)[number];
@@ -35,14 +36,36 @@ function resolveAnthropicModel(): AnthropicModel {
   return DEFAULT_ANTHROPIC_MODEL;
 }
 
+// --- Settings: env-var defaults in formData shape ---
+
+export function resolveEnvDefaults(): Record<string, unknown> {
+  return {
+    ai: {
+      provider: process.env["AI_PROVIDER"] ?? "anthropic",
+      anthropic: {
+        model: resolveAnthropicModel(),
+      },
+      ollama: {
+        model: process.env["OLLAMA_MODEL"] ?? "llama3",
+        host: process.env["OLLAMA_HOST"] ?? "http://localhost:11434",
+        think: process.env["OLLAMA_THINK"] !== "false",
+      },
+    },
+    ui: {},
+  };
+}
+
 // --- Provider-agnostic adapter resolution ---
 
-function resolveAdapter() {
-  const provider = process.env["AI_PROVIDER"] ?? "anthropic";
+function resolveAdapterFromSettings(settings: Record<string, unknown>) {
+  const ai = settings.ai as Record<string, unknown> | undefined;
+  const provider = (ai?.provider as string) ?? "anthropic";
 
   if (provider === "ollama") {
-    const model = process.env["OLLAMA_MODEL"] ?? "llama3";
-    const host = process.env["OLLAMA_HOST"] ?? "http://localhost:11434";
+    const ollama = ai?.ollama as Record<string, unknown> | undefined;
+    const model = (ollama?.model as string) ?? "llama3";
+    const host = (ollama?.host as string) ?? "http://localhost:11434";
+    const think = ollama?.think !== false;
     console.log(`[chat] Using Ollama provider: model=${model}, host=${host}`);
 
     // Create a custom Ollama client with extended timeout.
@@ -65,6 +88,14 @@ function resolveAdapter() {
         } as unknown as RequestInit)) as typeof fetch,
     });
 
+    // The TanStack adapter doesn't pass `think` to the Ollama API.
+    // Wrap the client's chat method to inject it.
+    const originalChat = ollamaClient.chat.bind(ollamaClient);
+    (ollamaClient as unknown as Record<string, unknown>).chat = (
+      req: Record<string, unknown>,
+    ) => originalChat({ ...req, think } as Parameters<typeof originalChat>[0]);
+
+    console.log(`[chat] Ollama thinking mode: ${think}`);
     const adapter = new OllamaTextAdapter(ollamaClient, model);
     return patchOllamaAdapter(adapter);
   }
@@ -74,9 +105,14 @@ function resolveAdapter() {
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not configured on the server.");
   }
-  const model = resolveAnthropicModel();
-  console.log(`[chat] Using Anthropic provider: model=${model}`);
-  return createAnthropicChat(model, apiKey);
+  const anthropic = ai?.anthropic as Record<string, unknown> | undefined;
+  const model = (anthropic?.model as string) ?? DEFAULT_ANTHROPIC_MODEL;
+  // Validate the model is in the allowed list
+  const validModel = (ANTHROPIC_MODELS as readonly string[]).includes(model)
+    ? (model as AnthropicModel)
+    : DEFAULT_ANTHROPIC_MODEL;
+  console.log(`[chat] Using Anthropic provider: model=${validModel}`);
+  return createAnthropicChat(validModel as Parameters<typeof createAnthropicChat>[0], apiKey);
 }
 
 // --- Route ---
@@ -85,8 +121,16 @@ const chatRoute = new Hono();
 
 chatRoute.post("/", async (c) => {
   try {
-    const adapter = resolveAdapter();
     const body = await c.req.json();
+
+    // Merge env-var defaults with any client-side overrides
+    const envDefaults = resolveEnvDefaults();
+    const aiDefaults = envDefaults.ai as Record<string, unknown>;
+    const settings = body.settings
+      ? { ...envDefaults, ai: { ...aiDefaults, ...body.settings.ai } }
+      : envDefaults;
+
+    const adapter = resolveAdapterFromSettings(settings);
 
     const stream = chat({
       adapter,

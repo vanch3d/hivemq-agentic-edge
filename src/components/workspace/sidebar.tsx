@@ -4,11 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/auth-context";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@chakra-ui/react";
-import { LuHouse, LuLogOut, LuNetwork } from "react-icons/lu";
+import { LuHouse, LuLogOut, LuNetwork, LuSettings } from "react-icons/lu";
 
 const navItems = [
-  { to: "/workspace", labelKey: "nav.home", icon: LuHouse },
-  { to: "/workspace/graph", labelKey: "nav.graph", icon: LuNetwork },
+  { to: "/workspace", labelKey: "nav.home", icon: LuHouse, exact: true },
+  {
+    to: "/workspace/graph",
+    labelKey: "nav.graph",
+    icon: LuNetwork,
+    exact: true,
+  },
+  {
+    to: "/workspace/configuration",
+    labelKey: "nav.configuration",
+    icon: LuSettings,
+    exact: false,
+  },
 ] as const;
 
 export function Sidebar() {
@@ -37,7 +48,15 @@ export function Sidebar() {
           <Button
             key={item.to}
             asChild
-            variant={currentPath === item.to ? "subtle" : "ghost"}
+            variant={
+              (
+                item.exact
+                  ? currentPath === item.to
+                  : currentPath.startsWith(item.to)
+              )
+                ? "subtle"
+                : "ghost"
+            }
             justifyContent="flex-start"
             size="sm"
           >

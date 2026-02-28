@@ -32,6 +32,14 @@ import {
   type ApprovalRequest,
 } from "@/agent/tool-context";
 
+function getSettingsOverrides(): Record<string, unknown> {
+  try {
+    return JSON.parse(localStorage.getItem("app-settings") ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
 const tools = clientTools(
   queryBridges,
   queryAdapters,
@@ -139,7 +147,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const chatState = useChat({
-    connection: fetchServerSentEvents("/api/chat"),
+    connection: fetchServerSentEvents("/api/chat", () => {
+      const settings = getSettingsOverrides();
+      return Object.keys(settings).length > 0
+        ? { body: { settings } }
+        : {};
+    }),
     tools,
     onChunk,
   });
@@ -172,6 +185,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [chatState],
   );
 
+  const clear = useCallback(() => {
+    chatState.clear();
+    setModel(null);
+  }, [chatState]);
+
   const onOpen = useCallback(() => setIsOpen(true), []);
   const onClose = useCallback(() => setIsOpen(false), []);
   const onToggle = useCallback(() => setIsOpen((prev) => !prev), []);
@@ -185,7 +203,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         error: visibleError,
         dismissError,
         stop: chatState.stop,
-        clear: chatState.clear,
+        clear,
         isOpen,
         onOpen,
         onClose,

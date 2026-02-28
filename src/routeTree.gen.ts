@@ -15,6 +15,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace/index'
 import { Route as AuthenticatedWorkspaceGraphRouteImport } from './routes/_authenticated/workspace/graph'
+import { Route as AuthenticatedWorkspaceConfigurationIndexRouteImport } from './routes/_authenticated/workspace/configuration/index'
+import { Route as AuthenticatedWorkspaceConfigurationToolsRouteImport } from './routes/_authenticated/workspace/configuration/tools'
+import { Route as AuthenticatedWorkspaceConfigurationSettingsRouteImport } from './routes/_authenticated/workspace/configuration/settings'
+import { Route as AuthenticatedWorkspaceConfigurationOntologyRouteImport } from './routes/_authenticated/workspace/configuration/ontology'
+import { Route as AuthenticatedWorkspaceConfigurationAboutRouteImport } from './routes/_authenticated/workspace/configuration/about'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -47,6 +52,36 @@ const AuthenticatedWorkspaceGraphRoute =
     path: '/graph',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedWorkspaceConfigurationIndexRoute =
+  AuthenticatedWorkspaceConfigurationIndexRouteImport.update({
+    id: '/configuration/',
+    path: '/configuration/',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceConfigurationToolsRoute =
+  AuthenticatedWorkspaceConfigurationToolsRouteImport.update({
+    id: '/configuration/tools',
+    path: '/configuration/tools',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceConfigurationSettingsRoute =
+  AuthenticatedWorkspaceConfigurationSettingsRouteImport.update({
+    id: '/configuration/settings',
+    path: '/configuration/settings',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceConfigurationOntologyRoute =
+  AuthenticatedWorkspaceConfigurationOntologyRouteImport.update({
+    id: '/configuration/ontology',
+    path: '/configuration/ontology',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceConfigurationAboutRoute =
+  AuthenticatedWorkspaceConfigurationAboutRouteImport.update({
+    id: '/configuration/about',
+    path: '/configuration/about',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,12 +89,22 @@ export interface FileRoutesByFullPath {
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
   '/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/workspace/configuration/about': typeof AuthenticatedWorkspaceConfigurationAboutRoute
+  '/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
+  '/workspace/configuration/settings': typeof AuthenticatedWorkspaceConfigurationSettingsRoute
+  '/workspace/configuration/tools': typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  '/workspace/configuration/': typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
+  '/workspace/configuration/about': typeof AuthenticatedWorkspaceConfigurationAboutRoute
+  '/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
+  '/workspace/configuration/settings': typeof AuthenticatedWorkspaceConfigurationSettingsRoute
+  '/workspace/configuration/tools': typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  '/workspace/configuration': typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,12 +114,36 @@ export interface FileRoutesById {
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
   '/_authenticated/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/_authenticated/workspace/configuration/about': typeof AuthenticatedWorkspaceConfigurationAboutRoute
+  '/_authenticated/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
+  '/_authenticated/workspace/configuration/settings': typeof AuthenticatedWorkspaceConfigurationSettingsRoute
+  '/_authenticated/workspace/configuration/tools': typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  '/_authenticated/workspace/configuration/': typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/workspace' | '/workspace/graph' | '/workspace/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/workspace'
+    | '/workspace/graph'
+    | '/workspace/'
+    | '/workspace/configuration/about'
+    | '/workspace/configuration/ontology'
+    | '/workspace/configuration/settings'
+    | '/workspace/configuration/tools'
+    | '/workspace/configuration/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/workspace/graph' | '/workspace'
+  to:
+    | '/'
+    | '/login'
+    | '/workspace/graph'
+    | '/workspace'
+    | '/workspace/configuration/about'
+    | '/workspace/configuration/ontology'
+    | '/workspace/configuration/settings'
+    | '/workspace/configuration/tools'
+    | '/workspace/configuration'
   id:
     | '__root__'
     | '/'
@@ -83,6 +152,11 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace'
     | '/_authenticated/workspace/graph'
     | '/_authenticated/workspace/'
+    | '/_authenticated/workspace/configuration/about'
+    | '/_authenticated/workspace/configuration/ontology'
+    | '/_authenticated/workspace/configuration/settings'
+    | '/_authenticated/workspace/configuration/tools'
+    | '/_authenticated/workspace/configuration/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,18 +209,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceGraphRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/workspace/configuration/': {
+      id: '/_authenticated/workspace/configuration/'
+      path: '/configuration'
+      fullPath: '/workspace/configuration/'
+      preLoaderRoute: typeof AuthenticatedWorkspaceConfigurationIndexRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/configuration/tools': {
+      id: '/_authenticated/workspace/configuration/tools'
+      path: '/configuration/tools'
+      fullPath: '/workspace/configuration/tools'
+      preLoaderRoute: typeof AuthenticatedWorkspaceConfigurationToolsRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/configuration/settings': {
+      id: '/_authenticated/workspace/configuration/settings'
+      path: '/configuration/settings'
+      fullPath: '/workspace/configuration/settings'
+      preLoaderRoute: typeof AuthenticatedWorkspaceConfigurationSettingsRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/configuration/ontology': {
+      id: '/_authenticated/workspace/configuration/ontology'
+      path: '/configuration/ontology'
+      fullPath: '/workspace/configuration/ontology'
+      preLoaderRoute: typeof AuthenticatedWorkspaceConfigurationOntologyRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/configuration/about': {
+      id: '/_authenticated/workspace/configuration/about'
+      path: '/configuration/about'
+      fullPath: '/workspace/configuration/about'
+      preLoaderRoute: typeof AuthenticatedWorkspaceConfigurationAboutRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
   }
 }
 
 interface AuthenticatedWorkspaceRouteChildren {
   AuthenticatedWorkspaceGraphRoute: typeof AuthenticatedWorkspaceGraphRoute
   AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
+  AuthenticatedWorkspaceConfigurationAboutRoute: typeof AuthenticatedWorkspaceConfigurationAboutRoute
+  AuthenticatedWorkspaceConfigurationOntologyRoute: typeof AuthenticatedWorkspaceConfigurationOntologyRoute
+  AuthenticatedWorkspaceConfigurationSettingsRoute: typeof AuthenticatedWorkspaceConfigurationSettingsRoute
+  AuthenticatedWorkspaceConfigurationToolsRoute: typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  AuthenticatedWorkspaceConfigurationIndexRoute: typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 
 const AuthenticatedWorkspaceRouteChildren: AuthenticatedWorkspaceRouteChildren =
   {
     AuthenticatedWorkspaceGraphRoute: AuthenticatedWorkspaceGraphRoute,
     AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
+    AuthenticatedWorkspaceConfigurationAboutRoute:
+      AuthenticatedWorkspaceConfigurationAboutRoute,
+    AuthenticatedWorkspaceConfigurationOntologyRoute:
+      AuthenticatedWorkspaceConfigurationOntologyRoute,
+    AuthenticatedWorkspaceConfigurationSettingsRoute:
+      AuthenticatedWorkspaceConfigurationSettingsRoute,
+    AuthenticatedWorkspaceConfigurationToolsRoute:
+      AuthenticatedWorkspaceConfigurationToolsRoute,
+    AuthenticatedWorkspaceConfigurationIndexRoute:
+      AuthenticatedWorkspaceConfigurationIndexRoute,
   }
 
 const AuthenticatedWorkspaceRouteWithChildren =

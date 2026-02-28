@@ -1,5 +1,6 @@
 import { Box, Flex, Heading, Text, IconButton, Badge } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import { useLocalStorage } from "@uidotdev/usehooks";
 import { LuX } from "react-icons/lu";
 import {
   DrawerRoot,
@@ -9,6 +10,7 @@ import {
   DrawerCloseTrigger,
 } from "@/components/ui/drawer";
 import { useChatContext } from "@/context/chat-context";
+import { useSettings } from "@/hooks/use-settings";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ChatForm } from "./chat-form";
@@ -42,6 +44,16 @@ function formatError(error: Error): string {
   return raw;
 }
 
+function useProviderLabel(): string {
+  const { data } = useSettings();
+  const [stored] = useLocalStorage<Record<string, unknown>>("app-settings", {});
+  const ai = {
+    ...(data?.formData?.ai as Record<string, unknown> | undefined),
+    ...(stored?.ai as Record<string, unknown> | undefined),
+  };
+  return (ai?.provider as string) ?? "anthropic";
+}
+
 export function ChatDrawer() {
   const {
     isOpen,
@@ -55,6 +67,7 @@ export function ChatDrawer() {
     isLoading,
   } = useChatContext();
   const { t } = useTranslation();
+  const provider = useProviderLabel();
 
   return (
     <DrawerRoot
@@ -76,11 +89,14 @@ export function ChatDrawer() {
         <DrawerHeader borderBottomWidth="1px" py="2" px="3">
           <Flex align="center" gap="2">
             <Heading size="sm">{t("chat.title")}</Heading>
-            {model && (
-              <Badge size="xs" variant="outline" fontWeight="normal">
-                {model}
-              </Badge>
-            )}
+            <Badge
+              size="xs"
+              variant="outline"
+              fontWeight="normal"
+              colorPalette={error ? "red" : model ? "green" : "blue"}
+            >
+              {model ?? provider}
+            </Badge>
           </Flex>
         </DrawerHeader>
         <DrawerCloseTrigger />
