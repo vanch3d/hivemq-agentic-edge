@@ -31,17 +31,17 @@ export const Route = createFileRoute("/login")({
 
 const loginSchema: RJSFSchema = {
   ...UsernamePasswordCredentialsSchema,
-  title: "SSSSSSSS",
-  description: "SZZZZZZZZZZ",
   required: ["userName", "password"],
 };
 
 const loginUiSchema: UiSchema = {
   userName: {
     "ui:autofocus": true,
+    "ui:autocomplete": "username",
   },
   password: {
     "ui:widget": "password",
+    "ui:autocomplete": "current-password",
   },
   "ui:order": ["userName", "password"],
 };
@@ -60,6 +60,13 @@ function LoginPage() {
 
     try {
       await login(formData.userName ?? "", formData.password ?? "");
+      if (window.PasswordCredential) {
+        const cred = new PasswordCredential({
+          id: formData.userName ?? "",
+          password: formData.password ?? "",
+        });
+        navigator.credentials.store(cred);
+      }
       navigate({ to: "/workspace" });
     } catch {
       setError(t("login.errors.invalidCredentials"));

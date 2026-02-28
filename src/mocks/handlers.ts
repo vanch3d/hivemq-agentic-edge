@@ -20,6 +20,6 @@ const edgeApiHandlers = [
 ];
 
 export const handlers = [
-  ...(import.meta.env.VITE_MOCK_EDGE_API !== "false" ? edgeApiHandlers : []),
+  ...(import.meta.env.VITE_MOCK_EDGE_API === "true" ? edgeApiHandlers : []),
   ...(import.meta.env.VITE_MOCK_AGENT_CHAT === "true" ? chatHandlers : []),
 ];

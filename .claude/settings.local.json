@@ -48,7 +48,20 @@
       "Bash(pnpm exec prettier:*)",
       "WebFetch(domain:docs.ollama.com)",
       "Bash(dir /s \"C:\\\\Users\\\\Nicolas\\\\WebstormProjects\\\\untitled1\\\\src\\\\agent\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:docs.hivemq.com)",
+      "Bash(claude mcp list:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(for child_id in 38921 38922 38923 38924 38925 38926 38927 38928 38929 38930 38931 38932)",
+      "Bash(do:*)",
+      "Bash(done)",
+      "WebFetch(domain:kanbanize.com)",
+      "WebFetch(domain:businessmap.io)",
+      "Bash(npx tsx:*)",
+      "Bash(pnpm exec tsx:*)",
+      "Bash(node --import=tsx -e:*)",
+      "Bash(node --experimental-strip-types --experimental-transform-types:*)"
     ]
   }
 }

@@ -144,7 +144,7 @@ const scenarios: Scenario[] = [
     followUp: "Please fill in the form to add a new topic filter.",
   },
   {
-    match: (t) => /(?:create|add)\s+bridge/i.test(t),
+    match: (t) => /(?:create|add|create a new)\s+bridge/i.test(t),
     events: () => toolCallResponse("mutateBridge", { operation: "create" }),
     followUp:
       "Please fill in the bridge configuration form to create a new MQTT bridge.",

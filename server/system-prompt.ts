@@ -1,52 +1,6 @@
-const DOMAIN_ONTOLOGY = `
-HiveMQ Edge is an IoT gateway that bridges industrial protocols (OPC-UA, Modbus, S7, etc.) to MQTT.
-It sits between field devices (PLCs, sensors) and an MQTT broker, translating protocol-specific data
-into MQTT messages. It also integrates with HiveMQ's cloud platform ("Pulse") and provides a
-"Data Hub" for policy-based message validation and transformation.
+import { assembleDomainOntology } from "./ontology";
 
-Domain Map:
-- Authentication: JWT-based auth (login, refresh, validate)
-- Gateway: Core gateway config and listeners
-- Health: Liveness and readiness probes
-- Frontend: UI capabilities, configuration, notifications
-- Protocol Adapters: Connect to industrial protocols
-  - Adapter Types: Available protocol adapter implementations (e.g. "opc-ua", "modbus")
-  - Adapter Instances: Configured adapter connections with id, type, config, and runtime Status
-  - Domain Tags: Named data points on a device (e.g. "ns=3;s=Temperature")
-  - Northbound Mappings: Tag → MQTT topic (device-to-cloud)
-  - Southbound Mappings: MQTT topic → Tag (cloud-to-device)
-- Bridges: MQTT-to-MQTT bridge connections (host, port, TLS, local/remote subscriptions)
-- Topic Filters: Named MQTT topic filter patterns with optional payload schemas
-- Combiners: Merge data from multiple sources into a single output
-- Events: System event log (severity: INFO/WARN/ERROR/CRITICAL)
-- Metrics: System performance metrics
-- Payload Sampling: Capture sample payloads for schema inference
-- UNS (Unified Namespace): ISA-95 hierarchy (enterprise > site > area > productionLine > workCell)
-- Pulse: Cloud platform integration (activation, managed assets, asset mappers)
-- Data Hub: Policy engine for message validation/transformation
-  - Behavior Policies: Validate MQTT client behavior via FSM-based rules
-  - Data Policies: Validate message payloads against schemas
-  - Schemas: JSON Schema / Protobuf definitions
-  - Scripts: Custom transformation logic
-  - Functions: Available pipeline functions for policy operations
-
-Key relationships:
-- Adapters expose Tags, Tags map to MQTT Topics via Northbound/Southbound Mappings
-- Bridges forward topics between local and remote MQTT brokers
-- Topic Filters match topic patterns; Data Policies validate payloads on matched topics
-- Combiners merge data from adapters, bridges, and topics into output topics or Pulse assets
-
-Status model (shared by adapters and bridges):
-- connection: CONNECTED | DISCONNECTED | STATELESS | UNKNOWN | ERROR
-- runtime: STARTED | STOPPED
-- Commands: START | STOP | RESTART
-
-Collection patterns:
-- Most resources: { items: T[] } — no pagination
-- Data Hub resources: { items: T[], _links?: { next } } — cursor-based pagination (limit: 10-500)
-
-Total API: 105 operations across 22 domains.
-`;
+const DOMAIN_ONTOLOGY = assembleDomainOntology();
 
 export const SYSTEM_PROMPT = `You are an AI assistant for HiveMQ Edge, an IoT gateway management interface. You help users understand, configure, and manage their HiveMQ Edge installation through natural conversation.
 
