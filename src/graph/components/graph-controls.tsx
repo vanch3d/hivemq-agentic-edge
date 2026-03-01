@@ -30,6 +30,7 @@ export function GraphControls() {
   const setViewScope = useGraphStore((s) => s.setViewScope);
   const viewMode = useGraphStore((s) => s.viewMode);
   const setViewMode = useGraphStore((s) => s.setViewMode);
+  const isLayoutPending = useGraphStore((s) => s.isLayoutPending);
   const rf = useReactFlow();
 
   const isSchema = viewMode === "schema";
@@ -53,6 +54,7 @@ export function GraphControls() {
             variant={isSchema ? "outline" : "solid"}
             onClick={() => setViewMode("instance")}
             title={t("graph.instanceView")}
+            disabled={isLayoutPending}
           >
             <LuDatabase />
             {t("graph.instance")}
@@ -62,6 +64,7 @@ export function GraphControls() {
             variant={isSchema ? "solid" : "outline"}
             onClick={() => setViewMode("schema")}
             title={t("graph.schemaView")}
+            disabled={isLayoutPending}
           >
             <LuNetwork />
             {t("graph.schema")}
@@ -77,6 +80,7 @@ export function GraphControls() {
                 size="xs"
                 variant={viewScope === scope ? "solid" : "outline"}
                 onClick={() => setViewScope(scope)}
+                disabled={isLayoutPending}
               >
                 {SCOPE_LABELS[scope]}
               </Button>
@@ -98,6 +102,7 @@ export function GraphControls() {
               ? "Switch to top-down layout"
               : "Switch to left-right layout"
           }
+          disabled={isLayoutPending}
         >
           {layoutDirection === "LR" ? (
             <LuArrowDownFromLine />

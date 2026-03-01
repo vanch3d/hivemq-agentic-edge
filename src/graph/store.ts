@@ -15,7 +15,11 @@ import type {
   DomainEntityType,
 } from "./types";
 import { DEFAULT_LAYOUT_DIRECTION } from "./constants";
-import { computeLayout } from "./layout";
+import {
+  requestLayout,
+  onResult,
+  getLatestRequestId,
+} from "./layout-bridge";
 import { v2Ontology } from "./ontology";
 import { buildSchemaGraph } from "./schema-graph";
 
@@ -121,6 +125,7 @@ interface GraphState {
 
   // Layout
   layoutDirection: LayoutDirection;
+  isLayoutPending: boolean;
 
   // Selection
   selectedNodeId: string | null;
@@ -156,65 +161,10 @@ const initialState = {
   nodes: [] as GraphNode[],
   edges: [] as GraphEdge[],
   layoutDirection: DEFAULT_LAYOUT_DIRECTION as LayoutDirection,
+  isLayoutPending: false,
   selectedNodeId: null as string | null,
   viewport: { x: 0, y: 0, zoom: 1 } as Viewport,
 };
-
-/**
- * Run layout, but preserve positions for nodes that already have them
- * (e.g. user-dragged positions). Only compute positions for new nodes.
- */
-function layoutWithPreservedPositions(
-  filtered: GraphNode[],
-  edges: GraphEdge[],
-  direction: LayoutDirection,
-  existingNodes: GraphNode[],
-  spacingScale = 1,
-): GraphNode[] {
-  const existingPositions = new Map(
-    existingNodes
-      .filter((n) => n.position.x !== 0 || n.position.y !== 0)
-      .map((n) => [n.id, n.position]),
-  );
-
-  // If all nodes already have positions, just reuse them
-  const allHavePositions = filtered.every((n) => existingPositions.has(n.id));
-  if (allHavePositions && filtered.length > 0) {
-    return filtered.map((n) => ({
-      ...n,
-      position: existingPositions.get(n.id) ?? n.position,
-    }));
-  }
-
-  // Some new nodes — run full layout
-  const laid = computeLayout(filtered, edges, direction, spacingScale);
-  // Restore user-moved positions for existing nodes
-  return laid.map((n) => {
-    const existing = existingPositions.get(n.id);
-    return existing ? { ...n, position: existing } : n;
-  });
-}
-
-/**
- * Full layout (no position preservation). Used for scope/direction changes.
- */
-function fullLayout(
-  fullNodes: GraphNode[],
-  fullEdges: GraphEdge[],
-  scope: ViewScope,
-  focusEntityId: string | null,
-  direction: LayoutDirection,
-  spacingScale = 1,
-) {
-  const { nodes: filtered, edges } = filterByScope(
-    fullNodes,
-    fullEdges,
-    scope,
-    focusEntityId,
-  );
-  const nodes = computeLayout(filtered, edges, direction, spacingScale);
-  return { nodes, edges };
-}
 
 /** Set `hidden` on nodes whose entity type is in the hidden set. */
 function applyHidden(
@@ -245,17 +195,18 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       // Build schema graph from ontology (no API data)
       const { nodes: schemaNodes, edges: schemaEdges } =
         buildSchemaGraph(v2Ontology);
-      const positioned = computeLayout(
-        schemaNodes,
-        schemaEdges,
-        get().layoutDirection,
-        2, // wider spacing for the schema graph (few nodes, low connectivity)
-      );
       set({
         viewMode,
-        nodes: positioned,
+        nodes: [],
         edges: schemaEdges,
         selectedNodeId: null,
+        isLayoutPending: true,
+      });
+      requestLayout({
+        nodes: schemaNodes,
+        edges: schemaEdges,
+        direction: get().layoutDirection,
+        spacingScale: 2,
       });
     } else {
       // Restore instance view from full graph
@@ -265,20 +216,24 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         viewScope,
         focusEntityId,
         layoutDirection,
-        hiddenEntityTypes,
       } = get();
-      const { nodes, edges } = fullLayout(
+      const { nodes: filtered, edges } = filterByScope(
         fullNodes,
         fullEdges,
         viewScope,
         focusEntityId,
-        layoutDirection,
       );
       set({
         viewMode,
-        nodes: applyHidden(nodes, hiddenEntityTypes),
+        nodes: [],
         edges,
         selectedNodeId: null,
+        isLayoutPending: true,
+      });
+      requestLayout({
+        nodes: filtered,
+        edges,
+        direction: layoutDirection,
       });
     }
   },
@@ -294,7 +249,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       focusEntityId,
       layoutDirection,
       isAssembled,
-      nodes,
+      nodes: existingNodes,
       hiddenEntityTypes,
     } = get();
 
@@ -320,17 +275,43 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       `[store] after filter: ${filtered.length} nodes, ${edges.length} edges (scope=${viewScope}, isAssembled=${isAssembled})`,
     );
 
-    // First assembly: full layout. Subsequent: preserve positions.
-    console.time("[store] layout");
-    const positioned = isAssembled
-      ? layoutWithPreservedPositions(filtered, edges, layoutDirection, nodes)
-      : computeLayout(filtered, edges, layoutDirection);
-    console.timeEnd("[store] layout");
+    // Subsequent assemblies: check if we can preserve all positions (fast path)
+    if (isAssembled) {
+      const existingPositions = new Map(
+        existingNodes
+          .filter((n) => n.position.x !== 0 || n.position.y !== 0)
+          .map((n) => [n.id, n.position]),
+      );
+      const allHavePositions =
+        filtered.length > 0 &&
+        filtered.every((n) => existingPositions.has(n.id));
 
+      if (allHavePositions) {
+        // Fast path — no layout needed, reuse positions
+        const positioned = filtered.map((n) => ({
+          ...n,
+          position: existingPositions.get(n.id) ?? n.position,
+        }));
+        set({
+          ...base,
+          nodes: applyHidden(positioned, hiddenEntityTypes),
+          edges,
+        });
+        console.timeEnd("[store] setFullGraph");
+        return;
+      }
+    }
+
+    // Need layout — dispatch to worker
     set({
       ...base,
-      nodes: applyHidden(positioned, hiddenEntityTypes),
       edges,
+      isLayoutPending: true,
+    });
+    requestLayout({
+      nodes: filtered,
+      edges,
+      direction: layoutDirection,
     });
     console.timeEnd("[store] setFullGraph");
   },
@@ -338,43 +319,45 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setViewScope: (viewScope, focusEntityId = null) => {
     console.time("[store] setViewScope");
     console.log("[store] setViewScope: %s (focus=%s)", viewScope, focusEntityId);
-    const { fullNodes, fullEdges, layoutDirection, hiddenEntityTypes } = get();
-    const { nodes, edges } = fullLayout(
+    const { fullNodes, fullEdges, layoutDirection } = get();
+    const { nodes: filtered, edges } = filterByScope(
       fullNodes,
       fullEdges,
       viewScope,
       focusEntityId,
-      layoutDirection,
     );
     set({
       viewScope,
       focusEntityId,
-      nodes: applyHidden(nodes, hiddenEntityTypes),
       edges,
       selectedNodeId: null,
+      isLayoutPending: true,
+    });
+    requestLayout({
+      nodes: filtered,
+      edges,
+      direction: layoutDirection,
     });
     console.timeEnd("[store] setViewScope");
   },
 
   setLayoutDirection: (layoutDirection) => {
-    const {
+    const { fullNodes, fullEdges, viewScope, focusEntityId } = get();
+    const { nodes: filtered, edges } = filterByScope(
       fullNodes,
       fullEdges,
       viewScope,
       focusEntityId,
-      hiddenEntityTypes,
-    } = get();
-    const { nodes, edges } = fullLayout(
-      fullNodes,
-      fullEdges,
-      viewScope,
-      focusEntityId,
-      layoutDirection,
     );
     set({
       layoutDirection,
-      nodes: applyHidden(nodes, hiddenEntityTypes),
       edges,
+      isLayoutPending: true,
+    });
+    requestLayout({
+      nodes: filtered,
+      edges,
+      direction: layoutDirection,
     });
   },
 
@@ -400,3 +383,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   reset: () => set(initialState),
 }));
+
+// --- Worker result callback (module-level, outside store creator) ---
+
+onResult((result) => {
+  // Drop stale results — only apply if this is the latest request
+  if (result.id !== getLatestRequestId()) return;
+
+  const { hiddenEntityTypes } = useGraphStore.getState();
+  useGraphStore.setState({
+    nodes: applyHidden(result.nodes, hiddenEntityTypes),
+    isLayoutPending: false,
+  });
+});

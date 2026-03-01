@@ -81,6 +81,7 @@
     "connection": "Connection: {{value}}",
     "runtime": "Runtime: {{value}}",
     "properties": "Properties",
+    "layoutPending": "Computing layout\u2026",
     "loadingCompact": "Loading graph...",
     "localSubs": "{{count}} local",
     "remoteSubs": "{{count}} remote",

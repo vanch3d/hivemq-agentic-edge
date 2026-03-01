@@ -15,6 +15,7 @@ export function GraphPage() {
   const isAssembled = useGraphStore((s) => s.isAssembled);
   const viewMode = useGraphStore((s) => s.viewMode);
   const nodeCount = useGraphStore((s) => s.nodes.length);
+  const isLayoutPending = useGraphStore((s) => s.isLayoutPending);
 
   // Schema view doesn't depend on API data
   const showLoading = viewMode !== "schema" && isLoading && !isAssembled;
@@ -36,7 +37,8 @@ export function GraphPage() {
     );
   }
 
-  if (nodeCount === 0) {
+  // Show "empty" only when layout is done and there are truly no nodes
+  if (nodeCount === 0 && !isLayoutPending) {
     return (
       <Flex align="center" justify="center" h="full">
         <Text color="fg.muted">{t("graph.empty")}</Text>
@@ -44,6 +46,7 @@ export function GraphPage() {
     );
   }
 
+  // Render full UI shell — canvas handles the layout-pending spinner overlay
   return (
     <ReactFlowProvider>
       <Flex h="full" w="full">
