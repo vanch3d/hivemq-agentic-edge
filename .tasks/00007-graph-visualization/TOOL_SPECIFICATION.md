@@ -53,6 +53,7 @@ part.error exists?
 ```
 
 **ChatTable** (`chat-table.tsx`):
+
 - Uses TanStack React Table
 - Auto-generates columns from the first object's keys
 - Has a search input (global filter)
@@ -66,23 +67,23 @@ part.error exists?
 The drawer is 400px wide. Showing all columns for types with many fields is
 unreadable. Here is the field count per API type:
 
-| Type | Total fields | Required fields | Problem? |
-|------|-------------|-----------------|----------|
-| Bridge | 17 | 6 (id, host, port, cleanStart, keepAlive, sessionExpiry) | YES — way too wide |
-| ProtocolAdapter (type listing) | 13+ | 0 | YES — too wide, 0 required |
-| Event | 8 | 5 (created, identifier, message, severity, timestamp) | Borderline |
-| DataPolicy | 7 | 2 (id, matching) | OK |
-| BehaviorPolicy | 7 | 3 (behavior, id, matching) | OK |
-| Listener | 7 | 0 | Borderline, 0 required |
-| Status | 7 | 0 | Borderline, 0 required |
-| PolicySchema | 6 | 3 (id, schemaDefinition, type) | OK |
-| Script | 6 | 3 (functionType, id, source) | OK |
-| Combiner | 5 | 4 (id, name, sources, mappings) | OK |
-| Adapter | 4 | 1 (id) | OK but only 1 required |
-| Notification | 4 | 0 | OK, but 0 required |
-| TopicFilter | 3 | 1 (topicFilter) | OK |
-| DomainTag | 3 | 2 (definition, name) | OK |
-| Metric | 1 | 0 | OK |
+| Type                           | Total fields | Required fields                                          | Problem?                   |
+| ------------------------------ | ------------ | -------------------------------------------------------- | -------------------------- |
+| Bridge                         | 17           | 6 (id, host, port, cleanStart, keepAlive, sessionExpiry) | YES — way too wide         |
+| ProtocolAdapter (type listing) | 13+          | 0                                                        | YES — too wide, 0 required |
+| Event                          | 8            | 5 (created, identifier, message, severity, timestamp)    | Borderline                 |
+| DataPolicy                     | 7            | 2 (id, matching)                                         | OK                         |
+| BehaviorPolicy                 | 7            | 3 (behavior, id, matching)                               | OK                         |
+| Listener                       | 7            | 0                                                        | Borderline, 0 required     |
+| Status                         | 7            | 0                                                        | Borderline, 0 required     |
+| PolicySchema                   | 6            | 3 (id, schemaDefinition, type)                           | OK                         |
+| Script                         | 6            | 3 (functionType, id, source)                             | OK                         |
+| Combiner                       | 5            | 4 (id, name, sources, mappings)                          | OK                         |
+| Adapter                        | 4            | 1 (id)                                                   | OK but only 1 required     |
+| Notification                   | 4            | 0                                                        | OK, but 0 required         |
+| TopicFilter                    | 3            | 1 (topicFilter)                                          | OK                         |
+| DomainTag                      | 3            | 2 (definition, name)                                     | OK                         |
+| Metric                         | 1            | 0                                                        | OK                         |
 
 ### Strategy Assessment
 
@@ -230,11 +231,7 @@ export function getVisibleColumns(
   const allKeys = Object.keys(data[0]);
   const scalarKeys = allKeys.filter((k) => {
     const val = data[0][k];
-    return (
-      val === null ||
-      val === undefined ||
-      typeof val !== "object"
-    );
+    return val === null || val === undefined || typeof val !== "object";
   });
   return scalarKeys.slice(0, MAX_FALLBACK_COLUMNS);
 }
@@ -272,20 +269,23 @@ that switches from `visibleKeys` to `allKeys`. This lets the user expand
 when needed without cluttering the default view.
 
 ```tsx
-{hasHiddenColumns && !showAll && (
-  <Text
-    as="button"
-    fontSize="xs"
-    color="fg.muted"
-    cursor="pointer"
-    onClick={() => setShowAll(true)}
-  >
-    Show all {allKeys.length} columns
-  </Text>
-)}
+{
+  hasHiddenColumns && !showAll && (
+    <Text
+      as="button"
+      fontSize="xs"
+      color="fg.muted"
+      cursor="pointer"
+      onClick={() => setShowAll(true)}
+    >
+      Show all {allKeys.length} columns
+    </Text>
+  );
+}
 ```
 
 **Why this is better than the other options**:
+
 - No tool definition changes. No output schema changes. No mock changes.
 - Works immediately for all existing query tools.
 - The fingerprint approach is explicit and maintainable — adding a new type
@@ -445,6 +445,7 @@ pipeline described above.
 #### `update`
 
 Same flow as create but:
+
 - Requires `bridgeId` in input
 - Form pre-filled with `{id: bridgeId, ...prefill}`
 - Title: "Update Bridge: {bridgeId}"
@@ -464,6 +465,7 @@ Same flow as create but:
 #### `transitionStatus`
 
 Same form flow as create but:
+
 - Requires `bridgeId`
 - Schema: StatusTransitionCommandSchema (required: command)
 - `requiredOnly` is NOT set
@@ -666,11 +668,14 @@ happens to wipe it.
 
    **Option A (recommended)**: Add `clearActiveForm` and `clearActiveApproval`
    functions to the ChatContext value. In `ChatProvider`:
+
    ```typescript
    const clearActiveForm = useCallback(() => setActiveForm(null), []);
    const clearActiveApproval = useCallback(() => setActiveApproval(null), []);
    ```
+
    Expose them in the context value. In `chat-drawer.tsx`:
+
    ```typescript
    onSubmit={(data) => {
      activeForm.resolve({ submitted: true, data });
@@ -681,7 +686,9 @@ happens to wipe it.
      clearActiveForm();
    }}
    ```
+
    Same pattern for approval:
+
    ```typescript
    onApprove={() => {
      activeApproval.resolve(true);
@@ -712,7 +719,8 @@ Disable both the Textarea and the Send button when either is non-null.
 
 ```typescript
 export function ChatInput() {
-  const { sendMessage, isLoading, activeForm, activeApproval } = useChatContext();
+  const { sendMessage, isLoading, activeForm, activeApproval } =
+    useChatContext();
   // ...
   const isBusy = isLoading || !!activeForm || !!activeApproval;
 
@@ -760,11 +768,13 @@ state including `showAll`.
 
 **Alternative fix** (in chat-form.tsx): Add a `useEffect` that resets `showAll`
 when `requiredOnly` or `schema` changes:
+
 ```typescript
 useEffect(() => {
   setShowAll(!requiredOnly);
 }, [schema, requiredOnly]);
 ```
+
 This is less clean because it causes a render with stale state before the
 effect fires.
 
@@ -783,6 +793,7 @@ form/card disappears immediately on click, making double-click impossible.
 BUG 4 is therefore **fully resolved by fixing BUG 1**. No additional work needed.
 
 If for some reason BUG 1 is not fixed with immediate state clearing, then:
+
 - Add a `const [submitting, setSubmitting] = useState(false)` to both components
 - Set it to `true` on first click
 - Disable all buttons when `submitting` is true
@@ -834,11 +845,13 @@ import { navigateToDef, KNOWN_ROUTES } from "@/agent/tool-definitions";
 Wait — `KNOWN_ROUTES` is not currently exported. Two changes needed:
 
 1. In `src/agent/tool-definitions.ts`, change line 123 from `const` to `export const`:
+
    ```typescript
    export const KNOWN_ROUTES = ["/workspace", "/login"] as const;
    ```
 
 2. In `src/agent/tools/navigate-to.ts`, add validation:
+
    ```typescript
    const isKnown = KNOWN_ROUTES.some((r) => input.path.startsWith(r));
    if (!isKnown) {
@@ -859,6 +872,7 @@ Wait — `KNOWN_ROUTES` is not currently exported. Two changes needed:
 
 **Root cause**: Scenario matching in `mocks/handlers/chat.ts` depends on array
 order. Several regexes overlap:
+
 - "create data policy" could match the behavior policy pattern (`/(?:create|add)\s+(?:behavior\s+)?polic/i`) because the `behavior\s+` part is optional
 - Any message containing "bridge" matches the query even if the user meant something else
 - "show adapters and bridges" would match whichever pattern comes first
@@ -874,11 +888,13 @@ behavior policy" (`/(?:create|add)\s+(?:behavior\s+)?polic/i`) with the optional
 for messages containing "create" + "policy" without "data" explicitly.
 
 **Fix** (if desired): Make the behavior policy pattern require "behavior":
+
 ```typescript
 match: (t) => /(?:create|add)\s+behavior\s+polic/i.test(t),
 ```
 
 And the data policy pattern can remain as-is since it requires "data":
+
 ```typescript
 match: (t) => /(?:create|add)\s+data\s+polic/i.test(t),
 ```
@@ -887,53 +903,54 @@ match: (t) => /(?:create|add)\s+data\s+polic/i.test(t),
 
 ## Mock Scenarios — Complete Reference
 
-| User message pattern          | Tool called                        | Args                                  |
-| ----------------------------- | ---------------------------------- | ------------------------------------- |
-| `create adapter`              | `mutateAdapter`                    | `{operation: "create"}`               |
-| `create behavior policy`      | `mutateDataHub`                    | `{operation: "createBehaviorPolicy"}` |
-| `create data policy`          | `mutateDataHub`                    | `{operation: "createDataPolicy"}`     |
-| `create schema`               | `mutateDataHub`                    | `{operation: "createSchema"}`         |
-| `create script`               | `mutateDataHub`                    | `{operation: "createScript"}`         |
-| `create topic filter`         | `mutateSystem`                     | `{operation: "addTopicFilter"}`       |
-| `create bridge`               | `mutateBridge`                     | `{operation: "create"}`               |
-| `create combiner`             | `mutateSystem`                     | `{operation: "addCombiner"}`          |
-| `delete bridge`               | `mutateBridge`                     | `{operation: "delete", bridgeId: "mqtt-bridge-01"}` |
-| `bridge` (generic)            | `queryBridges`                     | `{operation: "list"}`                 |
-| `adapter` (generic)           | `queryAdapters`                    | `{operation: "list"}`                 |
-| `topic filter`                | `querySystem`                      | `{operation: "listTopicFilters"}`     |
-| `combiner`                    | `querySystem`                      | `{operation: "listCombiners"}`        |
-| `data policy`                 | `queryDataHub`                     | `{operation: "listDataPolicies"}`     |
-| `schema`                      | `queryDataHub`                     | `{operation: "listSchemas"}`          |
-| `script`                      | `queryDataHub`                     | `{operation: "listScripts"}`          |
-| `policy` (generic)            | `queryDataHub`                     | `{operation: "listBehaviorPolicies"}` |
-| `metrics`                     | `querySystem`                      | `{operation: "metrics"}`              |
-| `listener`                    | `querySystem`                      | `{operation: "listeners"}`            |
-| `events`                      | `querySystem`                      | `{operation: "events"}`               |
-| `notification`                | `querySystem`                      | `{operation: "notifications"}`        |
-| `graph / visualize / topology`| `queryGraph`                       | `{scope: "dataFlow"}`                 |
-| `navigate / go to / take me`  | `navigateTo`                       | `{path: "/workspace"}`                |
-| `create / add new` (fallback) | `mutateBridge`                     | `{operation: "create"}`               |
+| User message pattern           | Tool called     | Args                                                |
+| ------------------------------ | --------------- | --------------------------------------------------- |
+| `create adapter`               | `mutateAdapter` | `{operation: "create"}`                             |
+| `create behavior policy`       | `mutateDataHub` | `{operation: "createBehaviorPolicy"}`               |
+| `create data policy`           | `mutateDataHub` | `{operation: "createDataPolicy"}`                   |
+| `create schema`                | `mutateDataHub` | `{operation: "createSchema"}`                       |
+| `create script`                | `mutateDataHub` | `{operation: "createScript"}`                       |
+| `create topic filter`          | `mutateSystem`  | `{operation: "addTopicFilter"}`                     |
+| `create bridge`                | `mutateBridge`  | `{operation: "create"}`                             |
+| `create combiner`              | `mutateSystem`  | `{operation: "addCombiner"}`                        |
+| `delete bridge`                | `mutateBridge`  | `{operation: "delete", bridgeId: "mqtt-bridge-01"}` |
+| `bridge` (generic)             | `queryBridges`  | `{operation: "list"}`                               |
+| `adapter` (generic)            | `queryAdapters` | `{operation: "list"}`                               |
+| `topic filter`                 | `querySystem`   | `{operation: "listTopicFilters"}`                   |
+| `combiner`                     | `querySystem`   | `{operation: "listCombiners"}`                      |
+| `data policy`                  | `queryDataHub`  | `{operation: "listDataPolicies"}`                   |
+| `schema`                       | `queryDataHub`  | `{operation: "listSchemas"}`                        |
+| `script`                       | `queryDataHub`  | `{operation: "listScripts"}`                        |
+| `policy` (generic)             | `queryDataHub`  | `{operation: "listBehaviorPolicies"}`               |
+| `metrics`                      | `querySystem`   | `{operation: "metrics"}`                            |
+| `listener`                     | `querySystem`   | `{operation: "listeners"}`                          |
+| `events`                       | `querySystem`   | `{operation: "events"}`                             |
+| `notification`                 | `querySystem`   | `{operation: "notifications"}`                      |
+| `graph / visualize / topology` | `queryGraph`    | `{scope: "dataFlow"}`                               |
+| `navigate / go to / take me`   | `navigateTo`    | `{path: "/workspace"}`                              |
+| `create / add new` (fallback)  | `mutateBridge`  | `{operation: "create"}`                             |
 
 ---
 
 ## Form Schema Registry — Complete Reference
 
-| Registry Key                             | API Schema              | Required Fields                         | requiredOnly |
-| ---------------------------------------- | ----------------------- | --------------------------------------- | ------------ |
-| `mutateBridge.create`                    | BridgeSchema            | id, host, port                          | true         |
-| `mutateBridge.update`                    | BridgeSchema            | (from schema)                           | false        |
-| `mutateBridge.transitionStatus`          | StatusTransitionCommand  | command                                 | false        |
-| `mutateAdapter.create`                   | AdapterSchema           | id, type                                | true         |
-| `mutateAdapter.update`                   | AdapterSchema           | (from schema)                           | false        |
-| `mutateAdapter.transitionStatus`         | StatusTransitionCommand  | command                                 | false        |
-| `mutateDataHub.createBehaviorPolicy`     | BehaviorPolicySchema    | id, matching, behavior                  | true         |
-| `mutateDataHub.updateBehaviorPolicy`     | BehaviorPolicySchema    | (from schema)                           | false        |
-| `mutateDataHub.createDataPolicy`         | DataPolicySchema        | id, matching                            | true         |
-| `mutateDataHub.updateDataPolicy`         | DataPolicySchema        | (from schema)                           | false        |
-| `mutateDataHub.createSchema`             | PolicySchemaSchema      | id, schemaDefinition, type              | true         |
-| `mutateDataHub.createScript`             | ScriptSchema            | id, functionType, source                | true         |
+| Registry Key                         | API Schema              | Required Fields            | requiredOnly |
+| ------------------------------------ | ----------------------- | -------------------------- | ------------ |
+| `mutateBridge.create`                | BridgeSchema            | id, host, port             | true         |
+| `mutateBridge.update`                | BridgeSchema            | (from schema)              | false        |
+| `mutateBridge.transitionStatus`      | StatusTransitionCommand | command                    | false        |
+| `mutateAdapter.create`               | AdapterSchema           | id, type                   | true         |
+| `mutateAdapter.update`               | AdapterSchema           | (from schema)              | false        |
+| `mutateAdapter.transitionStatus`     | StatusTransitionCommand | command                    | false        |
+| `mutateDataHub.createBehaviorPolicy` | BehaviorPolicySchema    | id, matching, behavior     | true         |
+| `mutateDataHub.updateBehaviorPolicy` | BehaviorPolicySchema    | (from schema)              | false        |
+| `mutateDataHub.createDataPolicy`     | DataPolicySchema        | id, matching               | true         |
+| `mutateDataHub.updateDataPolicy`     | DataPolicySchema        | (from schema)              | false        |
+| `mutateDataHub.createSchema`         | PolicySchemaSchema      | id, schemaDefinition, type | true         |
+| `mutateDataHub.createScript`         | ScriptSchema            | id, functionType, source   | true         |
 
 **Not in registry** (use approval only, no form):
+
 - All delete operations
 - All mutateSystem operations
 
@@ -943,42 +960,42 @@ match: (t) => /(?:create|add)\s+data\s+polic/i.test(t),
 
 ### Tool Implementations (src/agent/tools/)
 
-| File | Tool | Type | Lines |
-|------|------|------|-------|
-| `query-bridges.ts` | queryBridges | query | 48 |
-| `query-adapters.ts` | queryAdapters | query | 116 |
-| `query-data-hub.ts` | queryDataHub | query | 118 |
-| `query-system.ts` | querySystem | query | 116 |
-| `query-sampling.ts` | querySampling | query | 28 |
-| `query-graph.ts` | queryGraph | query (side-effect) | 17 |
-| `navigate-to.ts` | navigateTo | action | 20 |
-| `mutate-bridge.ts` | mutateBridge | mutation (form/approval) | 102 |
-| `mutate-adapter.ts` | mutateAdapter | mutation (form/approval) | 109 |
-| `mutate-data-hub.ts` | mutateDataHub | mutation (form/approval) | 219 |
-| `mutate-system.ts` | mutateSystem | mutation (approval only) | 141 |
+| File                 | Tool          | Type                     | Lines |
+| -------------------- | ------------- | ------------------------ | ----- |
+| `query-bridges.ts`   | queryBridges  | query                    | 48    |
+| `query-adapters.ts`  | queryAdapters | query                    | 116   |
+| `query-data-hub.ts`  | queryDataHub  | query                    | 118   |
+| `query-system.ts`    | querySystem   | query                    | 116   |
+| `query-sampling.ts`  | querySampling | query                    | 28    |
+| `query-graph.ts`     | queryGraph    | query (side-effect)      | 17    |
+| `navigate-to.ts`     | navigateTo    | action                   | 20    |
+| `mutate-bridge.ts`   | mutateBridge  | mutation (form/approval) | 102   |
+| `mutate-adapter.ts`  | mutateAdapter | mutation (form/approval) | 109   |
+| `mutate-data-hub.ts` | mutateDataHub | mutation (form/approval) | 219   |
+| `mutate-system.ts`   | mutateSystem  | mutation (approval only) | 141   |
 
 ### UI Components (src/components/chat/)
 
-| File | Purpose | Bugs |
-|------|---------|------|
-| `chat-drawer.tsx` | Main drawer: message list + form/approval area + input | BUG 1 (lines 124-129, 138-139) |
-| `chat-input.tsx` | Text input + send button | BUG 2 (no disable during form) |
-| `chat-form.tsx` | RJSF form wrapper with show-all toggle | BUG 3 (showAll leak) |
-| `approval-card.tsx` | Approve/Reject card | BUG 4 (no disable after click) |
-| `tool-status.tsx` | Tool call/result rendering dispatch | — |
-| `chat-table.tsx` | TanStack Table for array results | — |
-| `message-list.tsx` | Message rendering | — |
+| File                | Purpose                                                | Bugs                           |
+| ------------------- | ------------------------------------------------------ | ------------------------------ |
+| `chat-drawer.tsx`   | Main drawer: message list + form/approval area + input | BUG 1 (lines 124-129, 138-139) |
+| `chat-input.tsx`    | Text input + send button                               | BUG 2 (no disable during form) |
+| `chat-form.tsx`     | RJSF form wrapper with show-all toggle                 | BUG 3 (showAll leak)           |
+| `approval-card.tsx` | Approve/Reject card                                    | BUG 4 (no disable after click) |
+| `tool-status.tsx`   | Tool call/result rendering dispatch                    | —                              |
+| `chat-table.tsx`    | TanStack Table for array results                       | —                              |
+| `message-list.tsx`  | Message rendering                                      | —                              |
 
 ### Infrastructure
 
-| File | Purpose |
-|------|---------|
-| `src/agent/tool-definitions.ts` | Zod schemas + tool metadata (no execution) |
-| `src/agent/tool-context.ts` | Module-level refs for navigate/form/approval coordination |
-| `src/agent/form-schemas.ts` | Registry mapping (toolName, operation) → {schema, requiredOnly} |
-| `src/agent/tools/index.ts` | Re-exports all tool implementations |
-| `src/context/chat-context.tsx` | ChatProvider: useChat + activeForm/activeApproval state |
-| `src/mocks/handlers/chat.ts` | MSW mock SSE handler with regex scenario matching |
+| File                            | Purpose                                                         |
+| ------------------------------- | --------------------------------------------------------------- |
+| `src/agent/tool-definitions.ts` | Zod schemas + tool metadata (no execution)                      |
+| `src/agent/tool-context.ts`     | Module-level refs for navigate/form/approval coordination       |
+| `src/agent/form-schemas.ts`     | Registry mapping (toolName, operation) → {schema, requiredOnly} |
+| `src/agent/tools/index.ts`      | Re-exports all tool implementations                             |
+| `src/context/chat-context.tsx`  | ChatProvider: useChat + activeForm/activeApproval state         |
+| `src/mocks/handlers/chat.ts`    | MSW mock SSE handler with regex scenario matching               |
 
 ---
 

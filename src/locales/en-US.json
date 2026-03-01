@@ -4,7 +4,7 @@
   },
   "nav": {
     "home": "Home",
-    "graph": "Graph",
+    "graph": "Domain Ontology",
     "configuration": "Configuration",
     "logout": "Logout"
   },
@@ -95,6 +95,13 @@
     "providerChangeDescription": "This will clear the current chat conversation. The new provider has no context of previous messages.",
     "providerChangeConfirm": "Switch & clear chat",
     "providerChangeCancel": "Cancel"
+  },
+  "snapshot": {
+    "recentQueries": "Recent Queries",
+    "clearAll": "Clear all",
+    "notFound": "This snapshot is no longer available.",
+    "noData": "No data to display.",
+    "openFullView": "Open full view \u2192"
   },
   "schemas": {
     "usernamePasswordCredentials": {

@@ -1,7 +1,19 @@
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import { authenticate } from "@/api/sdk.gen";
-import { getAuthToken, setAuthToken } from "@/auth-token";
+import {
+  getAuthToken,
+  setAuthToken,
+  getTokenExpiration,
+  getTokenUsername,
+} from "@/auth-token";
 
 type User = {
   username: string;
@@ -29,7 +41,14 @@ export function useAuth(): AuthContextValue {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     const existing = getAuthToken();
-    return existing ? { username: "", token: existing } : null;
+    if (!existing) return null;
+    // Discard stale tokens on init
+    const exp = getTokenExpiration(existing);
+    if (exp !== null && exp <= Date.now()) {
+      setAuthToken(null);
+      return null;
+    }
+    return { username: getTokenUsername(existing) ?? "", token: existing };
   });
 
   const login = useCallback(async (username: string, password: string) => {
@@ -49,6 +68,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthToken(null);
     setUser(null);
   }, []);
+
+  // --- Token expiration watcher ---
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    if (!user) return;
+
+    const exp = getTokenExpiration(user.token);
+    if (exp === null) return;
+
+    const remaining = exp - Date.now();
+
+    // Use setTimeout for both cases — immediate (0ms) and future expiry —
+    // to avoid synchronous setState inside an effect body.
+    timerRef.current = setTimeout(
+      () => {
+        logout();
+      },
+      Math.max(0, remaining),
+    );
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [user, logout]);
 
   return (
     <AuthContext

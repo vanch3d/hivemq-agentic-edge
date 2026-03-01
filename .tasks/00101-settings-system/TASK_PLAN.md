@@ -23,16 +23,16 @@ Adding a new setting = add a property to the schema on the server. No frontend c
 
 ## Files
 
-| Action | File | Purpose |
-|--------|------|---------|
-| CREATE | `server/api/settings.ts` | Hono route: serves JSON Schema + uiSchema + env-var defaults as formData |
-| CREATE | `src/hooks/use-settings.ts` | TanStack Query hook for `GET /api/settings` |
-| CREATE | `src/routes/_authenticated/workspace/configuration/settings.tsx` | Settings page — `SchemaForm` driven by server schema |
-| MODIFY | `server/api/chat.ts` | Export `resolveEnvDefaults()`; accept `body.settings` override; refactor `resolveAdapter` |
-| MODIFY | `server/index.ts` | Register `/api/settings` route |
-| MODIFY | `src/context/chat-context.tsx` | Pass settings formData in `fetchServerSentEvents` body |
-| MODIFY | `src/routes/_authenticated/workspace/configuration/index.tsx` | Add settings card |
-| MODIFY | `src/locales/en-US.json` | Add page-level i18n keys (field labels come from schema) |
+| Action | File                                                             | Purpose                                                                                   |
+| ------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| CREATE | `server/api/settings.ts`                                         | Hono route: serves JSON Schema + uiSchema + env-var defaults as formData                  |
+| CREATE | `src/hooks/use-settings.ts`                                      | TanStack Query hook for `GET /api/settings`                                               |
+| CREATE | `src/routes/_authenticated/workspace/configuration/settings.tsx` | Settings page — `SchemaForm` driven by server schema                                      |
+| MODIFY | `server/api/chat.ts`                                             | Export `resolveEnvDefaults()`; accept `body.settings` override; refactor `resolveAdapter` |
+| MODIFY | `server/index.ts`                                                | Register `/api/settings` route                                                            |
+| MODIFY | `src/context/chat-context.tsx`                                   | Pass settings formData in `fetchServerSentEvents` body                                    |
+| MODIFY | `src/routes/_authenticated/workspace/configuration/index.tsx`    | Add settings card                                                                         |
+| MODIFY | `src/locales/en-US.json`                                         | Add page-level i18n keys (field labels come from schema)                                  |
 
 No types file, no Zustand store. The JSON Schema defines the structure. Persistence is `useLocalStorage` from `@uidotdev/usehooks`. The `formData` is `Record<string, unknown>` on both sides.
 
@@ -114,23 +114,29 @@ The JSON Schema defines the complete settings structure. Nested by concern, usin
 ```
 
 **formData** (nested, built from env vars):
+
 ```jsonc
 {
   "ai": {
     "provider": "ollama",
     "anthropic": { "model": "claude-sonnet-4-5" },
-    "ollama": { "model": "qwen3:8b", "host": "http://localhost:11434", "think": true }
+    "ollama": {
+      "model": "qwen3:8b",
+      "host": "http://localhost:11434",
+      "think": true,
+    },
   },
-  "ui": {}
+  "ui": {},
 }
 ```
 
 **uiSchema** controls rendering:
+
 ```jsonc
 {
   "ai": {
-    "provider": { "ui:widget": "radio" }
-  }
+    "provider": { "ui:widget": "radio" },
+  },
 }
 ```
 
@@ -152,6 +158,7 @@ No Zustand store needed. Two access patterns:
 **In React (settings page):** `useLocalStorage("app-settings", {})` hook returns `[formData, setFormData]`.
 
 **Outside React (chat context options function):** read `localStorage` directly:
+
 ```typescript
 function getSettingsOverrides(): Record<string, unknown> {
   try {

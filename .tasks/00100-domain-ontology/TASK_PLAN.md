@@ -8,14 +8,14 @@
 
 ## Files
 
-| File | Action |
-|---|---|
-| `server/ontology/core.ts` | Created — core ontology (~1,500 tokens) |
-| `server/ontology/datahub.ts` | Created — Data Hub deep dive (~1,200 tokens) |
-| `server/ontology/adapters.ts` | Created — adapter context (~500 tokens) |
-| `server/ontology/index.ts` | Created — module registry + assembler |
-| `server/system-prompt.ts` | Modified — imports from ontology modules |
-| `server/ontology/README.md` | Created — human-readable reference |
+| File                          | Action                                       |
+| ----------------------------- | -------------------------------------------- |
+| `server/ontology/core.ts`     | Created — core ontology (~1,500 tokens)      |
+| `server/ontology/datahub.ts`  | Created — Data Hub deep dive (~1,200 tokens) |
+| `server/ontology/adapters.ts` | Created — adapter context (~500 tokens)      |
+| `server/ontology/index.ts`    | Created — module registry + assembler        |
+| `server/system-prompt.ts`     | Modified — imports from ontology modules     |
+| `server/ontology/README.md`   | Created — human-readable reference           |
 
 ## Progress
 

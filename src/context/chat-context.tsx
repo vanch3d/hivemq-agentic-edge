@@ -23,14 +23,17 @@ import {
   mutateDataHub,
   mutateSystem,
   queryGraph,
+  querySnapshots,
 } from "@/agent/tools";
 import {
   setToolNavigate,
   setFormRequester,
   setApprovalRequester,
+  setSnapshotCreator,
   type FormRequest,
   type ApprovalRequest,
 } from "@/agent/tool-context";
+import { useSnapshotStore } from "@/stores/snapshot-store";
 
 function getSettingsOverrides(): Record<string, unknown> {
   try {
@@ -52,6 +55,7 @@ const tools = clientTools(
   mutateDataHub,
   mutateSystem,
   queryGraph,
+  querySnapshots,
 );
 
 // --- Active form/approval state ---
@@ -126,6 +130,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Register snapshot creator — tools call this to persist query results
+  useEffect(() => {
+    setSnapshotCreator((request) =>
+      useSnapshotStore.getState().addSnapshot(request),
+    );
+  }, []);
+
   // Ctrl+K / Cmd+K keyboard shortcut to toggle drawer
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -149,9 +160,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const chatState = useChat({
     connection: fetchServerSentEvents("/api/chat", () => {
       const settings = getSettingsOverrides();
-      return Object.keys(settings).length > 0
-        ? { body: { settings } }
-        : {};
+      return Object.keys(settings).length > 0 ? { body: { settings } } : {};
     }),
     tools,
     onChunk,

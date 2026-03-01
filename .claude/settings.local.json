@@ -61,7 +61,8 @@
       "Bash(npx tsx:*)",
       "Bash(pnpm exec tsx:*)",
       "Bash(node --import=tsx -e:*)",
-      "Bash(node --experimental-strip-types --experimental-transform-types:*)"
+      "Bash(node --experimental-strip-types --experimental-transform-types:*)",
+      "Bash(pnpm format:check:*)"
     ]
   }
 }

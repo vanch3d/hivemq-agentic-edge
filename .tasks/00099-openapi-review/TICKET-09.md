@@ -13,33 +13,33 @@
 
 ### Part A — Fix typos and grammar (17 items)
 
-| Location | Current | Fix |
-| --- | --- | --- |
-| `delete-adapter-domainTags` summary | "an domain" | "a domain" |
-| `delete-topicFilter` summary | "an topic" | "a topic" |
-| `getTagSchema` description | "portocol" | "protocol" |
-| `getSchemaForTopic` summary | "based in" | "based on" |
-| `getSamplesForTopic` summary | "their gathered" | "are gathered" |
-| `getBehaviorPolicy` summary | "Get a  policy" | "Get a policy" (remove double space) |
-| `get-listeners` summary | Trailing space | Remove trailing space |
-| `getAdapter` description | Unmatched trailing quote | Remove quote |
-| `get-adapter-status` description | "status an adapter" | "status of an adapter" |
-| `list-response-b` (scripts) | "sripts" | "scripts" |
-| `NorthboundMapping.tagName` | "hould" | "should" |
-| `SouthboundMapping.tagName` | "hould" | "should" |
-| `RequestBodyParameterMissingError.parameter` | "The the missing" | "The missing" |
-| `Bridge.cleanStart` | "associated the the" | "associated with the" |
-| `Bridge.clientId` | "associated the the" | "associated with the" |
-| `Bridge.keepAlive` | "associated the the" | "associated with the" |
-| `Bridge.sessionExpiry`, `.password`, `.username` | "associated the the" | "associated with the" |
+| Location                                         | Current                  | Fix                                  |
+| ------------------------------------------------ | ------------------------ | ------------------------------------ |
+| `delete-adapter-domainTags` summary              | "an domain"              | "a domain"                           |
+| `delete-topicFilter` summary                     | "an topic"               | "a topic"                            |
+| `getTagSchema` description                       | "portocol"               | "protocol"                           |
+| `getSchemaForTopic` summary                      | "based in"               | "based on"                           |
+| `getSamplesForTopic` summary                     | "their gathered"         | "are gathered"                       |
+| `getBehaviorPolicy` summary                      | "Get a policy"           | "Get a policy" (remove double space) |
+| `get-listeners` summary                          | Trailing space           | Remove trailing space                |
+| `getAdapter` description                         | Unmatched trailing quote | Remove quote                         |
+| `get-adapter-status` description                 | "status an adapter"      | "status of an adapter"               |
+| `list-response-b` (scripts)                      | "sripts"                 | "scripts"                            |
+| `NorthboundMapping.tagName`                      | "hould"                  | "should"                             |
+| `SouthboundMapping.tagName`                      | "hould"                  | "should"                             |
+| `RequestBodyParameterMissingError.parameter`     | "The the missing"        | "The missing"                        |
+| `Bridge.cleanStart`                              | "associated the the"     | "associated with the"                |
+| `Bridge.clientId`                                | "associated the the"     | "associated with the"                |
+| `Bridge.keepAlive`                               | "associated the the"     | "associated with the"                |
+| `Bridge.sessionExpiry`, `.password`, `.username` | "associated the the"     | "associated with the"                |
 
 ### Part B — Fix garbled descriptions (3 items)
 
-| Location | Current | Suggested fix |
-| --- | --- | --- |
-| `BridgeCustomUserProperty.key` | "The key the from the property" | "The key of the custom user property" |
-| `BridgeCustomUserProperty.value` | "The value the from the property" | "The value of the custom user property" |
-| `TopicFilterId` parameter | "should be deleted" | "The unique identifier of the topic filter" |
+| Location                         | Current                           | Suggested fix                               |
+| -------------------------------- | --------------------------------- | ------------------------------------------- |
+| `BridgeCustomUserProperty.key`   | "The key the from the property"   | "The key of the custom user property"       |
+| `BridgeCustomUserProperty.value` | "The value the from the property" | "The value of the custom user property"     |
+| `TopicFilterId` parameter        | "should be deleted"               | "The unique identifier of the topic filter" |
 
 ### Part C — Standardize summary/description conventions
 

@@ -71,3 +71,28 @@ export function requestApproval(request: ApprovalRequest): Promise<boolean> {
   }
   return _requestApproval(request);
 }
+
+// --- Snapshot coordination ---
+
+export type SnapshotRequest = {
+  toolName: string;
+  operation: string;
+  displayType: "table" | "json" | "graph";
+  data: unknown;
+  label: string;
+  graphScope?: string;
+  graphFocusEntityId?: string;
+};
+
+type SnapshotCreatorFn = (request: SnapshotRequest) => string;
+
+let _createSnapshot: SnapshotCreatorFn | null = null;
+
+export function setSnapshotCreator(fn: SnapshotCreatorFn): void {
+  _createSnapshot = fn;
+}
+
+export function createToolSnapshot(request: SnapshotRequest): string | null {
+  if (!_createSnapshot) return null;
+  return _createSnapshot(request);
+}

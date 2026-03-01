@@ -21,6 +21,7 @@ This means generated SDKs cannot distinguish public from authenticated endpoints
 ### 5 items — Security scheme + endpoint annotations + writeOnly
 
 1. Add a `securitySchemes` definition under `components`:
+
    ```yaml
    components:
      securitySchemes:
@@ -31,6 +32,7 @@ This means generated SDKs cannot distinguish public from authenticated endpoints
    ```
 
 2. Add a global `security` declaration (applies to all endpoints by default):
+
    ```yaml
    security:
      - bearerAuth: []

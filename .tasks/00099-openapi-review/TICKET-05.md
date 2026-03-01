@@ -15,17 +15,17 @@
 
 Replace each `JsonNode` usage with a contextually named type, or at minimum add a specific `description` at the property level where `$ref: JsonNode` is used.
 
-| Current usage | Suggested replacement type | Description |
-| --- | --- | --- |
-| `Adapter.config` | `AdapterConfigPayload` | "Protocol-specific configuration for this adapter instance. Structure defined by the adapter type's configSchema." |
-| `ProtocolAdapter.configSchema` | `JsonSchemaDocument` | "JSON Schema defining the configuration structure for this adapter type" |
-| `ProtocolAdapter.uiSchema` | `RjsfUiSchema` | "RJSF UI schema controlling form rendering for this adapter type's configuration" |
-| `FunctionSpecs.schema` | `JsonSchemaDocument` (reuse) | "JSON Schema defining the arguments accepted by this Data Hub function" |
-| `FunctionSpecs.uiSchema` | `RjsfUiSchema` (reuse) | "RJSF UI schema for rendering this function's argument form" |
-| `DomainTag.definition` | `TagDefinitionPayload` | "Protocol-specific tag address definition. Structure defined by the adapter type's tag schema." |
-| `TagSchema.configSchema` | `JsonSchemaDocument` (reuse) | "JSON Schema defining the tag address structure for this adapter type" |
-| `getFsms` response | `JsonSchemaDocument` (reuse) | "JSON Schema describing the available behavior model FSMs and their states" |
-| `get-writing-schema` response | `JsonSchemaDocument` (reuse) | "JSON Schema defining the payload structure accepted when writing to this tag" |
+| Current usage                  | Suggested replacement type   | Description                                                                                                        |
+| ------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `Adapter.config`               | `AdapterConfigPayload`       | "Protocol-specific configuration for this adapter instance. Structure defined by the adapter type's configSchema." |
+| `ProtocolAdapter.configSchema` | `JsonSchemaDocument`         | "JSON Schema defining the configuration structure for this adapter type"                                           |
+| `ProtocolAdapter.uiSchema`     | `RjsfUiSchema`               | "RJSF UI schema controlling form rendering for this adapter type's configuration"                                  |
+| `FunctionSpecs.schema`         | `JsonSchemaDocument` (reuse) | "JSON Schema defining the arguments accepted by this Data Hub function"                                            |
+| `FunctionSpecs.uiSchema`       | `RjsfUiSchema` (reuse)       | "RJSF UI schema for rendering this function's argument form"                                                       |
+| `DomainTag.definition`         | `TagDefinitionPayload`       | "Protocol-specific tag address definition. Structure defined by the adapter type's tag schema."                    |
+| `TagSchema.configSchema`       | `JsonSchemaDocument` (reuse) | "JSON Schema defining the tag address structure for this adapter type"                                             |
+| `getFsms` response             | `JsonSchemaDocument` (reuse) | "JSON Schema describing the available behavior model FSMs and their states"                                        |
+| `get-writing-schema` response  | `JsonSchemaDocument` (reuse) | "JSON Schema defining the payload structure accepted when writing to this tag"                                     |
 
 This consolidates 9 usages into 4 distinct types: `AdapterConfigPayload`, `TagDefinitionPayload`, `JsonSchemaDocument`, and `RjsfUiSchema`.
 

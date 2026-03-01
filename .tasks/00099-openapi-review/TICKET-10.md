@@ -36,14 +36,14 @@ This is supplementary documentation — it cannot be expressed as a schema type.
 
 Add `maxItems`, `maxLength`, or descriptions documenting hard limits:
 
-| Property/Endpoint | Limit | How to express |
-| --- | --- | --- |
-| Data policies | 5,000 max | `x-max-items: 5000` or description on POST endpoint |
-| Behavior policies | 5,000 max | Same |
-| Schemas | 5,000 max | Same |
-| Scripts | 5,000 max | Same |
-| `PolicySchema` definition body | 100KB | `maxLength` or description |
-| `Script.source` | 100KB | `maxLength` or description |
-| `Delivery.redirectTo` | 20 policy eval depth | Description on `applyPolicies` argument |
-| Client connection state value | 10KB | Description |
-| Client connection state total | 50MB | Description |
+| Property/Endpoint              | Limit                | How to express                                      |
+| ------------------------------ | -------------------- | --------------------------------------------------- |
+| Data policies                  | 5,000 max            | `x-max-items: 5000` or description on POST endpoint |
+| Behavior policies              | 5,000 max            | Same                                                |
+| Schemas                        | 5,000 max            | Same                                                |
+| Scripts                        | 5,000 max            | Same                                                |
+| `PolicySchema` definition body | 100KB                | `maxLength` or description                          |
+| `Script.source`                | 100KB                | `maxLength` or description                          |
+| `Delivery.redirectTo`          | 20 policy eval depth | Description on `applyPolicies` argument             |
+| Client connection state value  | 10KB                 | Description                                         |
+| Client connection state total  | 50MB                 | Description                                         |

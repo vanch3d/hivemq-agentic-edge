@@ -5,6 +5,7 @@ import {
   getBridgeStatus,
 } from "@/api/sdk.gen";
 import { queryBridgesDef } from "@/agent/tool-definitions";
+import { snapshotQueryResult } from "./snapshot-helper";
 
 type ApiError = { title?: string };
 
@@ -13,10 +14,20 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
     switch (input.operation) {
       case "list": {
         const { data, error } = await getBridges();
-        return {
+        const result = {
           data: data?.items,
           error: (error as ApiError | undefined)?.title,
         };
+        if (result.data && !result.error) {
+          const snapshotId = snapshotQueryResult({
+            toolName: "queryBridges",
+            operation: "list",
+            data: result.data,
+            label: "Bridges \u2014 list",
+          });
+          return { ...result, snapshotId };
+        }
+        return result;
       }
       case "get": {
         if (!input.bridgeId)
@@ -24,14 +35,34 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgeByName({
           path: { bridgeId: input.bridgeId },
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: (error as ApiError | undefined)?.title };
+        if (result.data && !result.error) {
+          const snapshotId = snapshotQueryResult({
+            toolName: "queryBridges",
+            operation: "get",
+            data: result.data,
+            label: `Bridge \u2014 ${input.bridgeId}`,
+          });
+          return { ...result, snapshotId };
+        }
+        return result;
       }
       case "listStatus": {
         const { data, error } = await getBridgesStatus();
-        return {
+        const result = {
           data: data?.items,
           error: (error as ApiError | undefined)?.title,
         };
+        if (result.data && !result.error) {
+          const snapshotId = snapshotQueryResult({
+            toolName: "queryBridges",
+            operation: "listStatus",
+            data: result.data,
+            label: "Bridges \u2014 status",
+          });
+          return { ...result, snapshotId };
+        }
+        return result;
       }
       case "getStatus": {
         if (!input.bridgeId)
@@ -39,7 +70,17 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgeStatus({
           path: { bridgeId: input.bridgeId },
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: (error as ApiError | undefined)?.title };
+        if (result.data && !result.error) {
+          const snapshotId = snapshotQueryResult({
+            toolName: "queryBridges",
+            operation: "getStatus",
+            data: result.data,
+            label: `Bridge \u2014 ${input.bridgeId} status`,
+          });
+          return { ...result, snapshotId };
+        }
+        return result;
       }
     }
   } catch (e) {

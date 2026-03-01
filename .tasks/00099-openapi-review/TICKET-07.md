@@ -20,6 +20,7 @@ Three issues compound to make the API surface inconsistent:
 Convert all kebab-case operationIds to camelCase. The Data Hub endpoints already use camelCase consistently — extend this to Edge management and Frontend.
 
 Examples:
+
 - `refresh-token` → `refreshToken`
 - `get-capabilities` → `getCapabilities`
 - `get-bridges-status` → `getBridgesStatus`
@@ -27,6 +28,7 @@ Examples:
 - `delete-adapter-domainTags` → `deleteAdapterDomainTag`
 
 Fix mixed/misleading IDs:
+
 - `getCombinersById` → `getCombinerById` (singular)
 - `getBridgeByName` → `getBridgeById` (path param is `{bridgeId}`, not a name)
 
@@ -48,6 +50,7 @@ Fix mixed/misleading IDs:
 ### Part C — Normalize list schema names (15 schemas)
 
 Pick one convention (`*List` without plural entity) and rename:
+
 - `AdaptersList` → `AdapterList`
 
 Or document the convention and apply consistently.

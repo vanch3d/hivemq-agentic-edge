@@ -112,7 +112,10 @@ function resolveAdapterFromSettings(settings: Record<string, unknown>) {
     ? (model as AnthropicModel)
     : DEFAULT_ANTHROPIC_MODEL;
   console.log(`[chat] Using Anthropic provider: model=${validModel}`);
-  return createAnthropicChat(validModel as Parameters<typeof createAnthropicChat>[0], apiKey);
+  return createAnthropicChat(
+    validModel as Parameters<typeof createAnthropicChat>[0],
+    apiKey,
+  );
 }
 
 // --- Route ---

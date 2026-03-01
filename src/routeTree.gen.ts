@@ -16,6 +16,7 @@ import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authentica
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace/index'
 import { Route as AuthenticatedWorkspaceGraphRouteImport } from './routes/_authenticated/workspace/graph'
 import { Route as AuthenticatedWorkspaceConfigurationIndexRouteImport } from './routes/_authenticated/workspace/configuration/index'
+import { Route as AuthenticatedWorkspaceSnapshotIdRouteImport } from './routes/_authenticated/workspace/snapshot.$id'
 import { Route as AuthenticatedWorkspaceConfigurationToolsRouteImport } from './routes/_authenticated/workspace/configuration/tools'
 import { Route as AuthenticatedWorkspaceConfigurationSettingsRouteImport } from './routes/_authenticated/workspace/configuration/settings'
 import { Route as AuthenticatedWorkspaceConfigurationOntologyRouteImport } from './routes/_authenticated/workspace/configuration/ontology'
@@ -58,6 +59,12 @@ const AuthenticatedWorkspaceConfigurationIndexRoute =
     path: '/configuration/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedWorkspaceSnapshotIdRoute =
+  AuthenticatedWorkspaceSnapshotIdRouteImport.update({
+    id: '/snapshot/$id',
+    path: '/snapshot/$id',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
 const AuthenticatedWorkspaceConfigurationToolsRoute =
   AuthenticatedWorkspaceConfigurationToolsRouteImport.update({
     id: '/configuration/tools',
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
   '/workspace/configuration/settings': typeof AuthenticatedWorkspaceConfigurationSettingsRoute
   '/workspace/configuration/tools': typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  '/workspace/snapshot/$id': typeof AuthenticatedWorkspaceSnapshotIdRoute
   '/workspace/configuration/': typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 export interface FileRoutesByTo {
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
   '/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
   '/workspace/configuration/settings': typeof AuthenticatedWorkspaceConfigurationSettingsRoute
   '/workspace/configuration/tools': typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  '/workspace/snapshot/$id': typeof AuthenticatedWorkspaceSnapshotIdRoute
   '/workspace/configuration': typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 export interface FileRoutesById {
@@ -118,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
   '/_authenticated/workspace/configuration/settings': typeof AuthenticatedWorkspaceConfigurationSettingsRoute
   '/_authenticated/workspace/configuration/tools': typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  '/_authenticated/workspace/snapshot/$id': typeof AuthenticatedWorkspaceSnapshotIdRoute
   '/_authenticated/workspace/configuration/': typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 export interface FileRouteTypes {
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/workspace/configuration/ontology'
     | '/workspace/configuration/settings'
     | '/workspace/configuration/tools'
+    | '/workspace/snapshot/$id'
     | '/workspace/configuration/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/workspace/configuration/ontology'
     | '/workspace/configuration/settings'
     | '/workspace/configuration/tools'
+    | '/workspace/snapshot/$id'
     | '/workspace/configuration'
   id:
     | '__root__'
@@ -156,6 +168,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/configuration/ontology'
     | '/_authenticated/workspace/configuration/settings'
     | '/_authenticated/workspace/configuration/tools'
+    | '/_authenticated/workspace/snapshot/$id'
     | '/_authenticated/workspace/configuration/'
   fileRoutesById: FileRoutesById
 }
@@ -216,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceConfigurationIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/workspace/snapshot/$id': {
+      id: '/_authenticated/workspace/snapshot/$id'
+      path: '/snapshot/$id'
+      fullPath: '/workspace/snapshot/$id'
+      preLoaderRoute: typeof AuthenticatedWorkspaceSnapshotIdRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
     '/_authenticated/workspace/configuration/tools': {
       id: '/_authenticated/workspace/configuration/tools'
       path: '/configuration/tools'
@@ -254,6 +274,7 @@ interface AuthenticatedWorkspaceRouteChildren {
   AuthenticatedWorkspaceConfigurationOntologyRoute: typeof AuthenticatedWorkspaceConfigurationOntologyRoute
   AuthenticatedWorkspaceConfigurationSettingsRoute: typeof AuthenticatedWorkspaceConfigurationSettingsRoute
   AuthenticatedWorkspaceConfigurationToolsRoute: typeof AuthenticatedWorkspaceConfigurationToolsRoute
+  AuthenticatedWorkspaceSnapshotIdRoute: typeof AuthenticatedWorkspaceSnapshotIdRoute
   AuthenticatedWorkspaceConfigurationIndexRoute: typeof AuthenticatedWorkspaceConfigurationIndexRoute
 }
 
@@ -269,6 +290,8 @@ const AuthenticatedWorkspaceRouteChildren: AuthenticatedWorkspaceRouteChildren =
       AuthenticatedWorkspaceConfigurationSettingsRoute,
     AuthenticatedWorkspaceConfigurationToolsRoute:
       AuthenticatedWorkspaceConfigurationToolsRoute,
+    AuthenticatedWorkspaceSnapshotIdRoute:
+      AuthenticatedWorkspaceSnapshotIdRoute,
     AuthenticatedWorkspaceConfigurationIndexRoute:
       AuthenticatedWorkspaceConfigurationIndexRoute,
   }

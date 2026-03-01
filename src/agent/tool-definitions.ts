@@ -240,6 +240,44 @@ export const queryGraphDef = toolDefinition({
   }),
 });
 
+export const querySnapshotsDef = toolDefinition({
+  name: "querySnapshots",
+  description:
+    "Search and navigate to saved query snapshots (recent query results). Use 'list' to see all snapshots, 'search' to filter by toolName or label text, 'open' to navigate the user to one or more snapshots by id. Each snapshot has: id, toolName (e.g. 'queryBridges'), operation, label, displayType, timestamp.",
+  inputSchema: z.object({
+    operation: z.enum(["list", "search", "open"]),
+    toolName: z
+      .string()
+      .optional()
+      .describe(
+        "Filter by tool name for 'search', e.g. 'queryBridges', 'queryAdapters'",
+      ),
+    query: z
+      .string()
+      .optional()
+      .describe("Text to search in snapshot labels for 'search'"),
+    ids: z
+      .array(z.string())
+      .optional()
+      .describe("Snapshot IDs to open for 'open'"),
+    limit: z.number().optional().describe("Max results to return (default 10)"),
+  }),
+  outputSchema: z.object({
+    snapshots: z.array(
+      z.object({
+        id: z.string(),
+        toolName: z.string(),
+        operation: z.string(),
+        label: z.string(),
+        displayType: z.string(),
+        timestamp: z.number(),
+      }),
+    ),
+    opened: z.array(z.string()).optional(),
+    error: z.string().optional(),
+  }),
+});
+
 /** All tool definitions for server-side registration */
 export const allToolDefinitions = [
   queryBridgesDef,
@@ -253,4 +291,5 @@ export const allToolDefinitions = [
   mutateDataHubDef,
   mutateSystemDef,
   queryGraphDef,
+  querySnapshotsDef,
 ];

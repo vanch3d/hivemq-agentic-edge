@@ -15,25 +15,26 @@ The Data Hub and Edge management subsystems use different HTTP conventions for t
 
 Align Edge management endpoints with the Data Hub convention:
 
-| Operation | Current (Edge) | Target | Change |
-| --- | --- | --- | --- |
-| Create (POST) | `200 OK` empty body | `201 Created` with resource body | Return the created resource |
-| Delete (DELETE) | `200 OK` empty body | `204 No Content` | Change status code |
-| Update (PUT) | `200 OK` empty body | `200 OK` with resource body | Return the updated resource |
+| Operation       | Current (Edge)      | Target                           | Change                      |
+| --------------- | ------------------- | -------------------------------- | --------------------------- |
+| Create (POST)   | `200 OK` empty body | `201 Created` with resource body | Return the created resource |
+| Delete (DELETE) | `200 OK` empty body | `204 No Content`                 | Change status code          |
+| Update (PUT)    | `200 OK` empty body | `200 OK` with resource body      | Return the updated resource |
 
 Affected endpoint groups: bridges, adapters, topic filters, combiners, pulse, UNS.
 
 ### Part B — Fix incorrect error status codes (3 items)
 
-| Endpoint | Current | Correct |
-| --- | --- | --- |
-| `add-topicFilters` "Already Present" | `403 Forbidden` | `409 Conflict` |
-| `delete-topicFilter` "Already Present" | `403 Forbidden` | Remove (or `404 Not Found`) |
-| `update-adapter-domainTag` "Adapter not found" | `403 Forbidden` | `404 Not Found` |
+| Endpoint                                       | Current         | Correct                     |
+| ---------------------------------------------- | --------------- | --------------------------- |
+| `add-topicFilters` "Already Present"           | `403 Forbidden` | `409 Conflict`              |
+| `delete-topicFilter` "Already Present"         | `403 Forbidden` | Remove (or `404 Not Found`) |
+| `update-adapter-domainTag` "Adapter not found" | `403 Forbidden` | `404 Not Found`             |
 
 ### Part C — Document pagination patterns
 
 Add a description or `x-pagination` extension to each list endpoint indicating:
+
 - Whether pagination is supported
 - The mechanism (cursor-based, offset-based, or none)
 - Default and max page sizes

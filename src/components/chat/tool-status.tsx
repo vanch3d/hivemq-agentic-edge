@@ -1,5 +1,7 @@
 import { Box, Spinner, Text } from "@chakra-ui/react";
 import type { ToolCallPart, ToolResultPart } from "@tanstack/ai";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ChatTable } from "./chat-table";
 import { ChatGraph } from "@/graph/components/chat-graph";
 
@@ -16,7 +18,7 @@ export function ToolCallStatus({ part }: ToolCallStatusProps) {
       {isRunning && <Spinner size="xs" />}
       <Text fontSize="xs" color="fg.muted" fontStyle="italic">
         {part.name}
-        {isRunning ? "…" : ""}
+        {isRunning ? "\u2026" : ""}
       </Text>
     </Box>
   );
@@ -27,6 +29,8 @@ interface ToolResultStatusProps {
 }
 
 export function ToolResultStatus({ part }: ToolResultStatusProps) {
+  const { t } = useTranslation();
+
   if (part.error) {
     return (
       <Text fontSize="xs" color="fg.error">
@@ -55,8 +59,13 @@ export function ToolResultStatus({ part }: ToolResultStatusProps) {
     );
   }
 
-  // Tools return { data, error?, display? }
-  const result = parsed as { data?: unknown; error?: string; display?: string };
+  // Tools return { data, error?, display?, snapshotId? }
+  const result = parsed as {
+    data?: unknown;
+    error?: string;
+    display?: string;
+    snapshotId?: string;
+  };
 
   if (result.error) {
     return (
@@ -66,23 +75,46 @@ export function ToolResultStatus({ part }: ToolResultStatusProps) {
     );
   }
 
+  const snapshotLink = result.snapshotId ? (
+    <Box pt="1">
+      <Link to="/workspace/snapshot/$id" params={{ id: result.snapshotId }}>
+        <Text fontSize="xs" color="blue.500" cursor="pointer">
+          {t("snapshot.openFullView")}
+        </Text>
+      </Link>
+    </Box>
+  ) : null;
+
   // Graph display type
   if (result.display === "graph") {
-    return <ChatGraph />;
+    return (
+      <>
+        <ChatGraph />
+        {snapshotLink}
+      </>
+    );
   }
 
   // Render arrays as tables if items are objects
   if (Array.isArray(result.data) && result.data.length > 0) {
     const first = result.data[0];
     if (typeof first === "object" && first !== null) {
-      return <ChatTable data={result.data as Record<string, unknown>[]} />;
+      return (
+        <>
+          <ChatTable data={result.data as Record<string, unknown>[]} />
+          {snapshotLink}
+        </>
+      );
     }
   }
 
   // Fallback: JSON summary
   return (
-    <Text fontSize="xs" color="fg.muted" whiteSpace="pre-wrap">
-      {JSON.stringify(result.data ?? parsed, null, 2)}
-    </Text>
+    <>
+      <Text fontSize="xs" color="fg.muted" whiteSpace="pre-wrap">
+        {JSON.stringify(result.data ?? parsed, null, 2)}
+      </Text>
+      {snapshotLink}
+    </>
   );
 }

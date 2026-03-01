@@ -10,6 +10,7 @@
 The three most important Data Hub schemas — `PolicyOperation`, `DataPolicyValidator`, and `BehaviorPolicyBehavior` — all use `type: object` for their `arguments` fields and free-form strings for their discriminator fields (`functionId`, `type`, `id`). The actual domain types are well-defined in the product but invisible in the spec.
 
 An LLM or SDK consumer given only this spec cannot:
+
 - Know which function IDs are valid
 - Construct correct arguments for any function
 - Know which behavior models exist or what their FSM states are
@@ -33,6 +34,7 @@ An LLM or SDK consumer given only this spec cannot:
    Add descriptions noting terminal vs. non-terminal functions, data-policy-only restrictions, and pipeline ordering rules (deserialize before serialize).
 
 3. **`DataPolicyValidator.arguments`** — replace `type: object` with a typed schema for the `SCHEMA` validator type:
+
    ```yaml
    properties:
      strategy:
@@ -42,9 +44,10 @@ An LLM or SDK consumer given only this spec cannot:
      schemas:
        type: array
        items:
-         $ref: '#/components/schemas/SchemaReference'
+         $ref: "#/components/schemas/SchemaReference"
    required: [strategy, schemas]
    ```
+
    Note: `SchemaReference` already exists in the spec (used in `BehaviorPolicyDeserializer`) — reuse it.
 
 4. **`BehaviorPolicyBehavior.id`** — add `enum` with the 3 known models: `Mqtt.events`, `Publish.duplicate`, `Publish.quota`. Define per-model argument schemas:

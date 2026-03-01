@@ -216,10 +216,7 @@ function ToolCard({
               <Text fontSize="xs" fontWeight="semibold" mb="1">
                 {labels.parameters}
               </Text>
-              <ParamList
-                params={otherParams}
-                optionalLabel={labels.optional}
-              />
+              <ParamList params={otherParams} optionalLabel={labels.optional} />
             </Box>
           )}
         </Stack>
@@ -247,9 +244,7 @@ function ToolsPage() {
     <Box>
       <Stack gap="1" mb="6">
         <Heading size="xl">{t("configuration.tools.title")}</Heading>
-        <Text color="fg.muted">
-          {t("configuration.tools.pageDescription")}
-        </Text>
+        <Text color="fg.muted">{t("configuration.tools.pageDescription")}</Text>
         <HStack gap="3" mt="2">
           <Text fontSize="sm" color="fg.muted">
             {t("configuration.tools.totalCount", { count: tools.length })}

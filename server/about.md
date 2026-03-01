@@ -151,15 +151,15 @@ In practice, TanStack AI lets us write tool definitions once and have them work 
 
 Communication between server and client uses AG-UI (Agent User Interaction), a structured SSE event stream. The key event types:
 
-| Event | Purpose |
-|-------|---------|
-| `RUN_STARTED` | First event — signals the agent run has begun |
-| `TEXT_MESSAGE_START` / `CONTENT` / `END` | Streaming text response from the model |
-| `TOOL_CALL_START` / `ARGS` / `END` | Model requests a tool call with arguments |
-| `TOOL_CALL_RESULT` | Client sends tool execution result back |
-| `STEP_STARTED` / `STEP_FINISHED` | Thinking/reasoning steps (e.g., Ollama's thinking mode) |
-| `RUN_FINISHED` | Agent run complete |
-| `RUN_ERROR` | Error during execution |
+| Event                                    | Purpose                                                 |
+| ---------------------------------------- | ------------------------------------------------------- |
+| `RUN_STARTED`                            | First event — signals the agent run has begun           |
+| `TEXT_MESSAGE_START` / `CONTENT` / `END` | Streaming text response from the model                  |
+| `TOOL_CALL_START` / `ARGS` / `END`       | Model requests a tool call with arguments               |
+| `TOOL_CALL_RESULT`                       | Client sends tool execution result back                 |
+| `STEP_STARTED` / `STEP_FINISHED`         | Thinking/reasoning steps (e.g., Ollama's thinking mode) |
+| `RUN_FINISHED`                           | Agent run complete                                      |
+| `RUN_ERROR`                              | Error during execution                                  |
 
 This protocol is what makes the agentic loop possible: the model emits tool calls, the client executes them locally, results flow back, and the model continues reasoning — all over a single SSE connection.
 
@@ -169,13 +169,13 @@ TanStack AI is a young framework (v0.3.x at time of integration). We encountered
 
 **1. Ollama adapter emits wrong event types** — The `@tanstack/ai-ollama` adapter's `processOllamaStreamChunks()` emits non-standard event types that don't match the AG-UI protocol:
 
-| Ollama adapter emits | AG-UI expects |
-|---------------------|---------------|
-| `"content"` | `TEXT_MESSAGE_START` + `TEXT_MESSAGE_CONTENT` + `TEXT_MESSAGE_END` |
-| `"done"` | `RUN_FINISHED` |
-| `"tool_call"` | `TOOL_CALL_START` + `TOOL_CALL_ARGS` + `TOOL_CALL_END` |
-| `"thinking"` | `STEP_STARTED` + `STEP_FINISHED` |
-| _(missing)_ | `RUN_STARTED` (must be the first event) |
+| Ollama adapter emits | AG-UI expects                                                      |
+| -------------------- | ------------------------------------------------------------------ |
+| `"content"`          | `TEXT_MESSAGE_START` + `TEXT_MESSAGE_CONTENT` + `TEXT_MESSAGE_END` |
+| `"done"`             | `RUN_FINISHED`                                                     |
+| `"tool_call"`        | `TOOL_CALL_START` + `TOOL_CALL_ARGS` + `TOOL_CALL_END`             |
+| `"thinking"`         | `STEP_STARTED` + `STEP_FINISHED`                                   |
+| _(missing)_          | `RUN_STARTED` (must be the first event)                            |
 
 Since the TanStack AI engine's `handleStreamChunk()` switches on AG-UI type names, none of the Ollama events are recognized — nothing renders.
 
@@ -203,6 +203,7 @@ graph LR
 ```
 
 The patch:
+
 1. **Injects system prompts** — prepends `{ role: "system" }` to the messages array before calling the underlying adapter
 2. **Transforms event types** — maps every Ollama chunk to its AG-UI equivalent via an `async function*` generator that wraps the source stream
 3. **Manages state** — tracks open text messages, thinking steps, and tool calls to emit proper start/end event pairs
@@ -218,13 +219,13 @@ Both workarounds can be removed once the upstream `@tanstack/ai-ollama` package 
 
 Cloud-hosted models accessed via API key. The API key stays server-side and is never exposed to the browser.
 
-| Model | API ID | Input $/MTok | Output $/MTok | Tool Calling | Notes |
-|-------|--------|-------------|---------------|-------------|-------|
-| Opus 4.6 | `claude-opus-4-6` | $5.00 | $25.00 | Excellent | Latest generation, top-tier reasoning |
-| Sonnet 4.6 | `claude-sonnet-4-6` | $3.00 | $15.00 | Excellent | Latest balanced model |
-| **Sonnet 4.5** | **`claude-sonnet-4-5`** | **$3.00** | **$15.00** | **Excellent** | **Current default** — best balance |
-| Opus 4.5 | `claude-opus-4-5` | $5.00 | $25.00 | Excellent | Previous gen top-tier |
-| Haiku 4.5 | `claude-haiku-4-5` | $1.00 | $5.00 | Good | Fastest, 3x cheaper |
+| Model          | API ID                  | Input $/MTok | Output $/MTok | Tool Calling  | Notes                                 |
+| -------------- | ----------------------- | ------------ | ------------- | ------------- | ------------------------------------- |
+| Opus 4.6       | `claude-opus-4-6`       | $5.00        | $25.00        | Excellent     | Latest generation, top-tier reasoning |
+| Sonnet 4.6     | `claude-sonnet-4-6`     | $3.00        | $15.00        | Excellent     | Latest balanced model                 |
+| **Sonnet 4.5** | **`claude-sonnet-4-5`** | **$3.00**    | **$15.00**    | **Excellent** | **Current default** — best balance    |
+| Opus 4.5       | `claude-opus-4-5`       | $5.00        | $25.00        | Excellent     | Previous gen top-tier                 |
+| Haiku 4.5      | `claude-haiku-4-5`      | $1.00        | $5.00         | Good          | Fastest, 3x cheaper                   |
 
 **Cost-saving features**: Prompt caching (cache reads at 0.1x input price) is high-value for us — ~6,000 tokens of static content repeated every request.
 
@@ -232,15 +233,16 @@ Cloud-hosted models accessed via API key. The API key stays server-side and is n
 
 Free, runs locally. No API key required. Best for offline development, privacy-sensitive deployments, and zero-cost testing.
 
-| Model | Size (Q4) | VRAM | Tool Calling | Notes |
-|-------|-----------|------|-------------|-------|
-| **`qwen3:8b`** | ~5 GB | ~6 GB | Good | **Best pick** — Qwen3-8B native tool support, best small-model performance |
-| `qwen3:4b` | ~2.5 GB | ~3.5 GB | Fair | Best for 8 GB machines |
-| `llama3.1:8b` | ~4.7 GB | ~5.5 GB | Inconsistent | Sometimes calls tools, sometimes hallucinates results in text |
+| Model          | Size (Q4) | VRAM    | Tool Calling | Notes                                                                      |
+| -------------- | --------- | ------- | ------------ | -------------------------------------------------------------------------- |
+| **`qwen3:8b`** | ~5 GB     | ~6 GB   | Good         | **Best pick** — Qwen3-8B native tool support, best small-model performance |
+| `qwen3:4b`     | ~2.5 GB   | ~3.5 GB | Fair         | Best for 8 GB machines                                                     |
+| `llama3.1:8b`  | ~4.7 GB   | ~5.5 GB | Inconsistent | Sometimes calls tools, sometimes hallucinates results in text              |
 
 **Key insight**: Even with the adapter bugs fixed, smaller Ollama models (7B/8B) have unreliable native tool calling. They tend to describe tool calls in text rather than emitting structured tool call events. For production-quality agentic behavior, Anthropic Claude remains the recommended provider. Ollama is best suited for UI flow testing, basic conversation, and development without internet.
 
 **Recommended Ollama setup** (Apple Silicon):
+
 ```
 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve
 ```
@@ -249,21 +251,21 @@ OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve
 
 TanStack AI has official adapters for these providers. Adding one is a single `pnpm add` + a new branch in `resolveAdapterFromSettings()`.
 
-| Provider | Package | Key Models | Why Consider |
-|----------|---------|-----------|-------------|
-| **Google Gemini** | `@tanstack/ai-gemini` | Gemini 2.5 Flash ($0.30/MTok in) | 10x cheaper than Sonnet 4.5, context caching at 75% off |
-| **OpenAI** | `@tanstack/ai-openai` | GPT-4o-mini ($0.15/MTok in) | Cheapest reliable tool calling, good fallback |
-| **OpenRouter** | `@tanstack/ai-openrouter` | 400+ models (DeepSeek V3, Mistral, Llama) | Single gateway, A/B testing without code changes |
+| Provider          | Package                   | Key Models                                | Why Consider                                            |
+| ----------------- | ------------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| **Google Gemini** | `@tanstack/ai-gemini`     | Gemini 2.5 Flash ($0.30/MTok in)          | 10x cheaper than Sonnet 4.5, context caching at 75% off |
+| **OpenAI**        | `@tanstack/ai-openai`     | GPT-4o-mini ($0.15/MTok in)               | Cheapest reliable tool calling, good fallback           |
+| **OpenRouter**    | `@tanstack/ai-openrouter` | 400+ models (DeepSeek V3, Mistral, Llama) | Single gateway, A/B testing without code changes        |
 
 ### Provider Comparison
 
-| Use Case | Recommended Model | Cost |
-|----------|------------------|------|
-| Production / demo | `claude-sonnet-4-5` | $3.00 / MTok in |
-| Development / testing | `claude-haiku-4-5` | $1.00 / MTok in |
-| Budget production | Gemini 2.5 Flash (not yet integrated) | $0.30 / MTok in |
-| Offline / air-gapped | Ollama `qwen3:8b` | Free |
-| Multi-provider resilience | OpenRouter (not yet integrated) | Varies |
+| Use Case                  | Recommended Model                     | Cost            |
+| ------------------------- | ------------------------------------- | --------------- |
+| Production / demo         | `claude-sonnet-4-5`                   | $3.00 / MTok in |
+| Development / testing     | `claude-haiku-4-5`                    | $1.00 / MTok in |
+| Budget production         | Gemini 2.5 Flash (not yet integrated) | $0.30 / MTok in |
+| Offline / air-gapped      | Ollama `qwen3:8b`                     | Free            |
+| Multi-provider resilience | OpenRouter (not yet integrated)       | Varies          |
 
 ---
 
@@ -330,25 +332,25 @@ graph TB
 
 ### Query Tools
 
-| Tool | Operations | Domain |
-|------|-----------|--------|
-| `queryBridges` | list, get, listStatus, getStatus | MQTT bridges |
-| `queryAdapters` | list, get, listTypes, getType, listTags, listNorthbound, listSouthbound, getStatus, listAllStatus | Protocol adapters |
-| `queryDataHub` | listBehaviorPolicies, getBehaviorPolicy, listDataPolicies, getDataPolicy, listSchemas, getSchema, listScripts, getScript, listFsms, listFunctionSpecs, listVariables | Data Hub |
-| `querySystem` | events, metrics, notifications, capabilities, liveness, readiness, listeners, isa95, pulseStatus, listCombiners, getCombiner, listTopicFilters, getTopicFilter, configuration | System |
-| `querySampling` | samples, schema | Topic sampling |
-| `queryGraph` | full, dataFlow, adapterTopology, policyImpact, bridgeTopology, combinerSources | Visualization |
+| Tool            | Operations                                                                                                                                                                    | Domain            |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| `queryBridges`  | list, get, listStatus, getStatus                                                                                                                                              | MQTT bridges      |
+| `queryAdapters` | list, get, listTypes, getType, listTags, listNorthbound, listSouthbound, getStatus, listAllStatus                                                                             | Protocol adapters |
+| `queryDataHub`  | listBehaviorPolicies, getBehaviorPolicy, listDataPolicies, getDataPolicy, listSchemas, getSchema, listScripts, getScript, listFsms, listFunctionSpecs, listVariables          | Data Hub          |
+| `querySystem`   | events, metrics, notifications, capabilities, liveness, readiness, listeners, isa95, pulseStatus, listCombiners, getCombiner, listTopicFilters, getTopicFilter, configuration | System            |
+| `querySampling` | samples, schema                                                                                                                                                               | Topic sampling    |
+| `queryGraph`    | full, dataFlow, adapterTopology, policyImpact, bridgeTopology, combinerSources                                                                                                | Visualization     |
 
 ### Mutation Tools
 
 All mutations require explicit user confirmation. Create/update operations show an inline form pre-filled with conversation context. Delete operations show a confirmation prompt.
 
-| Tool | Operations | Domain |
-|------|-----------|--------|
-| `mutateBridge` | create, update, delete, transitionStatus | MQTT bridges |
-| `mutateAdapter` | create, update, delete, transitionStatus | Protocol adapters |
-| `mutateDataHub` | createBehaviorPolicy, updateBehaviorPolicy, deleteBehaviorPolicy, createDataPolicy, updateDataPolicy, deleteDataPolicy, createSchema, deleteSchema, createScript, deleteScript | Data Hub |
-| `mutateSystem` | addTopicFilter, updateTopicFilter, deleteTopicFilter, addCombiner, updateCombiner, deleteCombiner, setIsa95 | System |
+| Tool            | Operations                                                                                                                                                                     | Domain            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| `mutateBridge`  | create, update, delete, transitionStatus                                                                                                                                       | MQTT bridges      |
+| `mutateAdapter` | create, update, delete, transitionStatus                                                                                                                                       | Protocol adapters |
+| `mutateDataHub` | createBehaviorPolicy, updateBehaviorPolicy, deleteBehaviorPolicy, createDataPolicy, updateDataPolicy, deleteDataPolicy, createSchema, deleteSchema, createScript, deleteScript | Data Hub          |
+| `mutateSystem`  | addTopicFilter, updateTopicFilter, deleteTopicFilter, addCombiner, updateCombiner, deleteCombiner, setIsa95                                                                    | System            |
 
 ### Mutation Flow
 
@@ -379,24 +381,24 @@ sequenceDiagram
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| UI Framework | React 19 | Component rendering |
-| Type System | TypeScript 5.9 | Static typing with `erasableSyntaxOnly` |
-| Build Tool | Vite 7 | Dev server + bundling |
-| Component Library | Chakra UI v3 | Accessible UI primitives |
-| Routing | TanStack Router | File-based routing with type safety |
-| Data Fetching | TanStack React Query | Cache, refetch, optimistic updates |
-| AI Framework | TanStack AI | Provider-agnostic LLM streaming |
-| API Client | @hey-api/openapi-ts | Generated from OpenAPI spec |
-| Forms | RJSF + Chakra UI theme | Schema-driven form rendering |
-| i18n | react-i18next | Internationalization |
-| Graph | React Flow + WebCola | Interactive topology visualization |
-| Mocking | MSW + @msw/data | Browser-level API interception |
-| Server | Hono | Lightweight HTTP framework (in Vite) |
-| LLM (cloud) | Anthropic Claude | Tool-calling, streaming |
-| LLM (local) | Ollama | Local inference with Qwen3, Llama3 |
-| Package Manager | pnpm | Fast, disk-efficient |
+| Layer             | Technology             | Purpose                                 |
+| ----------------- | ---------------------- | --------------------------------------- |
+| UI Framework      | React 19               | Component rendering                     |
+| Type System       | TypeScript 5.9         | Static typing with `erasableSyntaxOnly` |
+| Build Tool        | Vite 7                 | Dev server + bundling                   |
+| Component Library | Chakra UI v3           | Accessible UI primitives                |
+| Routing           | TanStack Router        | File-based routing with type safety     |
+| Data Fetching     | TanStack React Query   | Cache, refetch, optimistic updates      |
+| AI Framework      | TanStack AI            | Provider-agnostic LLM streaming         |
+| API Client        | @hey-api/openapi-ts    | Generated from OpenAPI spec             |
+| Forms             | RJSF + Chakra UI theme | Schema-driven form rendering            |
+| i18n              | react-i18next          | Internationalization                    |
+| Graph             | React Flow + WebCola   | Interactive topology visualization      |
+| Mocking           | MSW + @msw/data        | Browser-level API interception          |
+| Server            | Hono                   | Lightweight HTTP framework (in Vite)    |
+| LLM (cloud)       | Anthropic Claude       | Tool-calling, streaming                 |
+| LLM (local)       | Ollama                 | Local inference with Qwen3, Llama3      |
+| Package Manager   | pnpm                   | Fast, disk-efficient                    |
 
 ---
 
