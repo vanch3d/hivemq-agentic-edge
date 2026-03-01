@@ -75,11 +75,20 @@ function buildSettingsSchema(ollamaModels: string[]): Record<string, unknown> {
           ollama: { $ref: "#/$defs/ollama" },
         },
       },
-      ui: {
+      featureFlags: {
         type: "object",
-        title: "Interface",
-        description: "Frontend preferences and feature flags.",
-        properties: {},
+        title: "Feature Flags",
+        description: "Experimental features and version toggles.",
+        properties: {
+          ontologyVersion: {
+            type: "string",
+            title: "Ontology Version",
+            description:
+              "Select which domain ontology drives the graph and agent.",
+            enum: ["v1", "v2"],
+            default: "v1",
+          },
+        },
       },
     },
   };
@@ -88,6 +97,9 @@ function buildSettingsSchema(ollamaModels: string[]): Record<string, unknown> {
 const settingsUiSchema: Record<string, unknown> = {
   ai: {
     provider: { "ui:widget": "radio" },
+  },
+  featureFlags: {
+    ontologyVersion: { "ui:widget": "radio" },
   },
 };
 

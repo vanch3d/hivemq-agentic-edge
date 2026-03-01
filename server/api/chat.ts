@@ -51,7 +51,9 @@ export function resolveEnvDefaults(): Record<string, unknown> {
         think: process.env["OLLAMA_THINK"] !== "false",
       },
     },
-    ui: {},
+    featureFlags: {
+      ontologyVersion: process.env["ONTOLOGY_VERSION"] ?? "v1",
+    },
   };
 }
 

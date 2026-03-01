@@ -14,9 +14,13 @@ import {
   getNorthboundMappingsOptions,
   getSouthboundMappingsOptions,
   getAdapterDomainTagsOptions,
+  getAdapterNorthboundMappingsOptions,
+  getAdapterSouthboundMappingsOptions,
 } from "@/api/@tanstack/react-query.gen";
-import type { DomainTag } from "@/api/types.gen";
+import type { DomainTag, NorthboundMapping, SouthboundMapping } from "@/api/types.gen";
+import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { assembleFullGraph, type ApiData } from "./assembler";
+import { assembleFullGraphV2 } from "./assembler-v2";
 import { useGraphStore } from "./store";
 
 /**
@@ -24,7 +28,14 @@ import { useGraphStore } from "./store";
  * domain graph into the Zustand store. Mount this hook in the workspace
  * layout so the graph warms up in the background.
  */
+let _graphDataRenderCount = 0;
+
 export function useGraphData() {
+  _graphDataRenderCount++;
+  console.log("[graph-data] render #%d", _graphDataRenderCount);
+
+  const ontologyVersion = useFeatureFlag("ontologyVersion");
+
   // --- Core entity queries ---
   const adapters = useQuery(getAdaptersOptions());
   const bridges = useQuery(getBridgesOptions());
@@ -41,7 +52,7 @@ export function useGraphData() {
   const northboundMappings = useQuery(getNorthboundMappingsOptions());
   const southboundMappings = useQuery(getSouthboundMappingsOptions());
 
-  // --- Per-adapter domain tags (dynamic queries based on adapter list) ---
+  // --- Per-adapter dynamic queries (based on adapter list) ---
   const adapterIds = useMemo(
     () => adapters.data?.items?.map((a) => a.id) ?? [],
     [adapters.data],
@@ -51,6 +62,20 @@ export function useGraphData() {
     queries: adapterIds.map((adapterId) => ({
       ...getAdapterDomainTagsOptions({ path: { adapterId } }),
       enabled: adapterIds.length > 0,
+    })),
+  });
+
+  const perAdapterNbQueries = useQueries({
+    queries: adapterIds.map((adapterId) => ({
+      ...getAdapterNorthboundMappingsOptions({ path: { adapterId } }),
+      enabled: adapterIds.length > 0 && ontologyVersion === "v2",
+    })),
+  });
+
+  const perAdapterSbQueries = useQueries({
+    queries: adapterIds.map((adapterId) => ({
+      ...getAdapterSouthboundMappingsOptions({ path: { adapterId } }),
+      enabled: adapterIds.length > 0 && ontologyVersion === "v2",
     })),
   });
 
@@ -71,7 +96,13 @@ export function useGraphData() {
   const perAdapterSettled =
     adapterIds.length === 0 || perAdapterTagQueries.every((q) => !q.isLoading);
 
-  const allSettled = coreSettled && perAdapterSettled;
+  const perAdapterMappingsSettled =
+    ontologyVersion !== "v2" ||
+    adapterIds.length === 0 ||
+    (perAdapterNbQueries.every((q) => !q.isLoading) &&
+      perAdapterSbQueries.every((q) => !q.isLoading));
+
+  const allSettled = coreSettled && perAdapterSettled && perAdapterMappingsSettled;
 
   // Build per-adapter tag map
   const adapterTagMap = useMemo(() => {
@@ -86,6 +117,36 @@ export function useGraphData() {
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- we track settlement + ids
   }, [perAdapterSettled, adapterIds]);
+
+  // Build per-adapter NB mapping map (v2 only)
+  const adapterNbMap = useMemo(() => {
+    if (ontologyVersion !== "v2" || !perAdapterMappingsSettled || adapterIds.length === 0)
+      return undefined;
+    const map: Record<string, NorthboundMapping[]> = {};
+    adapterIds.forEach((id, i) => {
+      const result = perAdapterNbQueries[i];
+      if (result?.data?.items) {
+        map[id] = result.data.items;
+      }
+    });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- we track settlement + ids
+  }, [ontologyVersion, perAdapterMappingsSettled, adapterIds]);
+
+  // Build per-adapter SB mapping map (v2 only)
+  const adapterSbMap = useMemo(() => {
+    if (ontologyVersion !== "v2" || !perAdapterMappingsSettled || adapterIds.length === 0)
+      return undefined;
+    const map: Record<string, SouthboundMapping[]> = {};
+    adapterIds.forEach((id, i) => {
+      const result = perAdapterSbQueries[i];
+      if (result?.data?.items) {
+        map[id] = result.data.items;
+      }
+    });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- we track settlement + ids
+  }, [ontologyVersion, perAdapterMappingsSettled, adapterIds]);
 
   const apiData: ApiData = useMemo(
     () => ({
@@ -102,6 +163,8 @@ export function useGraphData() {
       northboundMappings: northboundMappings.data?.items,
       southboundMappings: southboundMappings.data?.items,
       adapterTags: adapterTagMap,
+      adapterNorthboundMappings: adapterNbMap,
+      adapterSouthboundMappings: adapterSbMap,
     }),
     [
       adapters.data,
@@ -117,15 +180,26 @@ export function useGraphData() {
       northboundMappings.data,
       southboundMappings.data,
       adapterTagMap,
+      adapterNbMap,
+      adapterSbMap,
     ],
   );
 
   useEffect(() => {
     if (!allSettled) return;
 
-    const { nodes, edges } = assembleFullGraph(apiData);
+    console.time("[graph-data] useEffect pipeline");
+    console.log("[graph-data] assembling graph (version=%s)", ontologyVersion);
+
+    const { nodes, edges } =
+      ontologyVersion === "v2"
+        ? assembleFullGraphV2(apiData)
+        : assembleFullGraph(apiData);
+
+    console.log("[graph-data] calling setFullGraph");
     useGraphStore.getState().setFullGraph(nodes, edges);
-  }, [allSettled, apiData]);
+    console.timeEnd("[graph-data] useEffect pipeline");
+  }, [allSettled, apiData, ontologyVersion]);
 
   return {
     isLoading: !allSettled,

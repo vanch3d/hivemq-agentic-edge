@@ -62,7 +62,19 @@
       "Bash(pnpm exec tsx:*)",
       "Bash(node --import=tsx -e:*)",
       "Bash(node --experimental-strip-types --experimental-transform-types:*)",
-      "Bash(pnpm format:check:*)"
+      "Bash(pnpm format:check:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:reactflow.dev)",
+      "WebFetch(domain:www.jenitennison.com)",
+      "WebFetch(domain:ontogenesis.knowledgeblog.org)",
+      "WebFetch(domain:ceur-ws.org)",
+      "WebFetch(domain:ontology.naas.ai)",
+      "WebFetch(domain:www.semanticarts.com)",
+      "WebFetch(domain:schema.org)",
+      "WebFetch(domain:www.w3.org)",
+      "WebFetch(domain:blog.tomsawyer.com)",
+      "WebFetch(domain:synaptica.com)",
+      "WebFetch(domain:neo4j.com)"
     ]
   }
 }

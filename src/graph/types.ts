@@ -3,6 +3,7 @@ import type { Node, Edge, Viewport } from "@xyflow/react";
 // --- Domain entity types ---
 
 export const ENTITY_TYPES = [
+  // v1 entity types
   "adapter",
   "bridge",
   "domainTag",
@@ -13,6 +14,18 @@ export const ENTITY_TYPES = [
   "script",
   "combiner",
   "listener",
+  // v2-only entity types (ontology v2)
+  "edgeBroker",
+  "dataHub",
+  "pulse",
+  "remoteBroker",
+  "otDevice",
+  "tag",
+  "topic",
+  "northboundMapper",
+  "southboundMapper",
+  "assetMapper",
+  "bridgeSubscription",
 ] as const;
 
 export type DomainEntityType = (typeof ENTITY_TYPES)[number];

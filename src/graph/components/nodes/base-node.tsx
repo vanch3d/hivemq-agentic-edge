@@ -16,7 +16,7 @@ const pulseKeyframes = keyframes`
 `;
 
 /** Entity types rendered as pills (rounded ends) */
-const PILL_TYPES: DomainEntityType[] = ["topicFilter"];
+const PILL_TYPES: DomainEntityType[] = ["topicFilter", "topic"];
 
 /** Entity types rendered with dashed borders */
 const DASHED_BORDER_TYPES: DomainEntityType[] = ["topicFilter"];
@@ -113,9 +113,15 @@ export function BaseNode({
       {/* Type-specific content */}
       {children}
 
-      {/* Handles */}
-      <Handle type="target" position={Position.Left} />
+      {/* Handles — source + target on all four sides for floating edges */}
+      <Handle type="source" position={Position.Top} />
+      <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Right} />
+      <Handle type="target" position={Position.Right} />
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="target" position={Position.Bottom} />
+      <Handle type="source" position={Position.Left} />
+      <Handle type="target" position={Position.Left} />
     </Box>
   );
 }

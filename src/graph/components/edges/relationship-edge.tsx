@@ -2,36 +2,50 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getBezierPath,
+  useInternalNode,
   type EdgeProps,
 } from "@xyflow/react";
 import { Text } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 
 import type { GraphEdgeData } from "@/graph/types";
 import { EDGE_STYLES, DEFAULT_EDGE_STYLE } from "@/graph/constants";
+import { getFloatingEdgeParams } from "./floating-edge-utils";
 
 export function RelationshipEdge({
   id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
+  source,
+  target,
   data,
   selected,
 }: EdgeProps & { data?: GraphEdgeData }) {
+  const { t } = useTranslation();
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+
+  if (!sourceNode || !targetNode) return null;
+
+  const { sx, sy, tx, ty, sourcePos, targetPos } = getFloatingEdgeParams(
+    sourceNode,
+    targetNode,
+  );
+
   const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
+    sourceX: sx,
+    sourceY: sy,
+    targetX: tx,
+    targetY: ty,
+    sourcePosition: sourcePos,
+    targetPosition: targetPos,
   });
 
   const style = data?.relationship
     ? (EDGE_STYLES[data.relationship] ?? DEFAULT_EDGE_STYLE)
     : DEFAULT_EDGE_STYLE;
+
+  const label = data?.relationship
+    ? t(`graph.relationship.${data.relationship}`, { defaultValue: data.relationship })
+    : undefined;
 
   return (
     <>
@@ -45,7 +59,7 @@ export function RelationshipEdge({
         }}
         markerEnd="url(#arrow)"
       />
-      {data?.relationship && (
+      {label && (
         <EdgeLabelRenderer>
           <Text
             fontSize="2xs"
@@ -58,7 +72,7 @@ export function RelationshipEdge({
             pointerEvents="none"
             opacity={0.85}
           >
-            {data.relationship}
+            {label}
           </Text>
         </EdgeLabelRenderer>
       )}

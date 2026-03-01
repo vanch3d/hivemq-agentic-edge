@@ -1,6 +1,8 @@
 import { assembleDomainOntology } from "./ontology";
 
-const DOMAIN_ONTOLOGY = assembleDomainOntology();
+const ontologyVersion =
+  (process.env["ONTOLOGY_VERSION"] as "v1" | "v2") ?? "v1";
+const DOMAIN_ONTOLOGY = assembleDomainOntology(ontologyVersion);
 
 export const SYSTEM_PROMPT = `You are an AI assistant for HiveMQ Edge, an IoT gateway management interface. You help users understand, configure, and manage their HiveMQ Edge installation through natural conversation.
 

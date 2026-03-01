@@ -6,56 +6,175 @@ import {
   DEFAULT_NODE_DIMENSIONS,
   ENTITY_RANK,
   RANK_SPACING,
+  NODE_SPACING,
 } from "./constants";
 
-interface ColaNode {
-  index: number;
-  width: number;
-  height: number;
-  x: number;
-  y: number;
-}
-
 /**
- * Compute graph layout using WebCola's constraint-based engine.
+ * Compute graph layout using a two-phase approach:
  *
- * Instead of relying on `flowLayout` (which derives direction from edge
- * source→target), we assign each entity type a **rank** and add explicit
- * separation constraints so that upstream types always appear before
- * downstream types on the flow axis — regardless of which direction the
- * semantic edge points.
+ * 1. **Rank grid** — Group nodes by ENTITY_RANK, order within each rank
+ *    via a barycenter heuristic to reduce edge crossings. This produces
+ *    well-spaced initial positions in O(V + E).
  *
- * Returns a new array of nodes with updated positions.
+ * 2. **WebCola refinement** — Run a short force-directed simulation that
+ *    pulls connected nodes together for organic clustering. Uses the
+ *    rank-grid positions as seeds so few iterations are needed.
+ *    `avoidOverlaps` is OFF (it was O(n²) per iteration and caused
+ *    multi-second freezes). Overlap is already handled by the grid seed.
+ *
  * Pure function — does not mutate inputs.
  */
 export function computeLayout(
   nodes: GraphNode[],
   edges: GraphEdge[],
   direction: LayoutDirection,
+  spacingScale = 1,
 ): GraphNode[] {
   if (nodes.length === 0) return [];
 
-  // Single node — center it
   if (nodes.length === 1) {
     return [{ ...nodes[0], position: { x: 0, y: 0 } }];
   }
 
-  const flowAxis = direction === "LR" ? "x" : "y";
+  console.time("[layout] computeLayout");
+  console.log(
+    `[layout] input: ${nodes.length} nodes, ${edges.length} edges, direction=${direction}`,
+  );
 
-  // Build webcola nodes
+  const isLR = direction === "LR";
+  const flowAxis = isLR ? "x" : "y";
+
+  // Scale spacing for sparser graphs (e.g. schema view)
+  const nodeSpacing = NODE_SPACING * spacingScale;
+  const rankSpacing = RANK_SPACING * spacingScale;
+
+  // ── Phase 1: Rank grid with barycenter ordering ─────────────────────
+
+  console.time("[layout] phase1-grid");
+
+  const rankGroups = new Map<number, number[]>();
+  nodes.forEach((n, i) => {
+    const rank = ENTITY_RANK[n.data.entityType];
+    if (!rankGroups.has(rank)) rankGroups.set(rank, []);
+    rankGroups.get(rank)!.push(i);
+  });
+  const sortedRanks = [...rankGroups.keys()].sort((a, b) => a - b);
+
+  // Build adjacency
+  const adj = new Map<number, number[]>();
+  nodes.forEach((_, i) => adj.set(i, []));
+  const nodeIndexMap = new Map(nodes.map((n, i) => [n.id, i]));
+  for (const e of edges) {
+    const si = nodeIndexMap.get(e.source);
+    const ti = nodeIndexMap.get(e.target);
+    if (si !== undefined && ti !== undefined) {
+      adj.get(si)!.push(ti);
+      adj.get(ti)!.push(si);
+    }
+  }
+
+  // Barycenter ordering (forward + backward pass)
+  const slot = new Float64Array(nodes.length);
+  for (const rank of sortedRanks) {
+    rankGroups.get(rank)!.forEach((idx, s) => {
+      slot[idx] = s;
+    });
+  }
+
+  function barycentricSort(ri: number, neighborRanks: number[]) {
+    const group = rankGroups.get(sortedRanks[ri])!;
+    const nbrSet = new Set<number>();
+    for (const nri of neighborRanks) {
+      for (const idx of rankGroups.get(sortedRanks[nri])!) nbrSet.add(idx);
+    }
+    const bary = group.map((nodeIdx) => {
+      const nbrs = adj.get(nodeIdx)!.filter((n) => nbrSet.has(n));
+      if (nbrs.length === 0) return { nodeIdx, avg: slot[nodeIdx] };
+      return {
+        nodeIdx,
+        avg: nbrs.reduce((s, n) => s + slot[n], 0) / nbrs.length,
+      };
+    });
+    bary.sort((a, b) => a.avg - b.avg);
+    const sorted = bary.map((b) => b.nodeIdx);
+    sorted.forEach((idx, s) => {
+      slot[idx] = s;
+    });
+    rankGroups.set(sortedRanks[ri], sorted);
+  }
+
+  // Forward pass
+  for (let ri = 1; ri < sortedRanks.length; ri++) {
+    const prev = Array.from({ length: ri }, (_, i) => i);
+    barycentricSort(ri, prev);
+  }
+  // Backward pass
+  for (let ri = sortedRanks.length - 2; ri >= 0; ri--) {
+    const next = Array.from(
+      { length: sortedRanks.length - ri - 1 },
+      (_, i) => ri + 1 + i,
+    );
+    barycentricSort(ri, next);
+  }
+
+  // Compute grid positions
+  const rankCrossExtent = new Map<number, number>();
+  for (const rank of sortedRanks) {
+    let extent = 0;
+    for (const idx of rankGroups.get(rank)!) {
+      const d =
+        NODE_DIMENSIONS[nodes[idx].data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
+      extent += (isLR ? d.height : d.width) + nodeSpacing;
+    }
+    rankCrossExtent.set(rank, extent - nodeSpacing);
+  }
+  const maxCross = Math.max(...rankCrossExtent.values(), 0);
+
+  // Seed positions: colaNodes[i].x / .y
+  interface ColaNode {
+    index: number;
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+  }
+
   const colaNodes: ColaNode[] = nodes.map((n, i) => {
-    const dims = NODE_DIMENSIONS[n.data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
-    return {
-      index: i,
-      width: dims.width + 20,
-      height: dims.height + 20,
-      x: 0,
-      y: 0,
-    };
+    const d = NODE_DIMENSIONS[n.data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
+    return { index: i, width: d.width + 20, height: d.height + 20, x: 0, y: 0 };
   });
 
-  // Build index map for edge resolution
-  const nodeIndexMap = new Map(nodes.map((n, i) => [n.id, i]));
+  let flowPos = 0;
+  for (const rank of sortedRanks) {
+    const group = rankGroups.get(rank)!;
+    const crossExtent = rankCrossExtent.get(rank)!;
+    const crossOffset = (maxCross - crossExtent) / 2;
+    let crossPos = crossOffset;
+    let maxFlowDim = 0;
+
+    for (const idx of group) {
+      const d =
+        NODE_DIMENSIONS[nodes[idx].data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
+      if (isLR) {
+        colaNodes[idx].x = flowPos + d.width / 2;
+        colaNodes[idx].y = crossPos + d.height / 2;
+        crossPos += d.height + nodeSpacing;
+        maxFlowDim = Math.max(maxFlowDim, d.width);
+      } else {
+        colaNodes[idx].x = crossPos + d.width / 2;
+        colaNodes[idx].y = flowPos + d.height / 2;
+        crossPos += d.width + nodeSpacing;
+        maxFlowDim = Math.max(maxFlowDim, d.height);
+      }
+    }
+    flowPos += maxFlowDim + rankSpacing;
+  }
+
+  console.timeEnd("[layout] phase1-grid");
+
+  // ── Phase 2: WebCola refinement (no avoidOverlaps) ──────────────────
+
+  console.time("[layout] phase2-cola");
 
   const colaLinks = edges
     .map((e) => ({
@@ -67,13 +186,7 @@ export function computeLayout(
         l.source !== undefined && l.target !== undefined,
     );
 
-  // --- Rank-based separation constraints ---
-  // For each edge, enforce that the lower-ranked entity type is positioned
-  // before the higher-ranked one on the flow axis. Edges between nodes of
-  // the same rank get no flow constraint (they spread freely on the cross axis).
-  // WebCola's TS definitions type left/right as Variable, but the runtime
-  // engine accepts plain node indices (numbers). We build plain objects and
-  // cast when passing to the layout engine.
+  // Rank separation constraints (same logic as before)
   interface RankConstraint {
     axis: string;
     left: number;
@@ -85,76 +198,62 @@ export function computeLayout(
   const constraintSet = new Set<string>();
 
   for (const link of colaLinks) {
-    const sourceRank = ENTITY_RANK[nodes[link.source].data.entityType];
-    const targetRank = ENTITY_RANK[nodes[link.target].data.entityType];
-
-    if (sourceRank === targetRank) continue;
-
-    // Determine which node is upstream (lower rank) and downstream (higher rank)
+    const sr = ENTITY_RANK[nodes[link.source].data.entityType];
+    const tr = ENTITY_RANK[nodes[link.target].data.entityType];
+    if (sr === tr) continue;
     const [left, right] =
-      sourceRank < targetRank
-        ? [link.source, link.target]
-        : [link.target, link.source];
-
+      sr < tr ? [link.source, link.target] : [link.target, link.source];
     const key = `${left}-${right}`;
     if (constraintSet.has(key)) continue;
     constraintSet.add(key);
-
-    constraints.push({
-      axis: flowAxis,
-      left,
-      right,
-      gap: RANK_SPACING,
-    });
+    constraints.push({ axis: flowAxis, left, right, gap: rankSpacing });
   }
 
-  // Also add rank constraints between nodes that share no edge but belong
-  // to different ranks — prevents unconnected nodes from drifting into the
-  // wrong layer. We only need one representative pair per rank pair.
-  const nodesByRank = new Map<number, number[]>();
-  nodes.forEach((n, i) => {
-    const rank = ENTITY_RANK[n.data.entityType];
-    if (!nodesByRank.has(rank)) nodesByRank.set(rank, []);
-    nodesByRank.get(rank)!.push(i);
-  });
-
-  const ranks = [...nodesByRank.keys()].sort((a, b) => a - b);
-  for (let ri = 0; ri < ranks.length - 1; ri++) {
-    const leftNodes = nodesByRank.get(ranks[ri])!;
-    const rightNodes = nodesByRank.get(ranks[ri + 1])!;
-    const key = `${leftNodes[0]}-${rightNodes[0]}`;
+  // Inter-rank representative constraints
+  for (let ri = 0; ri < sortedRanks.length - 1; ri++) {
+    const leftGroup = rankGroups.get(sortedRanks[ri])!;
+    const rightGroup = rankGroups.get(sortedRanks[ri + 1])!;
+    const key = `${leftGroup[0]}-${rightGroup[0]}`;
     if (!constraintSet.has(key)) {
       constraintSet.add(key);
       constraints.push({
         axis: flowAxis,
-        left: leftNodes[0],
-        right: rightNodes[0],
-        gap: RANK_SPACING,
+        left: leftGroup[0],
+        right: rightGroup[0],
+        gap: rankSpacing,
       });
     }
   }
 
-  // Run layout with explicit constraints instead of flowLayout
+  console.log(
+    `[layout] cola: ${constraints.length} constraints, ${colaLinks.length} links`,
+  );
+
+  // Shorter link length keeps connected nodes closer together.
+  // Fewer iterations keep nodes near their grid positions — prevents
+  // heavy scatter for nodes with cross-rank edges (e.g. schemas).
   const colaLayout = new cola.Layout()
     .size([800, 600])
     .nodes(colaNodes as unknown as cola.Node[])
     .links(colaLinks as unknown as cola.Link<cola.Node | number>[])
     .constraints(constraints as unknown[] as cola.Constraint[])
-    .symmetricDiffLinkLengths(RANK_SPACING)
-    .avoidOverlaps(true)
+    .symmetricDiffLinkLengths(rankSpacing * 0.6)
     .convergenceThreshold(0.01);
 
-  colaLayout.start(50, 30, 20);
+  colaLayout.start(3, 5, 3);
 
-  // Extract positions
-  return nodes.map((node, i) => {
-    const dims =
-      NODE_DIMENSIONS[node.data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
+  console.timeEnd("[layout] phase2-cola");
+
+  // ── Extract final positions ─────────────────────────────────────────
+
+  console.timeEnd("[layout] computeLayout");
+  return nodes.map((n, i) => {
+    const d = NODE_DIMENSIONS[n.data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
     return {
-      ...node,
+      ...n,
       position: {
-        x: colaNodes[i].x - dims.width / 2,
-        y: colaNodes[i].y - dims.height / 2,
+        x: colaNodes[i].x - d.width / 2,
+        y: colaNodes[i].y - d.height / 2,
       },
     };
   });

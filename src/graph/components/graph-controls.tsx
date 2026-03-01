@@ -3,8 +3,11 @@ import {
   LuMaximize,
   LuArrowRightFromLine,
   LuArrowDownFromLine,
+  LuNetwork,
+  LuDatabase,
 } from "react-icons/lu";
 import { useReactFlow } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 
 import { useGraphStore } from "@/graph/store";
 import type { ViewScope } from "@/graph/types";
@@ -20,11 +23,16 @@ const SCOPE_LABELS: Record<ViewScope, string> = {
 };
 
 export function GraphControls() {
+  const { t } = useTranslation();
   const layoutDirection = useGraphStore((s) => s.layoutDirection);
   const setLayoutDirection = useGraphStore((s) => s.setLayoutDirection);
   const viewScope = useGraphStore((s) => s.viewScope);
   const setViewScope = useGraphStore((s) => s.setViewScope);
+  const viewMode = useGraphStore((s) => s.viewMode);
+  const setViewMode = useGraphStore((s) => s.setViewMode);
   const rf = useReactFlow();
+
+  const isSchema = viewMode === "schema";
 
   return (
     <Box
@@ -36,21 +44,48 @@ export function GraphControls() {
       flexWrap="wrap"
       gap="2"
     >
-      {/* Scope selector */}
-      <HStack gap="1" flexWrap="wrap">
-        {VIEW_SCOPES.map((scope) => (
+      {/* Left: View mode toggle + scope selector */}
+      <HStack gap="2" flexWrap="wrap">
+        {/* View mode toggle */}
+        <HStack gap="1">
           <Button
-            key={scope}
             size="xs"
-            variant={viewScope === scope ? "solid" : "outline"}
-            onClick={() => setViewScope(scope)}
+            variant={isSchema ? "outline" : "solid"}
+            onClick={() => setViewMode("instance")}
+            title={t("graph.instanceView")}
           >
-            {SCOPE_LABELS[scope]}
+            <LuDatabase />
+            {t("graph.instance")}
           </Button>
-        ))}
+          <Button
+            size="xs"
+            variant={isSchema ? "solid" : "outline"}
+            onClick={() => setViewMode("schema")}
+            title={t("graph.schemaView")}
+          >
+            <LuNetwork />
+            {t("graph.schema")}
+          </Button>
+        </HStack>
+
+        {/* Scope selector (only in instance mode) */}
+        {!isSchema && (
+          <HStack gap="1" flexWrap="wrap">
+            {VIEW_SCOPES.map((scope) => (
+              <Button
+                key={scope}
+                size="xs"
+                variant={viewScope === scope ? "solid" : "outline"}
+                onClick={() => setViewScope(scope)}
+              >
+                {SCOPE_LABELS[scope]}
+              </Button>
+            ))}
+          </HStack>
+        )}
       </HStack>
 
-      {/* Layout controls */}
+      {/* Right: Layout controls */}
       <HStack gap="1">
         <Button
           size="xs"

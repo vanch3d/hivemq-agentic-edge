@@ -52,6 +52,10 @@ export interface ApiData {
   southboundMappings?: SouthboundMapping[];
   /** Per-adapter domain tags: { adapterId → tags[] } */
   adapterTags?: Record<string, DomainTag[]>;
+  /** Per-adapter northbound mappings: { adapterId → mappings[] } (v2) */
+  adapterNorthboundMappings?: Record<string, NorthboundMapping[]>;
+  /** Per-adapter southbound mappings: { adapterId → mappings[] } (v2) */
+  adapterSouthboundMappings?: Record<string, SouthboundMapping[]>;
 }
 
 // --- Helpers ---

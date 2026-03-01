@@ -5,10 +5,18 @@ import {
   LuTag,
   LuFilter,
   LuShield,
+  LuShieldCheck,
   LuFileText,
   LuFileCode2,
   LuMerge,
   LuRadioTower,
+  LuServer,
+  LuCloud,
+  LuCpu,
+  LuMessageSquare,
+  LuArrowUpRight,
+  LuArrowDownLeft,
+  LuArrowLeftRight,
 } from "react-icons/lu";
 
 import type { DomainEntityType } from "./types";
@@ -16,34 +24,61 @@ import type { DomainEntityType } from "./types";
 // --- Entity icons (matching task plan spec) ---
 
 export const ENTITY_ICONS: Record<DomainEntityType, IconType> = {
-  adapter: LuPlug2, // Plug/connector
-  bridge: LuLink, // Link/chain
-  domainTag: LuTag, // Tag
-  topicFilter: LuFilter, // Filter
-  dataPolicy: LuShield, // Shield
-  behaviorPolicy: LuShield, // Shield
-  schema: LuFileText, // File/doc
-  script: LuFileCode2, // Code file
-  combiner: LuMerge, // Merge
-  listener: LuRadioTower, // Antenna
+  // v1
+  adapter: LuPlug2,
+  bridge: LuLink,
+  domainTag: LuTag,
+  topicFilter: LuFilter,
+  dataPolicy: LuShield,
+  behaviorPolicy: LuShield,
+  schema: LuFileText,
+  script: LuFileCode2,
+  combiner: LuMerge,
+  listener: LuRadioTower,
+  // v2
+  edgeBroker: LuServer,
+  dataHub: LuShieldCheck,
+  pulse: LuCloud,
+  remoteBroker: LuServer,
+  otDevice: LuCpu,
+  tag: LuTag,
+  topic: LuMessageSquare,
+  northboundMapper: LuArrowUpRight,
+  southboundMapper: LuArrowDownLeft,
+  assetMapper: LuMerge,
+  bridgeSubscription: LuArrowLeftRight,
 };
 
 // --- Entity colors (matching task plan spec) ---
 
 export const ENTITY_COLORS: Record<DomainEntityType, string> = {
-  adapter: "blue.500", // Blue — protocol adapter instance
-  bridge: "orange.500", // Orange — MQTT bridge
-  domainTag: "teal.400", // Teal — domain tag
-  topicFilter: "green.400", // Light green — topic filter pattern
-  dataPolicy: "purple.500", // Purple — data policy
-  behaviorPolicy: "purple.500", // Purple — behavior policy
-  schema: "purple.300", // Light purple — schema
-  script: "purple.300", // Light purple — script (same family as schema)
-  combiner: "yellow.500", // Yellow — combiner
-  listener: "green.700", // Dark green — listener
+  // v1
+  adapter: "blue.500",
+  bridge: "orange.500",
+  domainTag: "teal.400",
+  topicFilter: "green.400",
+  dataPolicy: "purple.500",
+  behaviorPolicy: "purple.500",
+  schema: "purple.300",
+  script: "purple.300",
+  combiner: "yellow.500",
+  listener: "green.700",
+  // v2
+  edgeBroker: "cyan.600",
+  dataHub: "purple.600",
+  pulse: "sky.500",
+  remoteBroker: "orange.300",
+  otDevice: "blue.300",
+  tag: "teal.400",
+  topic: "green.500",
+  northboundMapper: "green.600",
+  southboundMapper: "green.600",
+  assetMapper: "sky.500",
+  bridgeSubscription: "orange.400",
 };
 
 export const ENTITY_LABELS: Record<DomainEntityType, string> = {
+  // v1
   adapter: "Adapter",
   bridge: "Bridge",
   domainTag: "Tag",
@@ -54,6 +89,18 @@ export const ENTITY_LABELS: Record<DomainEntityType, string> = {
   script: "Script",
   combiner: "Combiner",
   listener: "Listener",
+  // v2
+  edgeBroker: "Edge Broker",
+  dataHub: "DataHub",
+  pulse: "Pulse",
+  remoteBroker: "Remote Broker",
+  otDevice: "OT Device",
+  tag: "Tag",
+  topic: "Topic",
+  northboundMapper: "NB Mapper",
+  southboundMapper: "SB Mapper",
+  assetMapper: "Asset Mapper",
+  bridgeSubscription: "Bridge Sub",
 };
 
 // --- Status colors ---
@@ -74,6 +121,7 @@ export const NODE_DIMENSIONS: Record<
   DomainEntityType,
   { width: number; height: number }
 > = {
+  // v1
   adapter: { width: 160, height: 56 },
   bridge: { width: 160, height: 56 },
   domainTag: { width: 120, height: 40 },
@@ -84,6 +132,18 @@ export const NODE_DIMENSIONS: Record<
   script: { width: 120, height: 40 },
   combiner: { width: 120, height: 48 },
   listener: { width: 120, height: 40 },
+  // v2
+  edgeBroker: { width: 160, height: 56 },
+  dataHub: { width: 160, height: 56 },
+  pulse: { width: 140, height: 48 },
+  remoteBroker: { width: 160, height: 56 },
+  otDevice: { width: 140, height: 48 },
+  tag: { width: 120, height: 40 },
+  topic: { width: 160, height: 40 },
+  northboundMapper: { width: 140, height: 40 },
+  southboundMapper: { width: 140, height: 40 },
+  assetMapper: { width: 140, height: 48 },
+  bridgeSubscription: { width: 140, height: 40 },
 };
 
 export const DEFAULT_NODE_DIMENSIONS = { width: 140, height: 44 };
@@ -97,62 +157,85 @@ export interface EdgeStyle {
 }
 
 export const EDGE_STYLES: Record<string, EdgeStyle> = {
-  // adapter → tag: Solid, teal
-  hasTags: { stroke: "#14b8a6", strokeWidth: 1.5 },
-  exposes: { stroke: "#14b8a6", strokeWidth: 1.5 },
-  // tag → topic: Solid, green, arrow (northbound)
-  publishesTo: { stroke: "#22c55e", strokeWidth: 2 },
-  northbound: { stroke: "#22c55e", strokeWidth: 2 },
-  // topic → tag: Dashed, green, arrow (southbound)
-  writesTo: { stroke: "#22c55e", strokeWidth: 2, strokeDasharray: "6 3" },
-  southbound: { stroke: "#22c55e", strokeWidth: 2, strokeDasharray: "6 3" },
-  // topic → bridge: Solid, orange
-  subscribes: { stroke: "#f97316", strokeWidth: 1.5 },
-  // bridge → remoteBroker: Solid, orange, arrow
-  forwards: { stroke: "#f97316", strokeWidth: 1.5 },
-  // topicFilter → topic: Dotted, light green
-  matches: { stroke: "#86efac", strokeWidth: 1.5, strokeDasharray: "2 3" },
-  // policy → topic: Dotted, purple
-  validates: { stroke: "#a855f7", strokeWidth: 1.5, strokeDasharray: "2 3" },
-  // policy → schema: Dotted, light purple
-  deserializes: {
-    stroke: "#c084fc",
-    strokeWidth: 1.5,
-    strokeDasharray: "2 3",
-  },
-  uses: { stroke: "#c084fc", strokeWidth: 1.5, strokeDasharray: "2 3" },
-  // policy → script: Dotted, light purple
-  executes: { stroke: "#c084fc", strokeWidth: 1.5, strokeDasharray: "4 3" },
-  // topic/tag → combiner: Solid, yellow
-  combines: { stroke: "#eab308", strokeWidth: 1.5 },
-  // combiner → topic/pulseAsset: Solid, yellow, arrow
-  outputs: { stroke: "#eab308", strokeWidth: 1.5 },
+  // Adapter → OT Device: Solid, blue
+  manages: { stroke: "var(--graph-edge-blue)", strokeWidth: 1.5 },
+  // OT Device → Tag: Solid, teal
+  exposes: { stroke: "var(--graph-edge-teal)", strokeWidth: 1.5 },
+  // Structural ownership: Solid, gray, thin
+  owns: { stroke: "var(--graph-edge-default)", strokeWidth: 1 },
+  // Bridge → Remote Broker: Solid, orange
+  connectsTo: { stroke: "var(--graph-edge-orange)", strokeWidth: 1.5 },
+  // Tag/TopicFilter → Mapper: Solid, green (data input)
+  feeds: { stroke: "var(--graph-edge-green)", strokeWidth: 2 },
+  // Mapper/Combiner → Topic: Solid, green (data output)
+  publishes: { stroke: "var(--graph-edge-green)", strokeWidth: 2 },
+  // SB Mapper → Tag: Dashed, green (southbound write)
+  writes: { stroke: "var(--graph-edge-green-dash)", strokeWidth: 2, strokeDasharray: "6 3" },
+  // BridgeSubscription → TopicFilter: Solid, orange
+  filters: { stroke: "var(--graph-edge-orange)", strokeWidth: 1.5 },
+  // BridgeSubscription → Topic: Solid, orange
+  delivers: { stroke: "var(--graph-edge-orange)", strokeWidth: 1.5 },
+  // Adapter/Bridge → Combiner: Solid, yellow
+  sources: { stroke: "var(--graph-edge-yellow)", strokeWidth: 1.5 },
+  // DataPolicy → TopicFilter: Dotted, purple
+  attachedTo: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  // DataPolicy → Schema: Dotted, purple
+  validates: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  // Policy → Script: Dashed, light purple
+  executes: { stroke: "var(--graph-edge-purple-light)", strokeWidth: 1.5, strokeDasharray: "4 3" },
+  // DataPolicy → Topic (redirect): Dashed, purple
+  redirects: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5, strokeDasharray: "4 3" },
+  // BehaviorPolicy → Schema: Dotted, light purple
+  deserializes: { stroke: "var(--graph-edge-purple-light)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  // TopicFilter → Topic: Dotted, light green
+  matches: { stroke: "var(--graph-edge-green-light)", strokeWidth: 1.5, strokeDasharray: "2 3" },
 };
 
 export const DEFAULT_EDGE_STYLE: EdgeStyle = {
-  stroke: "#94a3b8",
+  stroke: "var(--graph-edge-default)",
   strokeWidth: 1.5,
 };
 
 // --- Entity rank (layer ordering for directed layout) ---
-// Lower rank = further upstream in the data flow.
-// Nodes of rank N are constrained to appear before rank N+1 on the flow axis.
+// Lower rank = further upstream (leftward in LR mode).
+// The data flow reads left-to-right:
+//   OT Device → Adapter → Tag → Mappers → Edge Broker / Topics →
+//   DataHub / Policies → Schemas/Scripts → Bridge → Remote Broker
 
 export const ENTITY_RANK: Record<DomainEntityType, number> = {
-  listener: 0, // entry point
-  adapter: 1, // connects to listeners, exposes tags
-  domainTag: 2, // exposed by adapters
-  topicFilter: 3, // tags publish to topics
-  dataPolicy: 4, // policies match topic filters
-  behaviorPolicy: 4,
-  bridge: 4, // bridges subscribe to topics
-  schema: 5, // used by policies
-  script: 5, // executed by policies
-  combiner: 5, // combines adapters/bridges
+  // Layer 0 — Connectors (entry points, leftmost in LR)
+  adapter: 0,           // OT connector
+  bridge: 0,            // IT connector
+  listener: 0,          // v1 infrastructure
+  // Layer 1 — What connectors connect to
+  otDevice: 1,          // adapter → device
+  remoteBroker: 1,      // bridge → remote broker
+  bridgeSubscription: 1,
+  // Layer 2 — Data points
+  domainTag: 2,         // v1 tag
+  tag: 2,               // v2 tag (exposed by device)
+  // Layer 3 — Transforms & aggregation
+  northboundMapper: 3,  // tag → topic
+  southboundMapper: 3,  // topicFilter → tag
+  combiner: 3,          // aggregates sources → topic
+  assetMapper: 3,
+  // Layer 4 — Central messaging
+  edgeBroker: 4,        // local MQTT broker
+  topic: 4,             // broker's topics
+  topicFilter: 4,       // broker's filters
+  pulse: 4,             // cloud platform
+  // Layer 5 — Policy engine
+  dataHub: 5,
+  // Layer 6 — Policies
+  dataPolicy: 6,
+  behaviorPolicy: 6,
+  // Layer 7 — Resources (rightmost)
+  schema: 7,
+  script: 7,
 };
 
 // --- Layout defaults ---
 
 export const DEFAULT_LAYOUT_DIRECTION = "LR" as const;
-export const NODE_SPACING = 40;
-export const RANK_SPACING = 100;
+export const NODE_SPACING = 20;
+export const RANK_SPACING = 60;

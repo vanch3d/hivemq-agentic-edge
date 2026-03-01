@@ -10,9 +10,15 @@ interface OntologyModule {
 const MODULES: OntologyModule[] = [
   {
     id: "core",
-    name: "Core",
+    name: "Core (v1)",
     description:
       "System overview, entity catalog, relationships, data flow, status model, authentication, collection patterns, error model, key enums.",
+  },
+  {
+    id: "v2-core",
+    name: "Core (v2)",
+    description:
+      "Auto-generated domain ontology v2 — 18 entity types organized by taxonomy role with typed properties and relationships.",
   },
   {
     id: "datahub",

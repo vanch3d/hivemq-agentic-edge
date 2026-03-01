@@ -13,9 +13,13 @@ export function GraphPage() {
   const { t } = useTranslation();
   const { isLoading, hasError } = useGraphData();
   const isAssembled = useGraphStore((s) => s.isAssembled);
+  const viewMode = useGraphStore((s) => s.viewMode);
   const nodeCount = useGraphStore((s) => s.nodes.length);
 
-  if (isLoading && !isAssembled) {
+  // Schema view doesn't depend on API data
+  const showLoading = viewMode !== "schema" && isLoading && !isAssembled;
+
+  if (showLoading) {
     return (
       <Flex align="center" justify="center" h="full" gap="2">
         <Spinner size="sm" />
@@ -24,7 +28,7 @@ export function GraphPage() {
     );
   }
 
-  if (hasError && !isAssembled) {
+  if (viewMode !== "schema" && hasError && !isAssembled) {
     return (
       <Flex align="center" justify="center" h="full">
         <Text color="fg.error">{t("graph.error")}</Text>
@@ -49,7 +53,7 @@ export function GraphPage() {
             <GraphCanvas />
           </Box>
           <GraphControls />
-          <GraphLegend />
+          {viewMode !== "schema" && <GraphLegend />}
         </Flex>
 
         {/* Detail panel (right side) */}
