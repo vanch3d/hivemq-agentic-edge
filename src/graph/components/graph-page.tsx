@@ -7,7 +7,6 @@ import { useGraphData } from "@/graph/use-graph-data";
 import { GraphCanvas } from "./graph-canvas";
 import { GraphControls } from "./graph-controls";
 import { GraphLegend } from "./graph-legend";
-import { GraphDetailPanel } from "./graph-detail-panel";
 
 export function GraphPage() {
   const { t } = useTranslation();
@@ -58,16 +57,6 @@ export function GraphPage() {
           <GraphControls />
           {viewMode !== "schema" && <GraphLegend />}
         </Flex>
-
-        {/* Detail panel (right side) */}
-        <Box
-          w="280px"
-          borderLeftWidth="1px"
-          overflow="auto"
-          display={{ base: "none", lg: "block" }}
-        >
-          <GraphDetailPanel />
-        </Box>
       </Flex>
     </ReactFlowProvider>
   );

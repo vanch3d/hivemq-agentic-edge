@@ -14,11 +14,7 @@ export function GraphDetailPanel() {
     : null;
 
   if (!selectedNode) {
-    return (
-      <Box p="4" color="fg.muted">
-        <Text fontSize="sm">{t("graph.selectNode")}</Text>
-      </Box>
-    );
+    return null;
   }
 
   const { data } = selectedNode;
@@ -70,8 +66,6 @@ export function GraphDetailPanel() {
           bg="bg.subtle"
           p="2"
           borderRadius="md"
-          maxH="300px"
-          overflow="auto"
           whiteSpace="pre-wrap"
           wordBreak="break-all"
         >

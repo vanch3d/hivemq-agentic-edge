@@ -175,12 +175,10 @@ function applyHidden(
   nodes: GraphNode[],
   hidden: Set<DomainEntityType>,
 ): GraphNode[] {
-  if (hidden.size === 0) return nodes;
-  return nodes.map((n) =>
-    hidden.has(n.data.entityType)
-      ? { ...n, hidden: true }
-      : { ...n, hidden: false },
-  );
+  return nodes.map((n) => {
+    const shouldHide = hidden.has(n.data.entityType);
+    return n.hidden !== shouldHide ? { ...n, hidden: shouldHide } : n;
+  });
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({

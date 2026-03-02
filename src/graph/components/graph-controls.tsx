@@ -1,4 +1,4 @@
-import { Box, Button, HStack } from "@chakra-ui/react";
+import { Box, Button, Group, HStack } from "@chakra-ui/react";
 import {
   LuMaximize,
   LuArrowRightFromLine,
@@ -48,7 +48,7 @@ export function GraphControls() {
       {/* Left: View mode toggle + scope selector */}
       <HStack gap="2" flexWrap="wrap">
         {/* View mode toggle */}
-        <HStack gap="1">
+        <Group attached>
           <Button
             size="xs"
             variant={isSchema ? "outline" : "solid"}
@@ -69,11 +69,11 @@ export function GraphControls() {
             <LuNetwork />
             {t("graph.schema")}
           </Button>
-        </HStack>
+        </Group>
 
         {/* Scope selector (only in instance mode) */}
         {!isSchema && (
-          <HStack gap="1" flexWrap="wrap">
+          <Group attached>
             {VIEW_SCOPES.map((scope) => (
               <Button
                 key={scope}
@@ -85,7 +85,7 @@ export function GraphControls() {
                 {SCOPE_LABELS[scope]}
               </Button>
             ))}
-          </HStack>
+          </Group>
         )}
       </HStack>
 

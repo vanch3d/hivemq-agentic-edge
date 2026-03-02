@@ -1,6 +1,7 @@
 import {
   ReactFlow,
   MiniMap,
+  Panel,
   Background,
   BackgroundVariant,
   useReactFlow,
@@ -9,12 +10,14 @@ import "@xyflow/react/dist/style.css";
 import "@/graph/graph-tokens.css";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Spinner, Text } from "@chakra-ui/react";
+import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
+import { LuX } from "react-icons/lu";
 
 import { useColorMode } from "@/components/ui/color-mode";
 import { useGraphStore, ANIM_DURATION } from "@/graph/store";
 import { nodeTypes } from "./nodes";
 import { edgeTypes } from "./edges";
+import { GraphDetailPanel } from "./graph-detail-panel";
 
 interface GraphCanvasProps {
   /** If true, shows MiniMap and allows more space */
@@ -31,6 +34,7 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
   const animationPhase = useGraphStore((s) => s.animationPhase);
   const onNodesChange = useGraphStore((s) => s.onNodesChange);
   const onEdgesChange = useGraphStore((s) => s.onEdgesChange);
+  const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
   const selectNode = useGraphStore((s) => s.selectNode);
 
   // Animated fitView driven by store animation phase
@@ -104,6 +108,40 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
             }}
             maskColor="var(--graph-minimap-mask)"
           />
+        )}
+        {selectedNodeId && (
+          <Panel
+            position="top-right"
+            style={{
+              margin: 8,
+              /* Leave space for the minimap (~150px) + 15px gap to match minimap margin */
+              maxHeight: "calc(100% - 16px - 175px)",
+              display: "flex",
+            }}
+          >
+            <Box
+              w="280px"
+              overflow="auto"
+              bg="bg.panel"
+              borderWidth="1px"
+              borderRadius="md"
+              shadow="md"
+              position="relative"
+            >
+              <IconButton
+                aria-label={t("graph.closePanel")}
+                size="2xs"
+                variant="ghost"
+                position="absolute"
+                top="2"
+                right="2"
+                onClick={() => selectNode(null)}
+              >
+                <LuX />
+              </IconButton>
+              <GraphDetailPanel />
+            </Box>
+          </Panel>
         )}
         {/* Arrow marker for edges — uses CSS custom property for dark mode */}
         <svg>
