@@ -3,15 +3,16 @@ import {
   MiniMap,
   Background,
   BackgroundVariant,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "@/graph/graph-tokens.css";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Spinner, Text } from "@chakra-ui/react";
 
 import { useColorMode } from "@/components/ui/color-mode";
-import { useGraphStore } from "@/graph/store";
+import { useGraphStore, ANIM_DURATION } from "@/graph/store";
 import { nodeTypes } from "./nodes";
 import { edgeTypes } from "./edges";
 
@@ -23,12 +24,29 @@ interface GraphCanvasProps {
 export function GraphCanvas({ compact = false }: GraphCanvasProps) {
   const { t } = useTranslation();
   const { colorMode } = useColorMode();
+  const rf = useReactFlow();
   const nodes = useGraphStore((s) => s.nodes);
   const edges = useGraphStore((s) => s.edges);
   const isLayoutPending = useGraphStore((s) => s.isLayoutPending);
+  const animationPhase = useGraphStore((s) => s.animationPhase);
   const onNodesChange = useGraphStore((s) => s.onNodesChange);
   const onEdgesChange = useGraphStore((s) => s.onEdgesChange);
   const selectNode = useGraphStore((s) => s.selectNode);
+
+  // Animated fitView driven by store animation phase
+  useEffect(() => {
+    if (animationPhase === "enter") {
+      // Nodes spread from origin — fitView after they settle
+      const id = setTimeout(() => {
+        rf.fitView({ padding: 0.2, duration: 300 });
+      }, ANIM_DURATION);
+      return () => clearTimeout(id);
+    }
+    if (animationPhase === "reposition") {
+      // Nodes already have final positions — animate viewport in parallel with CSS transition
+      rf.fitView({ padding: 0.2, duration: ANIM_DURATION });
+    }
+  }, [animationPhase, rf]);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: { id: string }) => {
@@ -44,7 +62,18 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
   const isInitialLoad = isLayoutPending && nodes.length === 0;
 
   return (
-    <Box position="relative" width="100%" height="100%">
+    <Box
+      position="relative"
+      width="100%"
+      height="100%"
+      className={[
+        animationPhase !== "idle" && "layout-animating",
+        (animationPhase === "enter" || animationPhase === "enter-settle") &&
+          `layout-${animationPhase}`,
+      ]
+        .filter(Boolean)
+        .join(" ") || undefined}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -55,8 +84,6 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         colorMode={colorMode}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
         minZoom={0.2}
         maxZoom={3}
         proOptions={{ hideAttribution: true }}

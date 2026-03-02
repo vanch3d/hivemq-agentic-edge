@@ -25,6 +25,8 @@ import { buildSchemaGraph } from "./schema-graph";
 
 export type ViewMode = "instance" | "schema";
 
+export const ANIM_DURATION = 500;
+
 // --- Scope filter ---
 
 /** Entity types visible for each scope (includes both v1 and v2 type keys) */
@@ -126,6 +128,7 @@ interface GraphState {
   // Layout
   layoutDirection: LayoutDirection;
   isLayoutPending: boolean;
+  animationPhase: "idle" | "enter" | "enter-settle" | "reposition";
 
   // Selection
   selectedNodeId: string | null;
@@ -162,6 +165,7 @@ const initialState = {
   edges: [] as GraphEdge[],
   layoutDirection: DEFAULT_LAYOUT_DIRECTION as LayoutDirection,
   isLayoutPending: false,
+  animationPhase: "idle" as "idle" | "enter" | "enter-settle" | "reposition",
   selectedNodeId: null as string | null,
   viewport: { x: 0, y: 0, zoom: 1 } as Viewport,
 };
@@ -249,6 +253,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       focusEntityId,
       layoutDirection,
       isAssembled,
+      isLayoutPending,
       nodes: existingNodes,
       hiddenEntityTypes,
     } = get();
@@ -297,6 +302,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           nodes: applyHidden(positioned, hiddenEntityTypes),
           edges,
         });
+        console.timeEnd("[store] setFullGraph");
+        return;
+      }
+    }
+
+    // Skip if layout is already pending for the same node set
+    if (isLayoutPending) {
+      const existingIds = new Set(existingNodes.map((n) => n.id));
+      if (
+        filtered.length === existingIds.size &&
+        filtered.every((n) => existingIds.has(n.id))
+      ) {
+        set(base);
+        console.log("[store] skipping duplicate layout (same nodes, already pending)");
         console.timeEnd("[store] setFullGraph");
         return;
       }
@@ -390,9 +409,44 @@ onResult((result) => {
   // Drop stale results — only apply if this is the latest request
   if (result.id !== getLatestRequestId()) return;
 
-  const { hiddenEntityTypes } = useGraphStore.getState();
-  useGraphStore.setState({
-    nodes: applyHidden(result.nodes, hiddenEntityTypes),
-    isLayoutPending: false,
-  });
+  const { hiddenEntityTypes, nodes: currentNodes } = useGraphStore.getState();
+  const finalNodes = applyHidden(result.nodes, hiddenEntityTypes);
+
+  if (currentNodes.length === 0) {
+    // Enter path: seed at origin, paint one frame, then apply final positions
+    const originNodes = finalNodes.map((n) => ({
+      ...n,
+      position: { x: 0, y: 0 },
+    }));
+    useGraphStore.setState({
+      nodes: originNodes,
+      isLayoutPending: false,
+      animationPhase: "enter",
+    });
+    // Double rAF ensures the browser paints the origin frame before we apply finals
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Re-check staleness after async gap
+        if (result.id !== getLatestRequestId()) return;
+        useGraphStore.setState({ nodes: finalNodes });
+        // After nodes spread, transition to settle phase (edges fade in)
+        setTimeout(() => {
+          useGraphStore.setState({ animationPhase: "enter-settle" });
+          setTimeout(() => {
+            useGraphStore.setState({ animationPhase: "idle" });
+          }, 400);
+        }, ANIM_DURATION);
+      });
+    });
+  } else {
+    // Reposition path: apply final positions directly, CSS transition handles the rest
+    useGraphStore.setState({
+      nodes: finalNodes,
+      isLayoutPending: false,
+      animationPhase: "reposition",
+    });
+    setTimeout(() => {
+      useGraphStore.setState({ animationPhase: "idle" });
+    }, ANIM_DURATION + 100);
+  }
 });

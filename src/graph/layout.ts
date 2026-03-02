@@ -229,16 +229,16 @@ export function computeLayout(
     `[layout] cola: ${constraints.length} constraints, ${colaLinks.length} links`,
   );
 
-  // Shorter link length keeps connected nodes closer together.
-  // Fewer iterations keep nodes near their grid positions — prevents
-  // heavy scatter for nodes with cross-rank edges (e.g. schemas).
+  // Grid positions are good seeds — only need a few RK4 steps for clustering.
+  // Very high convergence threshold (100) ensures each run() phase executes
+  // exactly the requested number of iterations without extra convergence loops.
   const colaLayout = new cola.Layout()
     .size([800, 600])
     .nodes(colaNodes as unknown as cola.Node[])
     .links(colaLinks as unknown as cola.Link<cola.Node | number>[])
     .constraints(constraints as unknown[] as cola.Constraint[])
     .symmetricDiffLinkLengths(rankSpacing * 0.6)
-    .convergenceThreshold(0.01);
+    .convergenceThreshold(0.3);
 
   colaLayout.start(3, 5, 3);
 

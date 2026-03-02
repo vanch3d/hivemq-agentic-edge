@@ -41,3 +41,17 @@
   --graph-minimap-bg: #1e293b;
   --graph-minimap-mask: rgba(30, 41, 59, 0.6);
 }
+
+/* Smooth node transitions during layout animations only */
+.layout-animating .react-flow__node {
+  transition: transform 500ms ease-out;
+}
+
+/* Hide edges during enter animation, fade them in once nodes settle */
+.layout-enter .react-flow__edge {
+  opacity: 0;
+}
+.layout-enter-settle .react-flow__edge {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
