@@ -3,8 +3,10 @@ import { customizeValidator } from "@rjsf/validator-ajv8";
 import { useTranslation } from "react-i18next";
 import type { RJSFSchema, UiSchema, TemplatesType } from "@rjsf/utils";
 import type { IChangeEvent, FormProps } from "@rjsf/core";
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
+import type FormCore from "@rjsf/core";
 import { createLocalizedUiSchema } from "@/utils/create-localized-ui-schema";
+import { resolveSchemaRefs } from "@/utils/resolve-schema-refs";
 import { FieldTemplate } from "@/components/rjsf-templates/field-template";
 
 const validator = customizeValidator();
@@ -23,6 +25,8 @@ type SchemaFormProps<TFormData = unknown> = {
   /** When set, auto-resolves ui:title/description/placeholder from i18n keys
    *  using the convention: schemas.<i18nPrefix>.fields.<field>.title etc. */
   i18nPrefix?: string;
+  /** Ref to the underlying RJSF Form for programmatic submit. */
+  ref?: Ref<FormCore<TFormData>>;
 } & Omit<
   Partial<FormProps<TFormData>>,
   | "schema"
@@ -32,6 +36,7 @@ type SchemaFormProps<TFormData = unknown> = {
   | "onChange"
   | "validator"
   | "children"
+  | "ref"
 >;
 
 export function SchemaForm<TFormData = unknown>({
@@ -42,9 +47,13 @@ export function SchemaForm<TFormData = unknown>({
   onChange,
   children,
   i18nPrefix,
+  ref,
   ...rest
 }: SchemaFormProps<TFormData>) {
   const { t } = useTranslation();
+
+  // Resolve OpenAPI $ref pointers so RJSF can render nested schemas
+  const resolvedSchema = resolveSchemaRefs(schema);
 
   let resolvedUiSchema: UiSchema = uiSchema ?? {};
 
@@ -52,7 +61,7 @@ export function SchemaForm<TFormData = unknown>({
     resolvedUiSchema = createLocalizedUiSchema(
       t,
       i18nPrefix,
-      schema,
+      resolvedSchema,
       resolvedUiSchema,
     );
   }
@@ -80,7 +89,8 @@ export function SchemaForm<TFormData = unknown>({
 
   return (
     <Form
-      schema={schema}
+      ref={ref}
+      schema={resolvedSchema}
       uiSchema={resolvedUiSchema}
       formData={formData}
       onSubmit={handleSubmit}

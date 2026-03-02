@@ -116,7 +116,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setFormRequester((request: FormRequest) => {
       return new Promise((resolve) => {
-        setActiveForm({ ...request, resolve });
+        setActiveForm({
+          ...request,
+          resolve: (result) => {
+            resolve(result);
+            setActiveForm(null);
+          },
+        });
       });
     });
   }, []);
@@ -125,7 +131,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setApprovalRequester((request: ApprovalRequest) => {
       return new Promise((resolve) => {
-        setActiveApproval({ ...request, resolve });
+        setActiveApproval({
+          ...request,
+          resolve: (approved) => {
+            resolve(approved);
+            setActiveApproval(null);
+          },
+        });
       });
     });
   }, []);
