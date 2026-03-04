@@ -28,7 +28,9 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
   "mutateBridge.create": {
     schema: {
       ...BridgeSchema,
-      required: ["id", "host", "port"],
+      // OpenAPI spec requires: cleanStart, host, id, keepAlive, port, sessionExpiry
+      // cleanStart/keepAlive/sessionExpiry have defaults so RJSF pre-fills them
+      required: ["id", "host", "port", "cleanStart", "keepAlive", "sessionExpiry"],
     } as unknown as RJSFSchema,
     requiredOnly: true,
   },
@@ -46,7 +48,10 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
   "mutateAdapter.create": {
     schema: {
       ...AdapterSchema,
-      required: ["id", "type"],
+      // TEMP FIX: OpenAPI spec only requires ["id"] but the API rejects payloads
+      // without "config" and "type". Remove this override when the spec is corrected.
+      // See: README.md > Known OpenAPI Spec Issues
+      required: ["id", "type", "config"],
     } as unknown as RJSFSchema,
     requiredOnly: true,
   },

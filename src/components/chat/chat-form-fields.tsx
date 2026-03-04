@@ -1,5 +1,5 @@
 import { Box, Heading } from "@chakra-ui/react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { RefObject } from "react";
 import type { RJSFSchema } from "@rjsf/utils";
 import type FormCore from "@rjsf/core";
@@ -36,6 +36,20 @@ export function ChatFormFields({
     return schema;
   }, [schema, showAll]);
 
+  // When showing required-only fields, RJSF strips non-displayed fields from
+  // the submission. Merge initial formData back so prefilled values (e.g. config)
+  // are preserved in the API payload.
+  const handleSubmit = useCallback(
+    (data: unknown) => {
+      if (!showAll && formData && typeof formData === "object") {
+        onSubmit({ ...formData, ...(data as object) });
+      } else {
+        onSubmit(data);
+      }
+    },
+    [showAll, formData, onSubmit],
+  );
+
   return (
     <Box p="3" fontSize="sm" flex="1" minH="0" overflow="auto">
       <Heading size="xs" mb="2">
@@ -46,7 +60,7 @@ export function ChatFormFields({
         ref={formRef}
         schema={displaySchema}
         formData={formData}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
       >
         {/* Empty children suppress the default RJSF submit button */}
         <></>
