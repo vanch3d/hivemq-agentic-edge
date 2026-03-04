@@ -91,7 +91,7 @@ Most list wrapper schemas also lack descriptions: `BridgeList`, `EventList`, `St
 | `HealthStatus`                | `status`                                   |
 | `Capability`                  | `id`                                       |
 | `ProtocolAdapter`             | `id`, `name`                               |
-| `Adapter`                     | `type` (only `id` is required)             |
+| `Adapter`                     | `type`, `config` (only `id` is required) — **confirmed**: API rejects `POST /adapters/{type}` without `config`, returning 400 `AdapterFailedValidation`. Workaround in `src/agent/form-schemas.ts`. |
 | `Metric`                      | `name`                                     |
 | `DataPoint`                   | `value`                                    |
 | `ObjectNode`                  | `name`, `nodeType`                         |
