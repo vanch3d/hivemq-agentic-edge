@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 725 725">
+  <!-- Option B: "Chat Hive" — Heptagon with chat bubble + bee antennae -->
+  <!-- Outer dark heptagon -->
+  <polygon points="362.5 33 85.46 151.81 17.03 451.59 208.75 692 516.25 692 707.97 451.59 639.54 151.81" fill="#1a1a2e" stroke="#1a1a2e" stroke-width="8" stroke-linejoin="round"/>
+  <!-- Inner golden heptagon -->
+  <polygon points="362.5 84.52 120.65 184 60.91 437.33 228.28 640.48 496.72 640.48 664.09 437.33 604.35 184" fill="#ffc000"/>
+  <!-- Bee head -->
+  <ellipse cx="362" cy="245" rx="58" ry="36" fill="#1a1a2e"/>
+  <!-- Antenna stalks -->
+  <line x1="332" y1="214" x2="312" y2="175" stroke="#1a1a2e" stroke-width="7" stroke-linecap="round"/>
+  <line x1="392" y1="214" x2="412" y2="175" stroke="#1a1a2e" stroke-width="7" stroke-linecap="round"/>
+  <!-- Antenna tips -->
+  <circle cx="310" cy="172" r="8" fill="#1a1a2e"/>
+  <circle cx="414" cy="172" r="8" fill="#1a1a2e"/>
+  <!-- Eyes (original leaf shapes) -->
+  <path d="m315.5,262c-3.32-20.67,7.61-41.34,26.62-50.14,3.32,20.67-7.66,41.29-26.62,50.14Z" fill="#fff"/>
+  <path d="m408,262c-19.01-8.85-29.94-29.47-26.62-50.14,18.97,8.8,29.94,29.47,26.62,50.14Z" fill="#fff"/>
+  <!-- Chat bubble body -->
+  <rect x="210" y="290" width="305" height="210" rx="32" fill="#1a1a2e"/>
+  <!-- Chat bubble tail -->
+  <polygon points="300,500 340,500 310,555" fill="#1a1a2e"/>
+  <!-- Three dots (typing indicator) -->
+  <circle cx="300" cy="395" r="22" fill="#ffc000"/>
+  <circle cx="362" cy="395" r="22" fill="#ffc000"/>
+  <circle cx="424" cy="395" r="22" fill="#ffc000"/>
+</svg>

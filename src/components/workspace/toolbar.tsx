@@ -1,4 +1,4 @@
-import { Flex, Heading, Text } from "@chakra-ui/react";
+import { Flex, Heading, Image, Text } from "@chakra-ui/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/auth-context";
@@ -34,7 +34,10 @@ export function Toolbar() {
       borderBottomWidth="1px"
       flexShrink={0}
     >
-      <Heading size="md">{t("app.title")}</Heading>
+      <Flex align="center" gap="2">
+        <Image src="/hivemq-edge-agentic.svg" alt="" h="8" w="8" />
+        <Heading size="md">{t("app.title")}</Heading>
+      </Flex>
 
       <Flex align="center" gap="2">
         <ChatToggleButton />
