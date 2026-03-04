@@ -1,5 +1,5 @@
 {
-  "name": "untitled1",
+  "name": "hivemq-edge-agentic",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -27,6 +27,7 @@
     "@tanstack/ai-ollama": "^0.3.0",
     "@tanstack/ai-react": "^0.3.0",
     "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router": "^1.157.16",
     "@tanstack/react-router-devtools": "^1.157.16",
     "@tanstack/react-table": "^8.21.3",
