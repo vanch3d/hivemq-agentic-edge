@@ -78,10 +78,6 @@ type ChatContextValue = {
   dismissError: () => void;
   stop: () => void;
   clear: () => void;
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  onToggle: () => void;
   activeForm: ActiveForm | null;
   activeApproval: ActiveApproval | null;
   /** Model identifier reported by the AI provider (e.g. "claude-sonnet-4-5", "qwen2.5:7b") */
@@ -100,7 +96,6 @@ export function useChatContext(): ChatContextValue {
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [activeForm, setActiveForm] = useState<ActiveForm | null>(null);
   const [activeApproval, setActiveApproval] = useState<ActiveApproval | null>(
     null,
@@ -147,18 +142,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setSnapshotCreator((request) =>
       useSnapshotStore.getState().addSnapshot(request),
     );
-  }, []);
-
-  // Ctrl+K / Cmd+K keyboard shortcut to toggle drawer
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsOpen((prev) => !prev);
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
   }, []);
 
   const [model, setModel] = useState<string | null>(null);
@@ -211,10 +194,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setModel(null);
   }, [chatState]);
 
-  const onOpen = useCallback(() => setIsOpen(true), []);
-  const onClose = useCallback(() => setIsOpen(false), []);
-  const onToggle = useCallback(() => setIsOpen((prev) => !prev), []);
-
   return (
     <ChatContext
       value={{
@@ -225,10 +204,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         dismissError,
         stop: chatState.stop,
         clear,
-        isOpen,
-        onOpen,
-        onClose,
-        onToggle,
         activeForm,
         activeApproval,
         model,

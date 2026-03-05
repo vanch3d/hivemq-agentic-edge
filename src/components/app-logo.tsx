@@ -85,7 +85,7 @@ export function AppLogo(props: HTMLChakraProps<"svg">) {
           letterSpacing: 2,
         }}
       >
-        AGENTIC EDGE
+        {"AGENTIC EDGE"}
       </text>
     </chakra.svg>
   );

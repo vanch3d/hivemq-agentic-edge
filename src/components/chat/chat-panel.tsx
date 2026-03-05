@@ -1,22 +1,26 @@
-import { Box, Flex, Heading, Text, IconButton, Badge } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text, IconButton, Badge } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import { LuX } from "react-icons/lu";
+import { LuMessageSquarePlus, LuX } from "react-icons/lu";
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+} from "@/components/ui/dialog";
 import type { UIMessage } from "@tanstack/ai";
 import type FormCore from "@rjsf/core";
-import {
-  DrawerRoot,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerCloseTrigger,
-} from "@/components/ui/drawer";
 import {
   Splitter,
   SplitterPanel,
   SplitterResizeTrigger,
 } from "@/components/ui/splitter";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useChatContext, type ActiveForm } from "@/context/chat-context";
 import { useSettings } from "@/hooks/use-settings";
 import { MessageList } from "./message-list";
@@ -28,12 +32,10 @@ import { ApprovalCard } from "./approval-card";
 /** Extract a human-readable message from the error object / nested JSON. */
 function formatError(error: Error): string {
   const raw = error.message;
-  // The SSE RUN_ERROR often embeds a JSON string like '400 {"type":"error","error":{"message":"..."}}'
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      // Anthropic shape: { error: { message: "..." } }
       if (
         parsed["error"] &&
         typeof parsed["error"] === "object" &&
@@ -42,7 +44,6 @@ function formatError(error: Error): string {
       ) {
         return (parsed["error"] as { message: string }).message;
       }
-      // Generic shape: { message: "..." }
       if (typeof parsed["message"] === "string") {
         return parsed["message"];
       }
@@ -100,7 +101,7 @@ function ErrorBox({
   );
 }
 
-/** Split view shown when an inline form is active. Manages its own showAll state. */
+/** Split view shown when an inline form is active. */
 function FormSplitView({
   activeForm,
   messages,
@@ -181,10 +182,8 @@ function FormSplitView({
   );
 }
 
-export function ChatDrawer() {
+export function ChatPanel() {
   const {
-    isOpen,
-    onClose,
     messages,
     activeForm,
     activeApproval,
@@ -192,75 +191,112 @@ export function ChatDrawer() {
     dismissError,
     model,
     isLoading,
+    clear,
   } = useChatContext();
   const { t } = useTranslation();
   const provider = useProviderLabel();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const hasMessages = messages.length > 0;
 
   return (
-    <DrawerRoot
-      open={isOpen}
-      onOpenChange={(e) => {
-        if (!e.open) onClose();
-      }}
-      placement="end"
-      size="sm"
-    >
-      <DrawerContent
-        portalled={false}
-        w={{ base: "100vw", sm: "400px", lg: "480px", xl: "560px" }}
-        maxW={{ base: "100vw", sm: "400px", lg: "480px", xl: "560px" }}
-        h="100%"
-        borderLeftWidth="1px"
-        shadow="none"
+    <Flex direction="column" h="full" w="full" borderRightWidth="1px">
+      {/* Header */}
+      <Flex
+        align="center"
+        justify="space-between"
+        borderBottomWidth="1px"
+        py="2"
+        px="3"
+        flexShrink={0}
       >
-        <DrawerHeader borderBottomWidth="1px" py="2" px="3">
-          <Flex align="center" gap="2">
-            <Heading size="sm">{t("chat.title")}</Heading>
-            <Badge
-              size="xs"
-              variant="outline"
-              fontWeight="normal"
-              colorPalette={error ? "red" : model ? "green" : "blue"}
+        <Flex align="center" gap="2">
+          <Heading size="sm">{t("chat.title")}</Heading>
+          <Badge
+            size="xs"
+            variant="outline"
+            fontWeight="normal"
+            colorPalette={error ? "red" : model ? "green" : "blue"}
+          >
+            {model ?? provider}
+          </Badge>
+        </Flex>
+        <Tooltip content={t("chat.newConversation")}>
+          <IconButton
+            aria-label={t("chat.newConversation")}
+            variant="ghost"
+            size="xs"
+            disabled={!hasMessages}
+            onClick={() => setConfirmOpen(true)}
+          >
+            <LuMessageSquarePlus />
+          </IconButton>
+        </Tooltip>
+      </Flex>
+
+      {/* New conversation confirmation */}
+      <DialogRoot
+        open={confirmOpen}
+        onOpenChange={(e) => setConfirmOpen(e.open)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("chat.newConversationTitle")}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <DialogDescription>
+              {t("chat.newConversationDescription")}
+            </DialogDescription>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              {t("chat.newConversationCancel")}
+            </Button>
+            <Button
+              colorPalette="red"
+              onClick={() => {
+                clear();
+                setConfirmOpen(false);
+              }}
             >
-              {model ?? provider}
-            </Badge>
-          </Flex>
-        </DrawerHeader>
-        <DrawerCloseTrigger />
-        <DrawerBody p="0" display="flex" flexDirection="column">
-          {activeForm ? (
-            /* ── Form active: split view ── */
-            <FormSplitView
-              activeForm={activeForm}
-              messages={messages}
-              isLoading={isLoading}
-              error={error}
-              dismissError={dismissError}
-            />
-          ) : activeApproval ? (
-            /* ── Approval active: full messages + approval footer ── */
-            <Flex direction="column" flex="1" overflow="hidden">
-              <MessageList messages={messages} isLoading={isLoading} />
-              {error && <ErrorBox error={error} onDismiss={dismissError} />}
-              <Box px="3" py="2" borderTopWidth="1px">
-                <ApprovalCard
-                  title={activeApproval.title}
-                  description={activeApproval.description}
-                  onApprove={() => activeApproval.resolve(true)}
-                  onReject={() => activeApproval.resolve(false)}
-                />
-              </Box>
-            </Flex>
-          ) : (
-            /* ── Normal: messages + chat input ── */
-            <Flex direction="column" flex="1" overflow="hidden">
-              <MessageList messages={messages} isLoading={isLoading} />
-              {error && <ErrorBox error={error} onDismiss={dismissError} />}
-              <ChatInput />
-            </Flex>
-          )}
-        </DrawerBody>
-      </DrawerContent>
-    </DrawerRoot>
+              {t("chat.newConversationConfirm")}
+            </Button>
+          </DialogFooter>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
+
+      {/* Body */}
+      <Flex direction="column" flex="1" overflow="hidden">
+        {activeForm ? (
+          <FormSplitView
+            activeForm={activeForm}
+            messages={messages}
+            isLoading={isLoading}
+            error={error}
+            dismissError={dismissError}
+          />
+        ) : activeApproval ? (
+          <>
+            <MessageList messages={messages} isLoading={isLoading} />
+            {error && <ErrorBox error={error} onDismiss={dismissError} />}
+            <Box px="3" py="2" borderTopWidth="1px">
+              <ApprovalCard
+                title={activeApproval.title}
+                description={activeApproval.description}
+                onApprove={() => activeApproval.resolve(true)}
+                onReject={() => activeApproval.resolve(false)}
+              />
+            </Box>
+          </>
+        ) : (
+          <>
+            <MessageList messages={messages} isLoading={isLoading} />
+            {error && <ErrorBox error={error} onDismiss={dismissError} />}
+            <ChatInput />
+          </>
+        )}
+      </Flex>
+    </Flex>
   );
 }
