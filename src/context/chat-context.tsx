@@ -32,9 +32,13 @@ import {
   setApprovalRequester,
   setSnapshotCreator,
   setQueryInvalidator,
+  setQueryClient,
+  setAdapterTypesFetcher,
+  prefetchAdapterTypes,
   type FormRequest,
   type ApprovalRequest,
 } from "@/agent/tool-context";
+import { getAdapterTypes } from "@/api/sdk.gen";
 import { useSnapshotStore } from "@/stores/snapshot-store";
 
 function getSettingsOverrides(): Record<string, unknown> {
@@ -105,11 +109,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Register query invalidator — tools call this after mutations
+  // Register query client and invalidator — tools call these for cache access and mutation cleanup
   useEffect(() => {
+    setQueryClient(queryClient);
     setQueryInvalidator(() => {
       queryClient.invalidateQueries();
     });
+    setAdapterTypesFetcher(async () => {
+      const { data } = await getAdapterTypes();
+      return data?.items ?? [];
+    });
+    prefetchAdapterTypes();
   }, [queryClient]);
 
   // Register router navigate for use by agent tools

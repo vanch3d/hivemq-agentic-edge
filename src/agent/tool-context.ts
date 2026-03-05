@@ -6,7 +6,8 @@
  * Tools execute outside React's component tree, so they need
  * module-level refs that the ChatProvider populates on mount.
  */
-import type { RJSFSchema } from "@rjsf/utils";
+import type { RJSFSchema, UiSchema } from "@rjsf/utils";
+import type { QueryClient } from "@tanstack/react-query";
 
 // --- Navigation ---
 
@@ -26,6 +27,7 @@ export function getToolNavigate(): NavigateFn | null {
 
 export type FormRequest = {
   schema: RJSFSchema;
+  uiSchema?: UiSchema;
   title: string;
   formData?: unknown;
   requiredOnly?: boolean;
@@ -109,4 +111,59 @@ export function setQueryInvalidator(fn: InvalidateQueriesFn): void {
 
 export function invalidateQueries(): void {
   _invalidateQueries?.();
+}
+
+// --- Adapter type cache (TanStack Query with staleTime: Infinity) ---
+
+const ADAPTER_TYPES_QUERY_KEY = ["adapterTypes"] as const;
+
+let _queryClient: QueryClient | null = null;
+let _adapterTypesFetcher: (() => Promise<unknown[]>) | null = null;
+
+export function setQueryClient(qc: QueryClient): void {
+  _queryClient = qc;
+}
+
+/**
+ * Register the function that fetches adapter types from the API.
+ * Keeps sdk.gen imports out of this module.
+ */
+export function setAdapterTypesFetcher(
+  fn: () => Promise<unknown[]>,
+): void {
+  _adapterTypesFetcher = fn;
+}
+
+/**
+ * Prefetch adapter types into the query cache.
+ * Call once at app startup (e.g. in ChatProvider mount).
+ */
+export function prefetchAdapterTypes(): void {
+  if (!_queryClient || !_adapterTypesFetcher) return;
+  const fetcher = _adapterTypesFetcher;
+  _queryClient.prefetchQuery({
+    queryKey: ADAPTER_TYPES_QUERY_KEY,
+    queryFn: fetcher,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Get a single adapter type by ID from the cache.
+ * Uses ensureQueryData — returns cached data instantly if available,
+ * fetches once if the cache is cold.
+ */
+export async function getAdapterTypeById(
+  typeId: string,
+): Promise<Record<string, unknown> | undefined> {
+  if (!_queryClient || !_adapterTypesFetcher) return undefined;
+  const fetcher = _adapterTypesFetcher;
+  const types = await _queryClient.ensureQueryData<unknown[]>({
+    queryKey: ADAPTER_TYPES_QUERY_KEY,
+    queryFn: fetcher,
+    staleTime: Infinity,
+  });
+  return (types as Record<string, unknown>[]).find(
+    (t) => t.id === typeId,
+  );
 }

@@ -160,6 +160,7 @@ function FormSplitView({
         >
           <ChatFormFields
             schema={activeForm.schema}
+            uiSchema={activeForm.uiSchema}
             title={activeForm.title}
             formData={activeForm.formData}
             showAll={showAll}

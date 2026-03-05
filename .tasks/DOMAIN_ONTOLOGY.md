@@ -54,8 +54,9 @@ HiveMQ Edge
 
 A protocol adapter connects HiveMQ Edge to a non-MQTT industrial protocol. Each adapter has:
 
-- **Type** (`ProtocolAdapter`) — A plugin implementation (e.g. "opc-ua", "modbus"). Defines `configSchema` (JSON Schema) and `uiSchema` for the UI. Has `capabilities`: `READ`, `WRITE`, `DISCOVER`, `COMBINE`.
-- **Instance** (`Adapter`) — A configured connection to a specific device, created from a type. Has an `id`, `type` reference, `config` (freeform JSON matching the type's configSchema), and a runtime `Status`.
+- **Type** (`ProtocolAdapter`) — A plugin implementation (e.g. "opcua", "modbus", "s7"). Defines `configSchema` (JSON Schema) and `uiSchema` (RJSF layout hints) for the UI. Has `capabilities`: `READ`, `WRITE`, `DISCOVER`, `COMBINE`. Types are **deployment-time entities** — they don't change within a session and are cached at app startup.
+- **Instance** (`Adapter`) — A configured connection to a specific device, created from a type. Has an `id`, `type` reference, `config` (nested object matching the type's configSchema), and a runtime `Status`.
+- **Dynamic schema**: Creating or updating an adapter requires the type's `configSchema` — not a static schema. The form fields are different for each adapter type (e.g. OPC-UA needs `uri` + `security`; Modbus needs `host` + `port` + `timeoutMillis`). The API payload is structured as `{ id, type, config: { ...typeSpecificFields } }`.
 - **Domain Tags** (`DomainTag`) — Named data points exposed by the adapter (e.g. `ns=3;s=Temperature`). Each tag has a `name` and a `definition` (freeform JSON matching the type's tag schema).
 
 ### Data Flow: Northbound and Southbound

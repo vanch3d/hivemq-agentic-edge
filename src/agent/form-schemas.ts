@@ -5,7 +5,6 @@
 import type { RJSFSchema } from "@rjsf/utils";
 import {
   BridgeSchema,
-  AdapterSchema,
   StatusTransitionCommandSchema,
   BehaviorPolicySchema,
   DataPolicySchema,
@@ -45,19 +44,7 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
   },
 
   // Adapter mutations
-  "mutateAdapter.create": {
-    schema: {
-      ...AdapterSchema,
-      // TEMP FIX: OpenAPI spec only requires ["id"] but the API rejects payloads
-      // without "config" and "type". Remove this override when the spec is corrected.
-      // See: README.md > Known OpenAPI Spec Issues
-      required: ["id", "type", "config"],
-    } as unknown as RJSFSchema,
-    requiredOnly: true,
-  },
-  "mutateAdapter.update": {
-    schema: { ...AdapterSchema } as unknown as RJSFSchema,
-  },
+  // Note: create/update use dynamic schemas from adapter type definitions (see mutate-adapter.ts)
   "mutateAdapter.transitionStatus": {
     schema: {
       ...StatusTransitionCommandSchema,
