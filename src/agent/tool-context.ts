@@ -96,3 +96,17 @@ export function createToolSnapshot(request: SnapshotRequest): string | null {
   if (!_createSnapshot) return null;
   return _createSnapshot(request);
 }
+
+// --- Query invalidation ---
+
+type InvalidateQueriesFn = () => void;
+
+let _invalidateQueries: InvalidateQueriesFn | null = null;
+
+export function setQueryInvalidator(fn: InvalidateQueriesFn): void {
+  _invalidateQueries = fn;
+}
+
+export function invalidateQueries(): void {
+  _invalidateQueries?.();
+}

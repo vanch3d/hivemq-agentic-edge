@@ -36,9 +36,13 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
   const onEdgesChange = useGraphStore((s) => s.onEdgesChange);
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
   const selectNode = useGraphStore((s) => s.selectNode);
+  const pendingFocusNodeId = useGraphStore((s) => s.pendingFocusNodeId);
 
   // Animated fitView driven by store animation phase
   useEffect(() => {
+    // Skip general fitView when a pending focus will handle the zoom
+    if (pendingFocusNodeId) return;
+
     if (animationPhase === "enter") {
       // Nodes spread from origin — fitView after they settle
       const id = setTimeout(() => {
@@ -50,7 +54,26 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
       // Nodes already have final positions — animate viewport in parallel with CSS transition
       rf.fitView({ padding: 0.2, duration: ANIM_DURATION });
     }
-  }, [animationPhase, rf]);
+  }, [animationPhase, rf, pendingFocusNodeId]);
+
+  // Pending focus: select + zoom to a specific node after layout settles
+  useEffect(() => {
+    if (!pendingFocusNodeId || animationPhase !== "idle") return;
+    // Wait until nodes are actually rendered (layout complete)
+    if (nodes.length === 0) return;
+
+    const store = useGraphStore.getState();
+    const nodeExists = store.nodes.some((n) => n.id === pendingFocusNodeId);
+    if (nodeExists) {
+      store.selectNode(pendingFocusNodeId);
+      rf.fitView({
+        nodes: [{ id: pendingFocusNodeId }],
+        padding: 0.5,
+        duration: 500,
+      });
+    }
+    store.clearPendingFocus();
+  }, [pendingFocusNodeId, animationPhase, rf, nodes.length]);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: { id: string }) => {

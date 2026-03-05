@@ -8,7 +8,7 @@ import {
   deleteCombiner,
   setIsa95,
 } from "@/api/sdk.gen";
-import { requestApproval } from "@/agent/tool-context";
+import { requestApproval, invalidateQueries } from "@/agent/tool-context";
 import { extractApiError } from "./api-error";
 
 export const mutateSystem = mutateSystemDef.client(async (input) => {
@@ -27,7 +27,13 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         const { data, error } = await addTopicFilters({
           body: input.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        const tf = input.data["topicFilter"] ?? "unknown";
+        return {
+          summary: error ? undefined : `Topic filter "${tf}" added successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "updateTopicFilter": {
@@ -45,7 +51,12 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
           path: { filter: input.resourceId },
           body: input.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        return {
+          summary: error ? undefined : `Topic filter "${input.resourceId}" updated successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "deleteTopicFilter": {
@@ -61,7 +72,9 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         const { error } = await deleteTopicFilter({
           path: { filter: input.resourceId },
         });
+        if (!error) invalidateQueries();
         return {
+          summary: error ? undefined : `Topic filter "${input.resourceId}" deleted successfully.`,
           data: error ? null : { deleted: input.resourceId },
           error: extractApiError(error),
         };
@@ -80,7 +93,13 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         const { data, error } = await addCombiner({
           body: input.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        const cId = input.data["id"] ?? "unknown";
+        return {
+          summary: error ? undefined : `Combiner "${cId}" created successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "updateCombiner": {
@@ -98,7 +117,12 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
           path: { combinerId: input.resourceId },
           body: input.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        return {
+          summary: error ? undefined : `Combiner "${input.resourceId}" updated successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "deleteCombiner": {
@@ -114,7 +138,9 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         const { error } = await deleteCombiner({
           path: { combinerId: input.resourceId },
         });
+        if (!error) invalidateQueries();
         return {
+          summary: error ? undefined : `Combiner "${input.resourceId}" deleted successfully.`,
           data: error ? null : { deleted: input.resourceId },
           error: extractApiError(error),
         };
@@ -131,7 +157,12 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         if (!approved) return { data: null, error: "Rejected" };
 
         const { data, error } = await setIsa95({ body: input.data as never });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        return {
+          summary: error ? undefined : "ISA-95 configuration updated successfully.",
+          data,
+          error: extractApiError(error),
+        };
       }
     }
   } catch (e) {

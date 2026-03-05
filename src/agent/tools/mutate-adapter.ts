@@ -5,7 +5,11 @@ import {
   deleteAdapter,
   transitionAdapterStatus,
 } from "@/api/sdk.gen";
-import { requestFormInput, requestApproval } from "@/agent/tool-context";
+import {
+  requestFormInput,
+  requestApproval,
+  invalidateQueries,
+} from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
 import { extractApiError } from "./api-error";
 
@@ -34,7 +38,13 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
           path: { adapterType: input.adapterType },
           body: formResult.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        const id = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        return {
+          summary: error ? undefined : `Adapter "${id}" created successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "update": {
@@ -55,7 +65,12 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
           path: { adapterId: input.adapterId },
           body: formResult.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        return {
+          summary: error ? undefined : `Adapter "${input.adapterId}" updated successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "delete": {
@@ -71,7 +86,9 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         const { error } = await deleteAdapter({
           path: { adapterId: input.adapterId },
         });
+        if (!error) invalidateQueries();
         return {
+          summary: error ? undefined : `Adapter "${input.adapterId}" deleted successfully.`,
           data: error ? null : { deleted: input.adapterId },
           error: extractApiError(error),
         };
@@ -99,7 +116,15 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
           path: { adapterId: input.adapterId },
           body: formResult.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        const command = (formResult.data as Record<string, unknown>)?.command ?? "unknown";
+        return {
+          summary: error
+            ? undefined
+            : `Adapter "${input.adapterId}" status transition "${command}" completed successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
     }
   } catch (e) {

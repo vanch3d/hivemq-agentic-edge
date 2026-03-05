@@ -11,6 +11,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
 import { clientTools } from "@tanstack/ai-client";
 import type { UIMessage, StreamChunk } from "@tanstack/ai";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   queryBridges,
   queryAdapters,
@@ -30,6 +31,7 @@ import {
   setFormRequester,
   setApprovalRequester,
   setSnapshotCreator,
+  setQueryInvalidator,
   type FormRequest,
   type ApprovalRequest,
 } from "@/agent/tool-context";
@@ -101,6 +103,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     null,
   );
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Register query invalidator — tools call this after mutations
+  useEffect(() => {
+    setQueryInvalidator(() => {
+      queryClient.invalidateQueries();
+    });
+  }, [queryClient]);
 
   // Register router navigate for use by agent tools
   useEffect(() => {
@@ -149,6 +159,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const onChunk = useCallback((chunk: StreamChunk) => {
     if ("model" in chunk && typeof chunk.model === "string" && chunk.model) {
       setModel(chunk.model);
+    }
+    if (import.meta.env.DEV) {
+      console.log("[chat] chunk:", chunk.type, chunk);
     }
   }, []);
 

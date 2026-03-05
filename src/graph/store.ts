@@ -132,6 +132,7 @@ interface GraphState {
 
   // Selection
   selectedNodeId: string | null;
+  pendingFocusNodeId: string | null;
 
   // Viewport
   viewport: Viewport;
@@ -147,6 +148,8 @@ interface GraphState {
   setLayoutDirection: (direction: LayoutDirection) => void;
   toggleEntityType: (type: DomainEntityType) => void;
   selectNode: (nodeId: string | null) => void;
+  setPendingFocus: (nodeId: string) => void;
+  clearPendingFocus: () => void;
   setHighlight: (nodeIds: Set<string>) => void;
   setViewport: (viewport: Viewport) => void;
   reset: () => void;
@@ -167,6 +170,7 @@ const initialState = {
   isLayoutPending: false,
   animationPhase: "idle" as "idle" | "enter" | "enter-settle" | "reposition",
   selectedNodeId: null as string | null,
+  pendingFocusNodeId: null as string | null,
   viewport: { x: 0, y: 0, zoom: 1 } as Viewport,
 };
 
@@ -393,6 +397,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   selectNode: (selectedNodeId) => set({ selectedNodeId }),
+
+  setPendingFocus: (nodeId) => set({ pendingFocusNodeId: nodeId }),
+
+  clearPendingFocus: () => set({ pendingFocusNodeId: null }),
 
   setHighlight: (highlightedNodeIds) => set({ highlightedNodeIds }),
 
