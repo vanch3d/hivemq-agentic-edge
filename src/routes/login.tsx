@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import { useAuth } from "@/context/auth-context";
 import { ColorModeButton } from "@/components/ui/color-mode";
+import { AppLogo } from "@/components/app-logo";
 import { SchemaForm } from "@/components/schema-form";
 import { getNotificationsOptions } from "@/api/@tanstack/react-query.gen";
 import { UsernamePasswordCredentialsSchema } from "@/api/schemas.gen";
@@ -80,8 +81,9 @@ function LoginPage() {
       <Box position="absolute" top="4" right="4">
         <ColorModeButton />
       </Box>
-      <Stack w="full" maxW="sm" gap="4">
-        <Card.Root>
+      <Stack w="full" maxW="sm" gap="4" align="center">
+        <AppLogo w="full" maxW="xs" color="fg" aria-label={t("app.title")} />
+        <Card.Root w="full">
           <Card.Header>
             <Heading size="lg" textAlign="center">
               {t("login.title")}

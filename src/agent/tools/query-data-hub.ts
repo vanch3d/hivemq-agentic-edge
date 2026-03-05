@@ -13,8 +13,7 @@ import {
   getVariables,
 } from "@/api/sdk.gen";
 import { snapshotQueryResult } from "./snapshot-helper";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const queryDataHub = queryDataHubDef.client(async (input) => {
   try {
@@ -23,7 +22,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getAllBehaviorPolicies();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -45,7 +44,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getBehaviorPolicy({
           path: { policyId: input.resourceId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryDataHub",
@@ -61,7 +60,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getAllDataPolicies();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -83,7 +82,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getDataPolicy({
           path: { policyId: input.resourceId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryDataHub",
@@ -99,7 +98,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getAllSchemas();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -121,7 +120,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getSchema({
           path: { schemaId: input.resourceId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryDataHub",
@@ -137,7 +136,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getAllScripts();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -159,7 +158,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getScript({
           path: { scriptId: input.resourceId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryDataHub",
@@ -175,7 +174,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getFsms();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -192,7 +191,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getFunctionSpecs();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -209,7 +208,7 @@ export const queryDataHub = queryDataHubDef.client(async (input) => {
         const { data, error } = await getVariables();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({

@@ -6,8 +6,7 @@ import {
 } from "@/api/sdk.gen";
 import { queryBridgesDef } from "@/agent/tool-definitions";
 import { snapshotQueryResult } from "./snapshot-helper";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const queryBridges = queryBridgesDef.client(async (input) => {
   try {
@@ -16,7 +15,7 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridges();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -35,7 +34,7 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgeByName({
           path: { bridgeId: input.bridgeId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryBridges",
@@ -51,7 +50,7 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgesStatus();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -70,7 +69,7 @@ export const queryBridges = queryBridgesDef.client(async (input) => {
         const { data, error } = await getBridgeStatus({
           path: { bridgeId: input.bridgeId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryBridges",

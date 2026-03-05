@@ -207,8 +207,8 @@ export function ChatDrawer() {
     >
       <DrawerContent
         portalled={false}
-        w="400px"
-        maxW="400px"
+        w={{ base: "100vw", sm: "400px", lg: "480px", xl: "560px" }}
+        maxW={{ base: "100vw", sm: "400px", lg: "480px", xl: "560px" }}
         h="100%"
         borderLeftWidth="1px"
         shadow="none"

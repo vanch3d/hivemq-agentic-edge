@@ -124,7 +124,33 @@ function resolveAdapterFromSettings(settings: Record<string, unknown>) {
 
 const chatRoute = new Hono();
 
+function isConnectionError(msg: string): boolean {
+  return msg.includes("fetch failed") || msg.includes("ECONNREFUSED");
+}
+
+function friendlyError(provider: string, msg: string): { error: string; status: 500 | 502 } {
+  if (msg.includes("not configured")) {
+    return { error: msg, status: 500 };
+  }
+
+  if (isConnectionError(msg)) {
+    if (provider === "ollama") {
+      return {
+        error: "Could not connect to Ollama. Is it running? Start it with: ollama serve",
+        status: 502,
+      };
+    }
+    return {
+      error: "Could not reach the Anthropic API. Check your network connection.",
+      status: 502,
+    };
+  }
+
+  return { error: msg, status: 502 };
+}
+
 chatRoute.post("/", async (c) => {
+  let provider = "anthropic";
   try {
     const body = await c.req.json();
 
@@ -135,6 +161,7 @@ chatRoute.post("/", async (c) => {
       ? { ...envDefaults, ai: { ...aiDefaults, ...body.settings.ai } }
       : envDefaults;
 
+    provider = ((settings.ai as Record<string, unknown>)?.provider as string) ?? "anthropic";
     const adapter = resolveAdapterFromSettings(settings);
 
     const stream = chat({
@@ -148,9 +175,9 @@ chatRoute.post("/", async (c) => {
     return toServerSentEventsResponse(stream);
   } catch (e) {
     console.error("[chat] Error:", e);
-    const status =
-      e instanceof Error && e.message.includes("not configured") ? 500 : 502;
-    return c.json({ error: String(e) }, status);
+    const msg = e instanceof Error ? e.message : String(e);
+    const { error, status } = friendlyError(provider, msg);
+    return c.json({ error }, status);
   }
 });
 

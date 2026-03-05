@@ -7,8 +7,7 @@ import {
 } from "@/api/sdk.gen";
 import { requestFormInput, requestApproval } from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const mutateAdapter = mutateAdapterDef.client(async (input) => {
   try {
@@ -35,7 +34,7 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
           path: { adapterType: input.adapterType },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "update": {
@@ -56,7 +55,7 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
           path: { adapterId: input.adapterId },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "delete": {
@@ -74,7 +73,7 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.adapterId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -100,7 +99,7 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
           path: { adapterId: input.adapterId },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
     }
   } catch (e) {

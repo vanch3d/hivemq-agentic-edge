@@ -1,8 +1,7 @@
 import { querySamplingDef } from "@/agent/tool-definitions";
 import { getSamplesForTopic, getSchemaForTopic } from "@/api/sdk.gen";
 import { snapshotQueryResult } from "./snapshot-helper";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const querySampling = querySamplingDef.client(async (input) => {
   try {
@@ -13,7 +12,7 @@ export const querySampling = querySamplingDef.client(async (input) => {
         });
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -30,7 +29,7 @@ export const querySampling = querySamplingDef.client(async (input) => {
         const { data, error } = await getSchemaForTopic({
           path: { topic: input.topic },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySampling",

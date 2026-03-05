@@ -7,8 +7,7 @@ import {
 } from "@/api/sdk.gen";
 import { requestFormInput, requestApproval } from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const mutateBridge = mutateBridgeDef.client(async (input) => {
   try {
@@ -28,7 +27,7 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         const { data, error } = await addBridge({
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "update": {
@@ -49,7 +48,7 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
           path: { bridgeId: input.bridgeId },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "delete": {
@@ -67,7 +66,7 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.bridgeId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -93,7 +92,7 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
           path: { bridgeId: input.bridgeId },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
     }
   } catch (e) {

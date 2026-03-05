@@ -9,8 +9,7 @@ import {
   setIsa95,
 } from "@/api/sdk.gen";
 import { requestApproval } from "@/agent/tool-context";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const mutateSystem = mutateSystemDef.client(async (input) => {
   try {
@@ -28,7 +27,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         const { data, error } = await addTopicFilters({
           body: input.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "updateTopicFilter": {
@@ -46,7 +45,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
           path: { filter: input.resourceId },
           body: input.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "deleteTopicFilter": {
@@ -64,7 +63,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -81,7 +80,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         const { data, error } = await addCombiner({
           body: input.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "updateCombiner": {
@@ -99,7 +98,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
           path: { combinerId: input.resourceId },
           body: input.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "deleteCombiner": {
@@ -117,7 +116,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -132,7 +131,7 @@ export const mutateSystem = mutateSystemDef.client(async (input) => {
         if (!approved) return { data: null, error: "Rejected" };
 
         const { data, error } = await setIsa95({ body: input.data as never });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
     }
   } catch (e) {

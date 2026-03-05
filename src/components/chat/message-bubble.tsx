@@ -2,9 +2,20 @@ import { Box, Text } from "@chakra-ui/react";
 import type { UIMessage } from "@tanstack/ai";
 import { ToolCallStatus, ToolResultStatus } from "./tool-status";
 import { ThinkingPart } from "./thinking-part";
+import { ChatMarkdown } from "./chat-markdown";
 
 export function MessageBubble({ message }: { message: UIMessage }) {
   const isUser = message.role === "user";
+
+  const hasVisibleContent = message.parts.some(
+    (p) =>
+      (p.type === "text" && p.content) ||
+      p.type === "thinking" ||
+      p.type === "tool-call" ||
+      p.type === "tool-result",
+  );
+
+  if (!hasVisibleContent) return null;
 
   return (
     <Box
@@ -18,11 +29,17 @@ export function MessageBubble({ message }: { message: UIMessage }) {
     >
       {message.parts.map((part, i) => {
         if (part.type === "text") {
-          return (
-            <Text key={i} fontSize="sm" whiteSpace="pre-wrap">
-              {part.content}
-            </Text>
-          );
+          if (!part.content) return null;
+
+          if (isUser) {
+            return (
+              <Text key={i} fontSize="sm" whiteSpace="pre-wrap">
+                {part.content}
+              </Text>
+            );
+          }
+
+          return <ChatMarkdown key={i} content={part.content} />;
         }
         if (part.type === "thinking") {
           return <ThinkingPart key={i} content={part.content} />;

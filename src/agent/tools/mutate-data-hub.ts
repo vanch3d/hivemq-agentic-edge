@@ -13,8 +13,7 @@ import {
 } from "@/api/sdk.gen";
 import { requestFormInput, requestApproval } from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const mutateDataHub = mutateDataHubDef.client(async (input) => {
   try {
@@ -35,7 +34,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         const { data, error } = await createBehaviorPolicy({
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "updateBehaviorPolicy": {
@@ -56,7 +55,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
           path: { policyId: input.resourceId },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "deleteBehaviorPolicy": {
@@ -74,7 +73,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -94,7 +93,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         const { data, error } = await createDataPolicy({
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "updateDataPolicy": {
@@ -115,7 +114,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
           path: { policyId: input.resourceId },
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "deleteDataPolicy": {
@@ -133,7 +132,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -153,7 +152,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         const { data, error } = await createSchema({
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "deleteSchema": {
@@ -171,7 +170,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
 
@@ -191,7 +190,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         const { data, error } = await createScript({
           body: formResult.data as never,
         });
-        return { data, error: (error as ApiError | undefined)?.title };
+        return { data, error: extractApiError(error) };
       }
 
       case "deleteScript": {
@@ -209,7 +208,7 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         return {
           data: error ? null : { deleted: input.resourceId },
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
       }
     }

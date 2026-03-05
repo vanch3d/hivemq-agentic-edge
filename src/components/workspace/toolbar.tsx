@@ -1,8 +1,9 @@
-import { Flex, Heading, Image, Text } from "@chakra-ui/react";
+import { Flex, Text } from "@chakra-ui/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/auth-context";
 import { ColorModeButton } from "@/components/ui/color-mode";
+import { AppLogo } from "@/components/app-logo";
 import {
   MenuContent,
   MenuItem,
@@ -34,10 +35,12 @@ export function Toolbar() {
       borderBottomWidth="1px"
       flexShrink={0}
     >
-      <Flex align="center" gap="2">
-        <Image src="/hivemq-edge-agentic.svg" alt="" h="8" w="8" />
-        <Heading size="md">{t("app.title")}</Heading>
-      </Flex>
+      <AppLogo
+        h="12"
+        w="auto"
+        aria-label={t("app.title")}
+        color="fg"
+      />
 
       <Flex align="center" gap="2">
         <ChatToggleButton />

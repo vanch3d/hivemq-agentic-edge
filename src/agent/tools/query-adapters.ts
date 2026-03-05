@@ -11,8 +11,7 @@ import {
 } from "@/api/sdk.gen";
 import { queryAdaptersDef } from "@/agent/tool-definitions";
 import { snapshotQueryResult } from "./snapshot-helper";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const queryAdapters = queryAdaptersDef.client(async (input) => {
   try {
@@ -21,7 +20,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapters();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -40,7 +39,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapter({
           path: { adapterId: input.adapterId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryAdapters",
@@ -56,7 +55,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapterTypes();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -77,7 +76,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         });
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -101,7 +100,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         });
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -125,7 +124,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         });
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -149,7 +148,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         });
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -171,7 +170,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdapterStatus({
           path: { adapterId: input.adapterId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "queryAdapters",
@@ -187,7 +186,7 @@ export const queryAdapters = queryAdaptersDef.client(async (input) => {
         const { data, error } = await getAdaptersStatus();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({

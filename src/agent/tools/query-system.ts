@@ -16,8 +16,7 @@ import {
   getConfiguration,
 } from "@/api/sdk.gen";
 import { snapshotQueryResult } from "./snapshot-helper";
-
-type ApiError = { title?: string };
+import { extractApiError } from "./api-error";
 
 export const querySystem = querySystemDef.client(async (input) => {
   try {
@@ -26,7 +25,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getEvents();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -43,7 +42,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getMetrics();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -60,7 +59,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getNotifications();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -75,7 +74,7 @@ export const querySystem = querySystemDef.client(async (input) => {
       }
       case "capabilities": {
         const { data, error } = await getCapabilities();
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -89,7 +88,7 @@ export const querySystem = querySystemDef.client(async (input) => {
       }
       case "liveness": {
         const { data, error } = await liveness();
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -103,7 +102,7 @@ export const querySystem = querySystemDef.client(async (input) => {
       }
       case "readiness": {
         const { data, error } = await readiness();
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -119,7 +118,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getListeners();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -134,7 +133,7 @@ export const querySystem = querySystemDef.client(async (input) => {
       }
       case "isa95": {
         const { data, error } = await getIsa95();
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -148,7 +147,7 @@ export const querySystem = querySystemDef.client(async (input) => {
       }
       case "pulseStatus": {
         const { data, error } = await getPulseStatus();
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -164,7 +163,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getCombiners();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -186,7 +185,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getCombinersById({
           path: { combinerId: input.resourceId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -202,7 +201,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getTopicFilters();
         const result = {
           data: data?.items,
-          error: (error as ApiError | undefined)?.title,
+          error: extractApiError(error),
         };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
@@ -224,7 +223,7 @@ export const querySystem = querySystemDef.client(async (input) => {
         const { data, error } = await getTopicFilter({
           path: { filter: input.resourceId },
         });
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",
@@ -238,7 +237,7 @@ export const querySystem = querySystemDef.client(async (input) => {
       }
       case "configuration": {
         const { data, error } = await getConfiguration();
-        const result = { data, error: (error as ApiError | undefined)?.title };
+        const result = { data, error: extractApiError(error) };
         if (result.data && !result.error) {
           const snapshotId = snapshotQueryResult({
             toolName: "querySystem",

@@ -253,12 +253,15 @@ async function* transformStream(
     }
   } catch (err) {
     console.error("[ollama-patch] Stream error:", err);
+    const raw = err instanceof Error ? err.message : String(err);
+    const message =
+      raw.includes("fetch failed") || raw.includes("ECONNREFUSED")
+        ? "Could not connect to Ollama. Is it running? Start it with: ollama serve"
+        : raw;
     yield {
       type: "RUN_ERROR",
       runId,
-      error: {
-        message: err instanceof Error ? err.message : String(err),
-      },
+      error: { message },
       timestamp: Date.now(),
     };
   }
