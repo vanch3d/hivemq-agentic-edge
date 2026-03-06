@@ -5,7 +5,11 @@ import {
   removeBridge,
   transitionBridgeStatus,
 } from "@/api/sdk.gen";
-import { requestFormInput, requestApproval } from "@/agent/tool-context";
+import {
+  requestFormInput,
+  requestApproval,
+  invalidateQueries,
+} from "@/agent/tool-context";
 import { getFormSchema } from "@/agent/form-schemas";
 import { extractApiError } from "./api-error";
 
@@ -27,7 +31,13 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         const { data, error } = await addBridge({
           body: formResult.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        const id = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        return {
+          summary: error ? undefined : `Bridge "${id}" created successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "update": {
@@ -48,7 +58,12 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
           path: { bridgeId: input.bridgeId },
           body: formResult.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        return {
+          summary: error ? undefined : `Bridge "${input.bridgeId}" updated successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
 
       case "delete": {
@@ -64,7 +79,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         const { error } = await removeBridge({
           path: { bridgeId: input.bridgeId },
         });
+        if (!error) invalidateQueries();
         return {
+          summary: error ? undefined : `Bridge "${input.bridgeId}" deleted successfully.`,
           data: error ? null : { deleted: input.bridgeId },
           error: extractApiError(error),
         };
@@ -88,11 +105,19 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
+        const command = (formResult.data as Record<string, unknown>)?.command ?? "unknown";
         const { data, error } = await transitionBridgeStatus({
           path: { bridgeId: input.bridgeId },
           body: formResult.data as never,
         });
-        return { data, error: extractApiError(error) };
+        if (!error) invalidateQueries();
+        return {
+          summary: error
+            ? undefined
+            : `Bridge "${input.bridgeId}" status transition "${command}" completed successfully.`,
+          data,
+          error: extractApiError(error),
+        };
       }
     }
   } catch (e) {

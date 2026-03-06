@@ -32,6 +32,12 @@ const MODULES: OntologyModule[] = [
     description:
       "JsonNode disambiguation, adapter type ecosystem, tag semantics, form generation.",
   },
+  {
+    id: "messaging",
+    name: "Messaging",
+    description:
+      "Anatomy of a chat message — UIMessage parts, streaming protocol (AG-UI/SSE), tool execution lifecycle, agent loop, and UI rendering pipeline.",
+  },
 ];
 
 function loadMarkdown(id: string): string {

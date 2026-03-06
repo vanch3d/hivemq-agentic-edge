@@ -11,6 +11,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
 import { clientTools } from "@tanstack/ai-client";
 import type { UIMessage, StreamChunk } from "@tanstack/ai";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   queryBridges,
   queryAdapters,
@@ -25,15 +26,23 @@ import {
   queryGraph,
   querySnapshots,
 } from "@/agent/tools";
+import createDebug from "debug";
 import {
   setToolNavigate,
   setFormRequester,
   setApprovalRequester,
   setSnapshotCreator,
+  setQueryInvalidator,
+  setQueryClient,
+  setAdapterTypesFetcher,
+  prefetchAdapterTypes,
   type FormRequest,
   type ApprovalRequest,
 } from "@/agent/tool-context";
+import { getAdapterTypes } from "@/api/sdk.gen";
 import { useSnapshotStore } from "@/stores/snapshot-store";
+
+const log = createDebug("edge:chat");
 
 function getSettingsOverrides(): Record<string, unknown> {
   try {
@@ -78,10 +87,6 @@ type ChatContextValue = {
   dismissError: () => void;
   stop: () => void;
   clear: () => void;
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  onToggle: () => void;
   activeForm: ActiveForm | null;
   activeApproval: ActiveApproval | null;
   /** Model identifier reported by the AI provider (e.g. "claude-sonnet-4-5", "qwen2.5:7b") */
@@ -100,12 +105,25 @@ export function useChatContext(): ChatContextValue {
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [activeForm, setActiveForm] = useState<ActiveForm | null>(null);
   const [activeApproval, setActiveApproval] = useState<ActiveApproval | null>(
     null,
   );
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Register query client and invalidator — tools call these for cache access and mutation cleanup
+  useEffect(() => {
+    setQueryClient(queryClient);
+    setQueryInvalidator(() => {
+      queryClient.invalidateQueries();
+    });
+    setAdapterTypesFetcher(async () => {
+      const { data } = await getAdapterTypes();
+      return data?.items ?? [];
+    });
+    prefetchAdapterTypes();
+  }, [queryClient]);
 
   // Register router navigate for use by agent tools
   useEffect(() => {
@@ -149,24 +167,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  // Ctrl+K / Cmd+K keyboard shortcut to toggle drawer
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsOpen((prev) => !prev);
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
-
   const [model, setModel] = useState<string | null>(null);
 
   const onChunk = useCallback((chunk: StreamChunk) => {
     if ("model" in chunk && typeof chunk.model === "string" && chunk.model) {
       setModel(chunk.model);
     }
+    log("chunk: %s %O", chunk.type, chunk);
   }, []);
 
   const chatState = useChat({
@@ -211,10 +218,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setModel(null);
   }, [chatState]);
 
-  const onOpen = useCallback(() => setIsOpen(true), []);
-  const onClose = useCallback(() => setIsOpen(false), []);
-  const onToggle = useCallback(() => setIsOpen((prev) => !prev), []);
-
   return (
     <ChatContext
       value={{
@@ -225,10 +228,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         dismissError,
         stop: chatState.stop,
         clear,
-        isOpen,
-        onOpen,
-        onClose,
-        onToggle,
         activeForm,
         activeApproval,
         model,

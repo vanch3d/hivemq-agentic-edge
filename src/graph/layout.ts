@@ -1,3 +1,4 @@
+import createDebug from "debug";
 import * as cola from "webcola";
 
 import type { GraphNode, GraphEdge, LayoutDirection } from "./types";
@@ -8,6 +9,8 @@ import {
   RANK_SPACING,
   NODE_SPACING,
 } from "./constants";
+
+const log = createDebug("edge:graph:layout");
 
 /**
  * Compute graph layout using a two-phase approach:
@@ -36,10 +39,7 @@ export function computeLayout(
     return [{ ...nodes[0], position: { x: 0, y: 0 } }];
   }
 
-  console.time("[layout] computeLayout");
-  console.log(
-    `[layout] input: ${nodes.length} nodes, ${edges.length} edges, direction=${direction}`,
-  );
+  log("input: %d nodes, %d edges, direction=%s", nodes.length, edges.length, direction);
 
   const isLR = direction === "LR";
   const flowAxis = isLR ? "x" : "y";
@@ -49,8 +49,6 @@ export function computeLayout(
   const rankSpacing = RANK_SPACING * spacingScale;
 
   // ── Phase 1: Rank grid with barycenter ordering ─────────────────────
-
-  console.time("[layout] phase1-grid");
 
   const rankGroups = new Map<number, number[]>();
   nodes.forEach((n, i) => {
@@ -170,11 +168,7 @@ export function computeLayout(
     flowPos += maxFlowDim + rankSpacing;
   }
 
-  console.timeEnd("[layout] phase1-grid");
-
   // ── Phase 2: WebCola refinement (no avoidOverlaps) ──────────────────
-
-  console.time("[layout] phase2-cola");
 
   const colaLinks = edges
     .map((e) => ({
@@ -225,9 +219,7 @@ export function computeLayout(
     }
   }
 
-  console.log(
-    `[layout] cola: ${constraints.length} constraints, ${colaLinks.length} links`,
-  );
+  log("cola: %d constraints, %d links", constraints.length, colaLinks.length);
 
   // Grid positions are good seeds — only need a few RK4 steps for clustering.
   // Very high convergence threshold (100) ensures each run() phase executes
@@ -242,11 +234,8 @@ export function computeLayout(
 
   colaLayout.start(3, 5, 3);
 
-  console.timeEnd("[layout] phase2-cola");
-
   // ── Extract final positions ─────────────────────────────────────────
 
-  console.timeEnd("[layout] computeLayout");
   return nodes.map((n, i) => {
     const d = NODE_DIMENSIONS[n.data.entityType] ?? DEFAULT_NODE_DIMENSIONS;
     return {

@@ -6,6 +6,7 @@
     "home": "Home",
     "graph": "Domain Ontology",
     "configuration": "Configuration",
+    "snapshots": "Snapshots",
     "logout": "Logout"
   },
   "login": {
@@ -70,7 +71,13 @@
     "error": "Something went wrong",
     "dismissError": "Dismiss error",
     "errorTitle": "Chat failed to load",
-    "loading": "Thinking…"
+    "loading": "Thinking…",
+    "newConversation": "New conversation",
+    "newConversationTitle": "Start new conversation?",
+    "newConversationDescription": "This will clear the current conversation. The assistant will have no context of previous messages.",
+    "newConversationConfirm": "Clear & start new",
+    "newConversationCancel": "Cancel",
+    "exportConversation": "Export conversation"
   },
   "graph": {
     "loading": "Loading domain graph...",

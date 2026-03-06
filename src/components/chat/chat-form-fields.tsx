@@ -1,12 +1,13 @@
 import { Box, Heading } from "@chakra-ui/react";
 import { useCallback, useMemo } from "react";
 import type { RefObject } from "react";
-import type { RJSFSchema } from "@rjsf/utils";
+import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import type FormCore from "@rjsf/core";
 import { SchemaForm } from "@/components/schema-form";
 
 interface ChatFormFieldsProps {
   schema: RJSFSchema;
+  uiSchema?: UiSchema;
   title: string;
   formData?: unknown;
   showAll: boolean;
@@ -16,6 +17,7 @@ interface ChatFormFieldsProps {
 
 export function ChatFormFields({
   schema,
+  uiSchema,
   title,
   formData,
   showAll,
@@ -59,6 +61,7 @@ export function ChatFormFields({
         key={showAll ? "full" : "required"}
         ref={formRef}
         schema={displaySchema}
+        uiSchema={uiSchema}
         formData={formData}
         onSubmit={handleSubmit}
       >

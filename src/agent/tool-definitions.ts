@@ -21,6 +21,12 @@ export const queryBridgesDef = toolDefinition({
     bridgeId: z.string().optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -46,6 +52,12 @@ export const queryAdaptersDef = toolDefinition({
     adapterType: z.string().optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -72,6 +84,12 @@ export const queryDataHubDef = toolDefinition({
     resourceId: z.string().optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -101,6 +119,12 @@ export const querySystemDef = toolDefinition({
     resourceId: z.string().optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -115,6 +139,12 @@ export const querySamplingDef = toolDefinition({
     topic: z.string(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -147,6 +177,12 @@ export const mutateBridgeDef = toolDefinition({
     prefill: z.record(z.string(), z.unknown()).optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -163,6 +199,12 @@ export const mutateAdapterDef = toolDefinition({
     prefill: z.record(z.string(), z.unknown()).optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -189,6 +231,12 @@ export const mutateDataHubDef = toolDefinition({
     prefill: z.record(z.string(), z.unknown()).optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -212,6 +260,12 @@ export const mutateSystemDef = toolDefinition({
     data: z.record(z.string(), z.unknown()).optional(),
   }),
   outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+      ),
     data: z.unknown(),
     error: z.string().optional(),
   }),
@@ -220,7 +274,7 @@ export const mutateSystemDef = toolDefinition({
 export const queryGraphDef = toolDefinition({
   name: "queryGraph",
   description:
-    "Visualize the HiveMQ Edge domain ontology as an interactive graph. Scopes: 'full' (everything), 'dataFlow' (adapters → tags → topics → policies), 'adapterTopology' (adapters + tags + mappings), 'policyImpact' (policies → schemas/scripts), 'bridgeTopology' (bridges + topic filters), 'combinerSources' (combiners + sources). Optionally focus on a specific entity.",
+    "Visualize the HiveMQ Edge domain ontology as an interactive graph. Scopes: 'full' (everything), 'dataFlow' (adapters → tags → topics → policies), 'adapterTopology' (adapters + tags + mappings), 'policyImpact' (policies → schemas/scripts), 'bridgeTopology' (bridges + topic filters), 'combinerSources' (combiners + sources). Use selectNodeId to select and zoom to a specific node (format: entityType:entityId, e.g. 'bridge:my-bridge'). Use focusEntityId to filter the scope to show only neighbors of that entity. Both can be combined.",
   inputSchema: z.object({
     scope: z.enum([
       "full",
@@ -231,6 +285,12 @@ export const queryGraphDef = toolDefinition({
       "combinerSources",
     ]),
     focusEntityId: z.string().optional(),
+    selectNodeId: z
+      .string()
+      .optional()
+      .describe(
+        "Node ID to select and zoom to (format: entityType:entityId, e.g. 'bridge:my-bridge')",
+      ),
   }),
   outputSchema: z.object({
     display: z.literal("graph"),

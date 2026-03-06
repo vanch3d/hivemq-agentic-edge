@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace/index'
+import { Route as AuthenticatedWorkspaceSnapshotsRouteImport } from './routes/_authenticated/workspace/snapshots'
 import { Route as AuthenticatedWorkspaceGraphRouteImport } from './routes/_authenticated/workspace/graph'
 import { Route as AuthenticatedWorkspaceConfigurationIndexRouteImport } from './routes/_authenticated/workspace/configuration/index'
 import { Route as AuthenticatedWorkspaceSnapshotIdRouteImport } from './routes/_authenticated/workspace/snapshot.$id'
@@ -45,6 +46,12 @@ const AuthenticatedWorkspaceIndexRoute =
   AuthenticatedWorkspaceIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceSnapshotsRoute =
+  AuthenticatedWorkspaceSnapshotsRouteImport.update({
+    id: '/snapshots',
+    path: '/snapshots',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
 const AuthenticatedWorkspaceGraphRoute =
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
   '/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
+  '/workspace/snapshots': typeof AuthenticatedWorkspaceSnapshotsRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/workspace/configuration/about': typeof AuthenticatedWorkspaceConfigurationAboutRoute
   '/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
@@ -107,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
+  '/workspace/snapshots': typeof AuthenticatedWorkspaceSnapshotsRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/workspace/configuration/about': typeof AuthenticatedWorkspaceConfigurationAboutRoute
   '/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
@@ -122,6 +131,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
   '/_authenticated/workspace/graph': typeof AuthenticatedWorkspaceGraphRoute
+  '/_authenticated/workspace/snapshots': typeof AuthenticatedWorkspaceSnapshotsRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/_authenticated/workspace/configuration/about': typeof AuthenticatedWorkspaceConfigurationAboutRoute
   '/_authenticated/workspace/configuration/ontology': typeof AuthenticatedWorkspaceConfigurationOntologyRoute
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/workspace'
     | '/workspace/graph'
+    | '/workspace/snapshots'
     | '/workspace/'
     | '/workspace/configuration/about'
     | '/workspace/configuration/ontology'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/workspace/graph'
+    | '/workspace/snapshots'
     | '/workspace'
     | '/workspace/configuration/about'
     | '/workspace/configuration/ontology'
@@ -163,6 +175,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/workspace'
     | '/_authenticated/workspace/graph'
+    | '/_authenticated/workspace/snapshots'
     | '/_authenticated/workspace/'
     | '/_authenticated/workspace/configuration/about'
     | '/_authenticated/workspace/configuration/ontology'
@@ -213,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/workspace/'
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/snapshots': {
+      id: '/_authenticated/workspace/snapshots'
+      path: '/snapshots'
+      fullPath: '/workspace/snapshots'
+      preLoaderRoute: typeof AuthenticatedWorkspaceSnapshotsRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
     '/_authenticated/workspace/graph': {
@@ -269,6 +289,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedWorkspaceRouteChildren {
   AuthenticatedWorkspaceGraphRoute: typeof AuthenticatedWorkspaceGraphRoute
+  AuthenticatedWorkspaceSnapshotsRoute: typeof AuthenticatedWorkspaceSnapshotsRoute
   AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
   AuthenticatedWorkspaceConfigurationAboutRoute: typeof AuthenticatedWorkspaceConfigurationAboutRoute
   AuthenticatedWorkspaceConfigurationOntologyRoute: typeof AuthenticatedWorkspaceConfigurationOntologyRoute
@@ -281,6 +302,7 @@ interface AuthenticatedWorkspaceRouteChildren {
 const AuthenticatedWorkspaceRouteChildren: AuthenticatedWorkspaceRouteChildren =
   {
     AuthenticatedWorkspaceGraphRoute: AuthenticatedWorkspaceGraphRoute,
+    AuthenticatedWorkspaceSnapshotsRoute: AuthenticatedWorkspaceSnapshotsRoute,
     AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
     AuthenticatedWorkspaceConfigurationAboutRoute:
       AuthenticatedWorkspaceConfigurationAboutRoute,
