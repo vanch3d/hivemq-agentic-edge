@@ -76,7 +76,8 @@
     "newConversationTitle": "Start new conversation?",
     "newConversationDescription": "This will clear the current conversation. The assistant will have no context of previous messages.",
     "newConversationConfirm": "Clear & start new",
-    "newConversationCancel": "Cancel"
+    "newConversationCancel": "Cancel",
+    "exportConversation": "Export conversation"
   },
   "graph": {
     "loading": "Loading domain graph...",

@@ -2,7 +2,7 @@ import { Box, Button, Flex, Heading, Text, IconButton, Badge } from "@chakra-ui/
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import { LuMessageSquarePlus, LuX } from "react-icons/lu";
+import { LuDownload, LuMessageSquarePlus, LuX } from "react-icons/lu";
 import {
   DialogRoot,
   DialogContent,
@@ -28,6 +28,8 @@ import { ChatInput } from "./chat-input";
 import { ChatFormFields } from "./chat-form-fields";
 import { ChatFormFooter } from "./chat-form-footer";
 import { ApprovalCard } from "./approval-card";
+import { messagesToMarkdown } from "@/utils/export-conversation";
+import { downloadAsFile } from "@/utils/download-file";
 
 /** Extract a human-readable message from the error object / nested JSON. */
 function formatError(error: Error): string {
@@ -222,17 +224,37 @@ export function ChatPanel() {
             {model ?? provider}
           </Badge>
         </Flex>
-        <Tooltip content={t("chat.newConversation")}>
-          <IconButton
-            aria-label={t("chat.newConversation")}
-            variant="ghost"
-            size="xs"
-            disabled={!hasMessages}
-            onClick={() => setConfirmOpen(true)}
-          >
-            <LuMessageSquarePlus />
-          </IconButton>
-        </Tooltip>
+        <Flex gap="0.5">
+          <Tooltip content={t("chat.exportConversation")}>
+            <IconButton
+              aria-label={t("chat.exportConversation")}
+              variant="ghost"
+              size="xs"
+              disabled={!hasMessages}
+              onClick={() => {
+                const md = messagesToMarkdown(messages, { model });
+                const ts = new Date()
+                  .toISOString()
+                  .replace(/[:.]/g, "-")
+                  .slice(0, 16);
+                downloadAsFile(md, `conversation-${ts}.md`);
+              }}
+            >
+              <LuDownload />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content={t("chat.newConversation")}>
+            <IconButton
+              aria-label={t("chat.newConversation")}
+              variant="ghost"
+              size="xs"
+              disabled={!hasMessages}
+              onClick={() => setConfirmOpen(true)}
+            >
+              <LuMessageSquarePlus />
+            </IconButton>
+          </Tooltip>
+        </Flex>
       </Flex>
 
       {/* New conversation confirmation */}
