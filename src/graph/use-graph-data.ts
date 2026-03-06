@@ -1,3 +1,4 @@
+import createDebug from "debug";
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import {
@@ -28,11 +29,12 @@ import { useGraphStore } from "./store";
  * domain graph into the Zustand store. Mount this hook in the workspace
  * layout so the graph warms up in the background.
  */
+const log = createDebug("edge:graph:data");
 let _graphDataRenderCount = 0;
 
 export function useGraphData() {
   _graphDataRenderCount++;
-  console.log("[graph-data] render #%d", _graphDataRenderCount);
+  log("render #%d", _graphDataRenderCount);
 
   const ontologyVersion = useFeatureFlag("ontologyVersion");
 
@@ -188,17 +190,15 @@ export function useGraphData() {
   useEffect(() => {
     if (!allSettled) return;
 
-    console.time("[graph-data] useEffect pipeline");
-    console.log("[graph-data] assembling graph (version=%s)", ontologyVersion);
+    log("assembling graph (version=%s)", ontologyVersion);
 
     const { nodes, edges } =
       ontologyVersion === "v2"
         ? assembleFullGraphV2(apiData)
         : assembleFullGraph(apiData);
 
-    console.log("[graph-data] calling setFullGraph");
+    log("calling setFullGraph");
     useGraphStore.getState().setFullGraph(nodes, edges);
-    console.timeEnd("[graph-data] useEffect pipeline");
   }, [allSettled, apiData, ontologyVersion]);
 
   return {

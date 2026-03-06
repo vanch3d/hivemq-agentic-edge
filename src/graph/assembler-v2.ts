@@ -12,6 +12,7 @@
  * Pure function — no side effects, no API calls.
  */
 
+import createDebug from "debug";
 import type {
   Adapter,
   Bridge,
@@ -46,6 +47,8 @@ import {
   computeWildcardMatches,
   ensureDag,
 } from "./entity-derivation";
+
+const log = createDebug("edge:graph:assembler");
 
 // --- Input shape ---
 
@@ -108,7 +111,6 @@ export function assembleFullGraphV2(data: ApiDataV2): {
   nodes: GraphNode[];
   edges: GraphEdge[];
 } {
-  console.time("[v2-assembler] total");
   const c: Collector = { nodes: new Map(), edges: [] };
 
   // ── 1. Orchestrators ─────────────────────────────────────────
@@ -444,7 +446,6 @@ export function assembleFullGraphV2(data: ApiDataV2): {
 
   // ── 7. MQTT Wildcard Matching ────────────────────────────────
 
-  console.time("[v2-assembler] wildcard matching");
   const topicFilterNodes = Array.from(c.nodes.values()).filter(
     (n) => n.data.entityType === "topicFilter",
   );
@@ -454,11 +455,8 @@ export function assembleFullGraphV2(data: ApiDataV2): {
   computeWildcardMatches(topicFilterNodes, topicNodes).forEach((e) =>
     addEdge(c, e),
   );
-  console.timeEnd("[v2-assembler] wildcard matching");
 
   // ── 8. Prune Edges & Ensure DAG ─────────────────────────────
-
-  console.time("[v2-assembler] prune + DAG");
   // Remove edges whose endpoints don't exist
   const validNodeIds = new Set(c.nodes.keys());
   let prunedEdges = c.edges.filter(
@@ -475,15 +473,11 @@ export function assembleFullGraphV2(data: ApiDataV2): {
 
   // Ensure DAG (remove back-edges from cycles)
   const finalEdges = ensureDag(Array.from(c.nodes.keys()), prunedEdges);
-  console.timeEnd("[v2-assembler] prune + DAG");
 
   const result = {
     nodes: Array.from(c.nodes.values()),
     edges: finalEdges,
   };
-  console.log(
-    `[v2-assembler] graph: ${result.nodes.length} nodes, ${result.edges.length} edges`,
-  );
-  console.timeEnd("[v2-assembler] total");
+  log("assembled: %d nodes, %d edges", result.nodes.length, result.edges.length);
   return result;
 }

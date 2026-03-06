@@ -1,3 +1,4 @@
+import createDebug from "debug";
 import { create } from "zustand";
 import {
   applyNodeChanges,
@@ -22,6 +23,8 @@ import {
 } from "./layout-bridge";
 import { v2Ontology } from "./ontology";
 import { buildSchemaGraph } from "./schema-graph";
+
+const log = createDebug("edge:graph:store");
 
 export type ViewMode = "instance" | "schema";
 
@@ -245,10 +248,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setFullGraph: (fullNodes, fullEdges) => {
-    console.time("[store] setFullGraph");
-    console.log(
-      `[store] setFullGraph called: ${fullNodes.length} nodes, ${fullEdges.length} edges`,
-    );
+    log("setFullGraph: %d nodes, %d edges", fullNodes.length, fullEdges.length);
     const {
       viewMode,
       viewScope,
@@ -266,21 +266,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // If in schema view, only update stored data — don't change visible nodes
     if (viewMode === "schema") {
       set(base);
-      console.timeEnd("[store] setFullGraph");
       return;
     }
-
-    console.time("[store] filterByScope");
     const { nodes: filtered, edges } = filterByScope(
       fullNodes,
       fullEdges,
       viewScope,
       focusEntityId,
     );
-    console.timeEnd("[store] filterByScope");
-    console.log(
-      `[store] after filter: ${filtered.length} nodes, ${edges.length} edges (scope=${viewScope}, isAssembled=${isAssembled})`,
-    );
+    log("filterByScope: %d nodes, %d edges (scope=%s, isAssembled=%s)", filtered.length, edges.length, viewScope, isAssembled);
 
     // Subsequent assemblies: check if we can preserve all positions (fast path)
     if (isAssembled) {
@@ -304,7 +298,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           nodes: applyHidden(positioned, hiddenEntityTypes),
           edges,
         });
-        console.timeEnd("[store] setFullGraph");
+        log("fast path: reused existing positions");
         return;
       }
     }
@@ -317,8 +311,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         filtered.every((n) => existingIds.has(n.id))
       ) {
         set(base);
-        console.log("[store] skipping duplicate layout (same nodes, already pending)");
-        console.timeEnd("[store] setFullGraph");
+        log("skipping duplicate layout (same nodes, already pending)");
         return;
       }
     }
@@ -334,12 +327,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       edges,
       direction: layoutDirection,
     });
-    console.timeEnd("[store] setFullGraph");
   },
 
   setViewScope: (viewScope, focusEntityId = null) => {
-    console.time("[store] setViewScope");
-    console.log("[store] setViewScope: %s (focus=%s)", viewScope, focusEntityId);
+    log("setViewScope: %s (focus=%s)", viewScope, focusEntityId);
     const { fullNodes, fullEdges, layoutDirection } = get();
     const { nodes: filtered, edges } = filterByScope(
       fullNodes,
@@ -359,7 +350,6 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       edges,
       direction: layoutDirection,
     });
-    console.timeEnd("[store] setViewScope");
   },
 
   setLayoutDirection: (layoutDirection) => {

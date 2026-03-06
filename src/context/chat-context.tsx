@@ -26,6 +26,7 @@ import {
   queryGraph,
   querySnapshots,
 } from "@/agent/tools";
+import createDebug from "debug";
 import {
   setToolNavigate,
   setFormRequester,
@@ -40,6 +41,8 @@ import {
 } from "@/agent/tool-context";
 import { getAdapterTypes } from "@/api/sdk.gen";
 import { useSnapshotStore } from "@/stores/snapshot-store";
+
+const log = createDebug("edge:chat");
 
 function getSettingsOverrides(): Record<string, unknown> {
   try {
@@ -170,9 +173,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if ("model" in chunk && typeof chunk.model === "string" && chunk.model) {
       setModel(chunk.model);
     }
-    if (import.meta.env.DEV) {
-      console.log("[chat] chunk:", chunk.type, chunk);
-    }
+    log("chunk: %s %O", chunk.type, chunk);
   }, []);
 
   const chatState = useChat({
