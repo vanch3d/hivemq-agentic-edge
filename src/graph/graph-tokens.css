@@ -42,6 +42,63 @@
   --graph-minimap-mask: rgba(30, 41, 59, 0.6);
 }
 
+/*
+ * Node interaction states — hover, focus-visible, selected.
+ * These target the inner Box (first child) of the React Flow node wrapper.
+ * Using CSS ensures proper state composition (hover + selected, focus + selected, etc.)
+ * without inline Chakra styles fighting each other.
+ *
+ * Shadows layer additively via CSS custom properties:
+ *   --node-shadow-hover:    subtle lift on hover
+ *   --node-shadow-focus:    ring for keyboard focus-visible
+ *   --node-shadow-selected: double-ring halo for clicked/selected node
+ */
+
+:root {
+  --node-shadow-base: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --node-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --node-shadow-focus: 0 0 0 2px #93c5fd;                          /* blue.300 */
+  --node-shadow-selected: 0 0 0 2px #93c5fd, 0 0 0 5px #dbeafe;   /* blue.300 + blue.100 */
+}
+
+.dark {
+  --node-shadow-base: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --node-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --node-shadow-focus: 0 0 0 2px #60a5fa;                          /* blue.400 */
+  --node-shadow-selected: 0 0 0 2px #60a5fa, 0 0 0 5px #1e3a5f;   /* blue.400 + dark glow */
+}
+
+/* Base state */
+.react-flow__node > div:first-child {
+  box-shadow: var(--node-shadow-base) !important;
+  transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+/* Hover — subtle lift */
+.react-flow__node:hover > div:first-child {
+  box-shadow: var(--node-shadow-hover) !important;
+}
+
+/* Keyboard focus — ring (tab navigation) */
+.react-flow__node.selectable:focus-visible > div:first-child {
+  box-shadow: var(--node-shadow-focus) !important;
+}
+
+/* Selected (clicked) — double-ring halo */
+.react-flow__node.selected > div:first-child {
+  box-shadow: var(--node-shadow-selected) !important;
+}
+
+/* Selected + hover — keep selected halo (don't downgrade to hover shadow) */
+.react-flow__node.selected:hover > div:first-child {
+  box-shadow: var(--node-shadow-selected) !important;
+}
+
+/* Focus + selected — keep selected halo */
+.react-flow__node.selected:focus-visible > div:first-child {
+  box-shadow: var(--node-shadow-selected) !important;
+}
+
 /* Smooth node transitions during layout animations only */
 .layout-animating .react-flow__node {
   transition: transform 500ms ease-out;

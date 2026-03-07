@@ -4,13 +4,14 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { GraphNodeData, DomainEntityType } from "@/graph/types";
 import { ENTITY_COLORS, ENTITY_ICONS } from "@/graph/constants";
 
-const ROLE_COLORS: Record<string, string> = {
-  orchestrator: "cyan.600",
-  connector: "blue.500",
-  integrationPoint: "green.500",
-  mapper: "yellow.600",
-  policy: "purple.500",
-  resource: "purple.300",
+/** Chakra colorPalette per ontology role — used with variant="solid" for auto contrast. */
+const ROLE_PALETTES: Record<string, string> = {
+  orchestrator: "pink",
+  connector: "blue",
+  integrationPoint: "green",
+  mapper: "orange",
+  policy: "purple",
+  resource: "gray",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -52,15 +53,13 @@ export function SchemaClassNode({
       minW="160px"
       maxW="240px"
       position="relative"
-      boxShadow={selected ? "0 0 0 2px var(--chakra-colors-blue-300)" : "sm"}
-      _hover={{ boxShadow: "md" }}
-      transition="box-shadow 0.15s"
+      /* box-shadow handled by graph-tokens.css node interaction states */
     >
       {/* Role badge */}
       <Badge
         size="xs"
-        bg={ROLE_COLORS[role] ?? "gray.500"}
-        color="white"
+        colorPalette={ROLE_PALETTES[role] ?? "gray"}
+        variant="solid"
         mb="1"
         fontSize="2xs"
       >

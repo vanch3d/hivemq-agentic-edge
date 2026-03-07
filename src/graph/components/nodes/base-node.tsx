@@ -2,12 +2,15 @@ import { Box, Badge, HStack, Text, Circle, Icon } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 
-import type { GraphNodeData, DomainEntityType } from "@/graph/types";
+import type { GraphNodeData } from "@/graph/types";
 import {
   ENTITY_COLORS,
+  ENTITY_COLOR_PALETTE,
   ENTITY_ICONS,
   ENTITY_LABELS,
+  VISUAL_ROLE,
   STATUS_COLORS,
+  type VisualRole,
 } from "@/graph/constants";
 
 const pulseKeyframes = keyframes`
@@ -15,17 +18,10 @@ const pulseKeyframes = keyframes`
   50% { opacity: 0.5; }
 `;
 
-/** Entity types rendered as pills (rounded ends) */
-const PILL_TYPES: DomainEntityType[] = ["topicFilter", "topic"];
-
-/** Entity types rendered with dashed borders */
-const DASHED_BORDER_TYPES: DomainEntityType[] = ["topicFilter"];
-
 function getStatusColor(status?: GraphNodeData["status"]): string | undefined {
   if (!status) return undefined;
   const conn = status.connection;
   const rt = status.runtime;
-  // UNKNOWN / STATELESS → no accent dot
   if (conn === "UNKNOWN" || conn === "STATELESS") return undefined;
   if (conn && STATUS_COLORS[conn] && STATUS_COLORS[conn] !== "transparent")
     return STATUS_COLORS[conn];
@@ -45,38 +41,162 @@ function isError(status?: GraphNodeData["status"]): boolean {
   return status?.connection === "ERROR";
 }
 
+// --- Role-based visual properties ---
+
+interface RoleStyle {
+  borderRadius: string;
+  borderWidth: string;
+  borderStyle: string;
+  px: string;
+  py: string;
+  minW: string;
+  maxW: string;
+  badgeSize: "xs" | "sm";
+  labelSize: "xs" | "sm";
+  showBadge: boolean;
+  showSublabel: boolean;
+}
+
+const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
+  // Orchestrators: large, double-border, rounded — distinctive singletons
+  orchestrator: {
+    borderRadius: "lg",
+    borderWidth: "3px",
+    borderStyle: "double",
+    px: "3",
+    py: "2",
+    minW: "150px",
+    maxW: "220px",
+    badgeSize: "sm",
+    labelSize: "sm",
+    showBadge: true,
+    showSublabel: true,
+  },
+  // Connectors: robust, prominent — key entry points
+  connector: {
+    borderRadius: "md",
+    borderWidth: "2px",
+    borderStyle: "solid",
+    px: "2",
+    py: "1.5",
+    minW: "140px",
+    maxW: "200px",
+    badgeSize: "xs",
+    labelSize: "sm",
+    showBadge: true,
+    showSublabel: true,
+  },
+  // Endpoints: medium, slightly rounded
+  endpoint: {
+    borderRadius: "md",
+    borderWidth: "2px",
+    borderStyle: "solid",
+    px: "2",
+    py: "1.5",
+    minW: "120px",
+    maxW: "200px",
+    badgeSize: "xs",
+    labelSize: "xs",
+    showBadge: true,
+    showSublabel: true,
+  },
+  // Resources: compact pills — high-cardinality, minimal footprint
+  resource: {
+    borderRadius: "full",
+    borderWidth: "1.5px",
+    borderStyle: "solid",
+    px: "3",
+    py: "1",
+    minW: "80px",
+    maxW: "160px",
+    badgeSize: "xs",
+    labelSize: "xs",
+    showBadge: false,
+    showSublabel: false,
+  },
+  // Mappers: medium, rounded — transforms
+  mapper: {
+    borderRadius: "xl",
+    borderWidth: "1.5px",
+    borderStyle: "solid",
+    px: "2",
+    py: "1",
+    minW: "110px",
+    maxW: "180px",
+    badgeSize: "xs",
+    labelSize: "xs",
+    showBadge: true,
+    showSublabel: false,
+  },
+  // Policies: medium, dashed border — governance
+  policy: {
+    borderRadius: "md",
+    borderWidth: "2px",
+    borderStyle: "dashed",
+    px: "2",
+    py: "1.5",
+    minW: "120px",
+    maxW: "200px",
+    badgeSize: "xs",
+    labelSize: "xs",
+    showBadge: true,
+    showSublabel: true,
+  },
+  // Artifacts: small, dotted border — supporting files
+  artifact: {
+    borderRadius: "sm",
+    borderWidth: "1.5px",
+    borderStyle: "dotted",
+    px: "2",
+    py: "1",
+    minW: "90px",
+    maxW: "160px",
+    badgeSize: "xs",
+    labelSize: "xs",
+    showBadge: true,
+    showSublabel: false,
+  },
+};
+
 export function BaseNode({
   data,
   selected,
   children,
-}: NodeProps & { data: GraphNodeData; children?: React.ReactNode }) {
+  leftDecorator,
+}: NodeProps & {
+  data: GraphNodeData;
+  children?: React.ReactNode;
+  /** Optional element rendered flush against the left edge (e.g. semi-circle for topicFilter) */
+  leftDecorator?: React.ReactNode;
+}) {
   const color = ENTITY_COLORS[data.entityType];
+  const palette = ENTITY_COLOR_PALETTE[data.entityType];
   const EntityIcon = ENTITY_ICONS[data.entityType];
   const statusColor = getStatusColor(data.status);
-  const isPill = PILL_TYPES.includes(data.entityType);
-  const isDashed = DASHED_BORDER_TYPES.includes(data.entityType);
   const hasError = isError(data.status);
+  const role = VISUAL_ROLE[data.entityType];
+  const style = ROLE_STYLES[role];
 
   return (
     <Box
-      borderWidth="2px"
+      borderWidth={style.borderWidth}
       borderColor={hasError ? "red.500" : selected ? "blue.500" : color}
-      borderStyle={isDashed ? "dashed" : "solid"}
-      borderRadius={isPill ? "full" : "md"}
+      borderStyle={hasError ? "solid" : style.borderStyle}
+      borderRadius={style.borderRadius}
       bg="bg.panel"
-      px={isPill ? "4" : "2"}
-      py="1.5"
-      minW="120px"
-      maxW="200px"
+      px={style.px}
+      py={style.py}
+      minW={style.minW}
+      maxW={style.maxW}
       position="relative"
       opacity={getStatusOpacity(data.status)}
-      boxShadow={selected ? "0 0 0 2px var(--chakra-colors-blue-300)" : "sm"}
-      _hover={{ boxShadow: "md" }}
-      transition="box-shadow 0.15s, opacity 0.15s"
       animation={
         hasError ? `${pulseKeyframes} 2s ease-in-out infinite` : undefined
       }
     >
+      {/* Optional left-edge decorator */}
+      {leftDecorator}
+
       {/* Status indicator dot */}
       {statusColor && (
         <Circle
@@ -88,23 +208,31 @@ export function BaseNode({
         />
       )}
 
-      {/* Entity type badge */}
-      <Badge size="xs" bg={color} color="white" mb="0.5" fontSize="2xs">
-        <HStack gap="0.5">
-          <Icon asChild boxSize="2.5">
-            <EntityIcon />
-          </Icon>
-          {ENTITY_LABELS[data.entityType]}
-        </HStack>
-      </Badge>
+      {/* Entity type badge — hidden for resources (compact) */}
+      {style.showBadge && (
+        <Badge
+          size={style.badgeSize}
+          colorPalette={palette}
+          variant="solid"
+          mb="0.5"
+          fontSize="2xs"
+        >
+          <HStack gap="0.5">
+            <Icon asChild boxSize="2.5">
+              <EntityIcon />
+            </Icon>
+            {ENTITY_LABELS[data.entityType]}
+          </HStack>
+        </Badge>
+      )}
 
       {/* Label */}
-      <Text fontSize="xs" fontWeight="semibold" truncate>
+      <Text fontSize={style.labelSize} fontWeight="semibold" truncate>
         {data.label}
       </Text>
 
-      {/* Sublabel */}
-      {data.sublabel && (
+      {/* Sublabel — hidden for compact roles */}
+      {style.showSublabel && data.sublabel && (
         <Text fontSize="2xs" color="fg.muted" truncate>
           {data.sublabel}
         </Text>

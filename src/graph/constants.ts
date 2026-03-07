@@ -49,32 +49,128 @@ export const ENTITY_ICONS: Record<DomainEntityType, IconType> = {
   bridgeSubscription: LuArrowLeftRight,
 };
 
-// --- Entity colors (matching task plan spec) ---
+// --- Entity roles (taxonomy-based grouping for visual identity) ---
+
+export type VisualRole =
+  | "orchestrator"   // singletons that manage subsystems (edgeBroker, dataHub, pulse)
+  | "connector"      // entry-point devices/bridges (adapter, bridge, listener)
+  | "endpoint"       // remote targets of connectors (otDevice, remoteBroker)
+  | "resource"       // high-cardinality data points (tag, domainTag, topic, topicFilter)
+  | "mapper"         // data transforms (northbound/southbound/assetMapper, combiner, bridgeSubscription)
+  | "policy"         // governance rules (dataPolicy, behaviorPolicy)
+  | "artifact";      // supporting files (schema, script)
+
+export const VISUAL_ROLE: Record<DomainEntityType, VisualRole> = {
+  // Orchestrators — singletons
+  edgeBroker: "orchestrator",
+  dataHub: "orchestrator",
+  pulse: "orchestrator",
+  // Connectors — entry points
+  adapter: "connector",
+  bridge: "connector",
+  listener: "connector",
+  // Endpoints — what connectors connect to
+  otDevice: "endpoint",
+  remoteBroker: "endpoint",
+  // Resources — high-cardinality
+  tag: "resource",
+  domainTag: "resource",
+  topic: "resource",
+  topicFilter: "resource",
+  // Mappers — data transforms
+  northboundMapper: "mapper",
+  southboundMapper: "mapper",
+  assetMapper: "mapper",
+  combiner: "mapper",
+  bridgeSubscription: "mapper",
+  // Policies — governance
+  dataPolicy: "policy",
+  behaviorPolicy: "policy",
+  // Artifacts — supporting files
+  schema: "artifact",
+  script: "artifact",
+};
+
+// --- Entity colors (role-based, max perceptual distance between roles) ---
+// At dot-zoom level, color is the ONLY discriminator.
+// Palette chosen for maximum separation across roles:
+//   connector    = blue (strong, saturated)
+//   endpoint     = teal/cyan
+//   resource     = green (high-cardinality → calm)
+//   mapper       = orange
+//   policy       = purple
+//   artifact     = gray
+//   orchestrator = pink accent (distinctive singleton)
+//
+// ENTITY_COLORS: specific shade tokens for borders & legend icons.
+// ENTITY_COLOR_PALETTE: Chakra colorPalette name — used by Badge variant="solid"
+//   to guarantee WCAG-AA contrast automatically.
 
 export const ENTITY_COLORS: Record<DomainEntityType, string> = {
-  // v1
+  // Connectors — blue
   adapter: "blue.500",
-  bridge: "orange.500",
-  domainTag: "teal.400",
-  topicFilter: "green.400",
+  bridge: "blue.600",
+  listener: "blue.400",
+  // Endpoints — teal/cyan
+  otDevice: "teal.500",
+  remoteBroker: "cyan.600",
+  // Resources — green
+  tag: "green.500",
+  domainTag: "green.500",
+  topic: "green.500",
+  topicFilter: "green.600",
+  // Mappers — orange
+  northboundMapper: "orange.500",
+  southboundMapper: "orange.500",
+  assetMapper: "orange.400",
+  combiner: "orange.600",
+  bridgeSubscription: "orange.400",
+  // Policies — purple
   dataPolicy: "purple.500",
   behaviorPolicy: "purple.500",
-  schema: "purple.300",
-  script: "purple.300",
-  combiner: "yellow.500",
-  listener: "green.700",
-  // v2
-  edgeBroker: "cyan.600",
-  dataHub: "purple.600",
-  pulse: "sky.500",
-  remoteBroker: "orange.300",
-  otDevice: "blue.300",
-  tag: "teal.400",
-  topic: "green.500",
-  northboundMapper: "green.600",
-  southboundMapper: "green.600",
-  assetMapper: "sky.500",
-  bridgeSubscription: "orange.400",
+  // Artifacts — gray
+  schema: "gray.500",
+  script: "gray.500",
+  // Orchestrators — pink accent (singletons)
+  edgeBroker: "pink.500",
+  dataHub: "pink.600",
+  pulse: "pink.400",
+};
+
+/** Chakra colorPalette name — used by Badge `colorPalette` + `variant="solid"` for auto contrast. */
+export type ChakraColorPalette =
+  | "gray" | "red" | "orange" | "yellow" | "green"
+  | "teal" | "blue" | "cyan" | "purple" | "pink";
+
+export const ENTITY_COLOR_PALETTE: Record<DomainEntityType, ChakraColorPalette> = {
+  // Connectors — blue
+  adapter: "blue",
+  bridge: "blue",
+  listener: "blue",
+  // Endpoints — teal/cyan
+  otDevice: "teal",
+  remoteBroker: "cyan",
+  // Resources — green (badges hidden, but included for completeness)
+  tag: "green",
+  domainTag: "green",
+  topic: "green",
+  topicFilter: "green",
+  // Mappers — orange
+  northboundMapper: "orange",
+  southboundMapper: "orange",
+  assetMapper: "orange",
+  combiner: "orange",
+  bridgeSubscription: "orange",
+  // Policies — purple
+  dataPolicy: "purple",
+  behaviorPolicy: "purple",
+  // Artifacts — gray
+  schema: "gray",
+  script: "gray",
+  // Orchestrators — pink
+  edgeBroker: "pink",
+  dataHub: "pink",
+  pulse: "pink",
 };
 
 export const ENTITY_LABELS: Record<DomainEntityType, string> = {
@@ -116,34 +212,47 @@ export const STATUS_COLORS: Record<string, string> = {
 };
 
 // --- Node dimensions (for WebCola layout) ---
+// Differentiated by role:
+//   orchestrator: large (prominent singleton)
+//   connector:    large (robust, important entry points)
+//   endpoint:     medium
+//   resource:     small (high-cardinality, minimal footprint)
+//   mapper:       medium
+//   policy:       medium
+//   artifact:     small
 
 export const NODE_DIMENSIONS: Record<
   DomainEntityType,
   { width: number; height: number }
 > = {
-  // v1
-  adapter: { width: 160, height: 56 },
-  bridge: { width: 160, height: 56 },
-  domainTag: { width: 120, height: 40 },
-  topicFilter: { width: 140, height: 40 },
-  dataPolicy: { width: 140, height: 48 },
-  behaviorPolicy: { width: 140, height: 48 },
-  schema: { width: 120, height: 40 },
-  script: { width: 120, height: 40 },
-  combiner: { width: 120, height: 48 },
-  listener: { width: 120, height: 40 },
-  // v2
-  edgeBroker: { width: 160, height: 56 },
-  dataHub: { width: 160, height: 56 },
-  pulse: { width: 140, height: 48 },
-  remoteBroker: { width: 160, height: 56 },
-  otDevice: { width: 140, height: 48 },
-  tag: { width: 120, height: 40 },
-  topic: { width: 160, height: 40 },
-  northboundMapper: { width: 140, height: 40 },
-  southboundMapper: { width: 140, height: 40 },
-  assetMapper: { width: 140, height: 48 },
-  bridgeSubscription: { width: 140, height: 40 },
+  // Orchestrators — large, prominent
+  edgeBroker: { width: 180, height: 64 },
+  dataHub: { width: 180, height: 64 },
+  pulse: { width: 160, height: 56 },
+  // Connectors — large, robust
+  adapter: { width: 170, height: 60 },
+  bridge: { width: 170, height: 60 },
+  listener: { width: 140, height: 48 },
+  // Endpoints — medium
+  otDevice: { width: 150, height: 52 },
+  remoteBroker: { width: 160, height: 52 },
+  // Resources — small (high-cardinality, minimal footprint)
+  tag: { width: 100, height: 32 },
+  domainTag: { width: 100, height: 32 },
+  topic: { width: 120, height: 36 },
+  topicFilter: { width: 120, height: 36 },
+  // Mappers — medium
+  northboundMapper: { width: 140, height: 44 },
+  southboundMapper: { width: 140, height: 44 },
+  assetMapper: { width: 140, height: 44 },
+  combiner: { width: 130, height: 44 },
+  bridgeSubscription: { width: 140, height: 44 },
+  // Policies — medium
+  dataPolicy: { width: 150, height: 48 },
+  behaviorPolicy: { width: 150, height: 48 },
+  // Artifacts — small
+  schema: { width: 110, height: 36 },
+  script: { width: 110, height: 36 },
 };
 
 export const DEFAULT_NODE_DIMENSIONS = { width: 140, height: 44 };
