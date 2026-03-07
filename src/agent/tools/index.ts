@@ -9,4 +9,5 @@ export { mutateAdapter } from "./mutate-adapter";
 export { mutateDataHub } from "./mutate-data-hub";
 export { mutateSystem } from "./mutate-system";
 export { queryGraph } from "./query-graph";
+export { queryMetrics } from "./query-metrics";
 export { querySnapshots } from "./query-snapshots";

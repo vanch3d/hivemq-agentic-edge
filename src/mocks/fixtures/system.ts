@@ -12,6 +12,20 @@ export const metricList: MetricList = {
     { name: "com.hivemq.messages.outgoing.total.count" },
     { name: "com.hivemq.networking.connections.current" },
     { name: "com.hivemq.system.os.global.memory.total" },
+    {
+      name: "com.hivemq.edge.protocol-adapters.opcua.opcua-adapter-01.connection.success.count",
+    },
+    {
+      name: "com.hivemq.edge.protocol-adapters.opcua.opcua-adapter-01.publish.success.count",
+    },
+    {
+      name: "com.hivemq.edge.protocol-adapters.modbus.modbus-adapter-01.connection.success.count",
+    },
+    {
+      name: "com.hivemq.edge.protocol-adapters.modbus.modbus-adapter-01.publish.success.count",
+    },
+    { name: "com.hivemq.edge.bridge.cloud-bridge.local.publish.count" },
+    { name: "com.hivemq.edge.bridge.cloud-bridge.remote.publish.count" },
   ],
 };
 

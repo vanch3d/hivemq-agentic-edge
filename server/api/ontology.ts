@@ -38,6 +38,12 @@ const MODULES: OntologyModule[] = [
     description:
       "Anatomy of a chat message — UIMessage parts, streaming protocol (AG-UI/SSE), tool execution lifecycle, agent loop, and UI rendering pipeline.",
   },
+  {
+    id: "metrics",
+    name: "Metrics",
+    description:
+      "Metric naming conventions, suffixes and types (counter, gauge, accumulator), common adapter/bridge metric patterns, querying and live monitoring.",
+  },
 ];
 
 function loadMarkdown(id: string): string {
