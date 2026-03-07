@@ -300,6 +300,48 @@ export const queryGraphDef = toolDefinition({
   }),
 });
 
+export const queryMetricsDef = toolDefinition({
+  name: "queryMetrics",
+  description:
+    "Query metric values and monitor metrics live. Operations: 'getValue' reads a single metric's current value, 'search' finds metrics by name pattern, 'monitor' starts a live-updating sparkline visualization. Metric names follow the convention: com.hivemq.edge.protocol-adapters.{type}.{id}.{metric}, com.hivemq.edge.bridge.{bridgeName}.{metric}, com.hivemq.messages.{direction}.total.count. Use 'search' first to find the correct metric name if unsure.",
+  inputSchema: z.object({
+    operation: z.enum(["getValue", "monitor", "search"]),
+    metricName: z
+      .string()
+      .optional()
+      .describe("Full metric name for 'getValue'"),
+    metricNames: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "Array of metric names for 'monitor' (renders a grid of sparklines)",
+      ),
+    pattern: z
+      .string()
+      .optional()
+      .describe("Substring to match against metric names for 'search'"),
+    pollInterval: z
+      .number()
+      .optional()
+      .describe(
+        "Polling interval in milliseconds for 'monitor' (default 2000). Use longer intervals for slow-changing metrics.",
+      ),
+  }),
+  outputSchema: z.object({
+    summary: z
+      .string()
+      .optional()
+      .describe(
+        "Human-readable outcome (e.g. 'Current value of metric X is 42').",
+      ),
+    data: z.unknown(),
+    error: z.string().optional(),
+    display: z.string().optional(),
+    metricNames: z.array(z.string()).optional(),
+    pollInterval: z.number().optional(),
+  }),
+});
+
 export const querySnapshotsDef = toolDefinition({
   name: "querySnapshots",
   description:
@@ -345,6 +387,7 @@ export const allToolDefinitions = [
   queryDataHubDef,
   querySystemDef,
   querySamplingDef,
+  queryMetricsDef,
   navigateToDef,
   mutateBridgeDef,
   mutateAdapterDef,

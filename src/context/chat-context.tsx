@@ -24,6 +24,7 @@ import {
   mutateDataHub,
   mutateSystem,
   queryGraph,
+  queryMetrics,
   querySnapshots,
 } from "@/agent/tools";
 import createDebug from "debug";
@@ -58,6 +59,7 @@ const tools = clientTools(
   queryDataHub,
   querySystem,
   querySampling,
+  queryMetrics,
   navigateTo,
   mutateBridge,
   mutateAdapter,

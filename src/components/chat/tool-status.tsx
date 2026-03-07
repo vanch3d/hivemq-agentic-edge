@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ChatTable } from "./chat-table";
 import { ChatGraph } from "@/graph/components/chat-graph";
+import { ChatMetricLive } from "./chat-metric-live";
 
 interface ToolCallStatusProps {
   part: ToolCallPart;
@@ -93,6 +94,22 @@ export function ToolResultStatus({ part }: ToolResultStatusProps) {
         {snapshotLink}
       </>
     );
+  }
+
+  // Live metric display type
+  if (result.display === "metric-live") {
+    const metricResult = result as {
+      metricNames?: string[];
+      pollInterval?: number;
+    };
+    if (metricResult.metricNames && metricResult.metricNames.length > 0) {
+      return (
+        <ChatMetricLive
+          metricNames={metricResult.metricNames}
+          pollInterval={metricResult.pollInterval ?? 2000}
+        />
+      );
+    }
   }
 
   // Render arrays as tables if items are objects

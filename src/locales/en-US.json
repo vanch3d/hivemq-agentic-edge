@@ -134,6 +134,14 @@
     "noData": "No data to display.",
     "openFullView": "Open full view \u2192"
   },
+  "metrics": {
+    "live": {
+      "polling": "Polling every {{interval}}s",
+      "dataPoints": "{{count}} data points",
+      "currentValue": "Current value",
+      "noData": "Waiting for data\u2026"
+    }
+  },
   "schemas": {
     "usernamePasswordCredentials": {
       "fields": {

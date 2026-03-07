@@ -18,6 +18,7 @@ export const CORE_ONTOLOGY = read("./core.md");
 export const V2_CORE_ONTOLOGY = read("./v2-core.md");
 export const DATAHUB_ONTOLOGY = read("./datahub.md");
 export const ADAPTERS_ONTOLOGY = read("./adapters.md");
+export const METRICS_ONTOLOGY = read("./metrics.md");
 
 /**
  * Assemble the full domain ontology for system prompt injection.
@@ -28,5 +29,7 @@ export const ADAPTERS_ONTOLOGY = read("./adapters.md");
  */
 export function assembleDomainOntology(version: "v1" | "v2" = "v1"): string {
   const core = version === "v2" ? V2_CORE_ONTOLOGY : CORE_ONTOLOGY;
-  return [core, DATAHUB_ONTOLOGY, ADAPTERS_ONTOLOGY].join("\n");
+  return [core, DATAHUB_ONTOLOGY, ADAPTERS_ONTOLOGY, METRICS_ONTOLOGY].join(
+    "\n",
+  );
 }
