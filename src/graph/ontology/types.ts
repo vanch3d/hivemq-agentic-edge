@@ -15,12 +15,7 @@ export type EntityRole =
   | "policy" // Validate/transform traffic (owned by DataHub)
   | "resource"; // Used by policies (Schema, Script)
 
-export type PropertyType =
-  | "string"
-  | "number"
-  | "boolean"
-  | "enum"
-  | "object";
+export type PropertyType = "string" | "number" | "boolean" | "enum" | "object";
 
 export type Cardinality = "1:1" | "1:N" | "N:1" | "N:M" | "0..N";
 

@@ -17,6 +17,9 @@ import {
   LuArrowUpRight,
   LuArrowDownLeft,
   LuArrowLeftRight,
+  LuPlay,
+  LuGitBranch,
+  LuCheck,
 } from "react-icons/lu";
 
 import type { DomainEntityType } from "./types";
@@ -47,18 +50,22 @@ export const ENTITY_ICONS: Record<DomainEntityType, IconType> = {
   southboundMapper: LuArrowDownLeft,
   assetMapper: LuMerge,
   bridgeSubscription: LuArrowLeftRight,
+  // Policy internals
+  pipelineOperation: LuPlay,
+  fsmTransition: LuGitBranch,
+  validator: LuCheck,
 };
 
 // --- Entity roles (taxonomy-based grouping for visual identity) ---
 
 export type VisualRole =
-  | "orchestrator"   // singletons that manage subsystems (edgeBroker, dataHub, pulse)
-  | "connector"      // entry-point devices/bridges (adapter, bridge, listener)
-  | "endpoint"       // remote targets of connectors (otDevice, remoteBroker)
-  | "resource"       // high-cardinality data points (tag, domainTag, topic, topicFilter)
-  | "mapper"         // data transforms (northbound/southbound/assetMapper, combiner, bridgeSubscription)
-  | "policy"         // governance rules (dataPolicy, behaviorPolicy)
-  | "artifact";      // supporting files (schema, script)
+  | "orchestrator" // singletons that manage subsystems (edgeBroker, dataHub, pulse)
+  | "connector" // entry-point devices/bridges (adapter, bridge, listener)
+  | "endpoint" // remote targets of connectors (otDevice, remoteBroker)
+  | "resource" // high-cardinality data points (tag, domainTag, topic, topicFilter)
+  | "mapper" // data transforms (northbound/southbound/assetMapper, combiner, bridgeSubscription)
+  | "policy" // governance rules (dataPolicy, behaviorPolicy)
+  | "artifact"; // supporting files (schema, script)
 
 export const VISUAL_ROLE: Record<DomainEntityType, VisualRole> = {
   // Orchestrators — singletons
@@ -89,6 +96,10 @@ export const VISUAL_ROLE: Record<DomainEntityType, VisualRole> = {
   // Artifacts — supporting files
   schema: "artifact",
   script: "artifact",
+  // Policy internals — same visual role as artifacts (small, supporting)
+  pipelineOperation: "artifact",
+  fsmTransition: "artifact",
+  validator: "artifact",
 };
 
 // --- Entity colors (role-based, max perceptual distance between roles) ---
@@ -135,14 +146,29 @@ export const ENTITY_COLORS: Record<DomainEntityType, string> = {
   edgeBroker: "pink.500",
   dataHub: "pink.600",
   pulse: "pink.400",
+  // Policy internals — purple (lighter shades, subordinate to policies)
+  pipelineOperation: "purple.300",
+  fsmTransition: "purple.400",
+  validator: "purple.300",
 };
 
 /** Chakra colorPalette name — used by Badge `colorPalette` + `variant="solid"` for auto contrast. */
 export type ChakraColorPalette =
-  | "gray" | "red" | "orange" | "yellow" | "green"
-  | "teal" | "blue" | "cyan" | "purple" | "pink";
+  | "gray"
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "teal"
+  | "blue"
+  | "cyan"
+  | "purple"
+  | "pink";
 
-export const ENTITY_COLOR_PALETTE: Record<DomainEntityType, ChakraColorPalette> = {
+export const ENTITY_COLOR_PALETTE: Record<
+  DomainEntityType,
+  ChakraColorPalette
+> = {
   // Connectors — blue
   adapter: "blue",
   bridge: "blue",
@@ -171,6 +197,10 @@ export const ENTITY_COLOR_PALETTE: Record<DomainEntityType, ChakraColorPalette> 
   edgeBroker: "pink",
   dataHub: "pink",
   pulse: "pink",
+  // Policy internals — purple
+  pipelineOperation: "purple",
+  fsmTransition: "purple",
+  validator: "purple",
 };
 
 export const ENTITY_LABELS: Record<DomainEntityType, string> = {
@@ -197,6 +227,10 @@ export const ENTITY_LABELS: Record<DomainEntityType, string> = {
   southboundMapper: "SB Mapper",
   assetMapper: "Asset Mapper",
   bridgeSubscription: "Bridge Sub",
+  // Policy internals
+  pipelineOperation: "Operation",
+  fsmTransition: "Transition",
+  validator: "Validator",
 };
 
 // --- Status colors ---
@@ -253,6 +287,10 @@ export const NODE_DIMENSIONS: Record<
   // Artifacts — small
   schema: { width: 110, height: 36 },
   script: { width: 110, height: 36 },
+  // Policy internals — small
+  pipelineOperation: { width: 120, height: 36 },
+  fsmTransition: { width: 130, height: 40 },
+  validator: { width: 120, height: 36 },
 };
 
 export const DEFAULT_NODE_DIMENSIONS = { width: 140, height: 44 };
@@ -279,7 +317,11 @@ export const EDGE_STYLES: Record<string, EdgeStyle> = {
   // Mapper/Combiner → Topic: Solid, green (data output)
   publishes: { stroke: "var(--graph-edge-green)", strokeWidth: 2 },
   // SB Mapper → Tag: Dashed, green (southbound write)
-  writes: { stroke: "var(--graph-edge-green-dash)", strokeWidth: 2, strokeDasharray: "6 3" },
+  writes: {
+    stroke: "var(--graph-edge-green-dash)",
+    strokeWidth: 2,
+    strokeDasharray: "6 3",
+  },
   // BridgeSubscription → TopicFilter: Solid, orange
   filters: { stroke: "var(--graph-edge-orange)", strokeWidth: 1.5 },
   // BridgeSubscription → Topic: Solid, orange
@@ -287,17 +329,64 @@ export const EDGE_STYLES: Record<string, EdgeStyle> = {
   // Adapter/Bridge → Combiner: Solid, yellow
   sources: { stroke: "var(--graph-edge-yellow)", strokeWidth: 1.5 },
   // DataPolicy → TopicFilter: Dotted, purple
-  attachedTo: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  attachedTo: {
+    stroke: "var(--graph-edge-purple)",
+    strokeWidth: 1.5,
+    strokeDasharray: "2 3",
+  },
   // DataPolicy → Schema: Dotted, purple
-  validates: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  validates: {
+    stroke: "var(--graph-edge-purple)",
+    strokeWidth: 1.5,
+    strokeDasharray: "2 3",
+  },
   // Policy → Script: Dashed, light purple
-  executes: { stroke: "var(--graph-edge-purple-light)", strokeWidth: 1.5, strokeDasharray: "4 3" },
+  executes: {
+    stroke: "var(--graph-edge-purple-light)",
+    strokeWidth: 1.5,
+    strokeDasharray: "4 3",
+  },
   // DataPolicy → Topic (redirect): Dashed, purple
-  redirects: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5, strokeDasharray: "4 3" },
+  redirects: {
+    stroke: "var(--graph-edge-purple)",
+    strokeWidth: 1.5,
+    strokeDasharray: "4 3",
+  },
   // BehaviorPolicy → Schema: Dotted, light purple
-  deserializes: { stroke: "var(--graph-edge-purple-light)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  deserializes: {
+    stroke: "var(--graph-edge-purple-light)",
+    strokeWidth: 1.5,
+    strokeDasharray: "2 3",
+  },
   // TopicFilter → Topic: Dotted, light green
-  matches: { stroke: "var(--graph-edge-green-light)", strokeWidth: 1.5, strokeDasharray: "2 3" },
+  matches: {
+    stroke: "var(--graph-edge-green-light)",
+    strokeWidth: 1.5,
+    strokeDasharray: "2 3",
+  },
+  // Policy internals
+  validatesWith: {
+    stroke: "var(--graph-edge-purple-light)",
+    strokeWidth: 1,
+    strokeDasharray: "2 3",
+  },
+  transitionsVia: { stroke: "var(--graph-edge-purple)", strokeWidth: 1.5 },
+  chains: { stroke: "var(--graph-edge-purple-light)", strokeWidth: 1 },
+  invokes: {
+    stroke: "var(--graph-edge-purple-light)",
+    strokeWidth: 1.5,
+    strokeDasharray: "4 3",
+  },
+  serializes: {
+    stroke: "var(--graph-edge-purple-light)",
+    strokeWidth: 1.5,
+    strokeDasharray: "2 3",
+  },
+  redirectsTo: {
+    stroke: "var(--graph-edge-purple)",
+    strokeWidth: 1.5,
+    strokeDasharray: "4 3",
+  },
 };
 
 export const DEFAULT_EDGE_STYLE: EdgeStyle = {
@@ -308,39 +397,47 @@ export const DEFAULT_EDGE_STYLE: EdgeStyle = {
 // --- Entity rank (layer ordering for directed layout) ---
 // Lower rank = further upstream (leftward in LR mode).
 // The data flow reads left-to-right:
-//   OT Device → Adapter → Tag → Mappers → Edge Broker / Topics →
-//   DataHub / Policies → Schemas/Scripts → Bridge → Remote Broker
+//   Connectors → Endpoints → Tags → Mappers → Broker/Topics →
+//   DataHub → Policies → [pipeline chain via layoutRank] → Resources
+//
+// Policy internals (pipelineOperation, fsmTransition, validator) use per-node
+// layoutRank overrides for progressive chain positioning. Their static rank
+// here is a fallback only.
 
 export const ENTITY_RANK: Record<DomainEntityType, number> = {
   // Layer 0 — Connectors (entry points, leftmost in LR)
-  adapter: 0,           // OT connector
-  bridge: 0,            // IT connector
-  listener: 0,          // v1 infrastructure
+  adapter: 0, // OT connector
+  bridge: 0, // IT connector
+  listener: 0, // v1 infrastructure
   // Layer 1 — What connectors connect to
-  otDevice: 1,          // adapter → device
-  remoteBroker: 1,      // bridge → remote broker
+  otDevice: 1, // adapter → device
+  remoteBroker: 1, // bridge → remote broker
   bridgeSubscription: 1,
   // Layer 2 — Data points
-  domainTag: 2,         // v1 tag
-  tag: 2,               // v2 tag (exposed by device)
+  domainTag: 2, // v1 tag
+  tag: 2, // v2 tag (exposed by device)
   // Layer 3 — Transforms & aggregation
-  northboundMapper: 3,  // tag → topic
-  southboundMapper: 3,  // topicFilter → tag
-  combiner: 3,          // aggregates sources → topic
+  northboundMapper: 3, // tag → topic
+  southboundMapper: 3, // topicFilter → tag
+  combiner: 3, // aggregates sources → topic
   assetMapper: 3,
   // Layer 4 — Central messaging
-  edgeBroker: 4,        // local MQTT broker
-  topic: 4,             // broker's topics
-  topicFilter: 4,       // broker's filters
-  pulse: 4,             // cloud platform
+  edgeBroker: 4, // local MQTT broker
+  topic: 4, // broker's topics
+  topicFilter: 4, // broker's filters
+  pulse: 4, // cloud platform
   // Layer 5 — Policy engine
   dataHub: 5,
   // Layer 6 — Policies
   dataPolicy: 6,
   behaviorPolicy: 6,
-  // Layer 7 — Resources (rightmost)
-  schema: 7,
-  script: 7,
+  // Layer 7+ — Policy internals (defaults; overridden per-node for chains)
+  validator: 7,
+  fsmTransition: 7,
+  pipelineOperation: 8, // fallback; chains use layoutRank 7..N
+  // Layer 10 — Resources (rightmost, past typical pipeline chains)
+  schema: 10,
+  script: 10,
 };
 
 // --- Layout defaults ---

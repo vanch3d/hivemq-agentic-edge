@@ -1,7 +1,8 @@
 # VAN-30: Scalability of Domain Ontology Graph Visualization
 
-| Document | Description |
-| --- | --- |
-| TASK_BRIEF.md | Requirements and objectives from Linear ticket VAN-30 |
-| TASK_PLAN.md | Investigation findings, strategy options, and implementation plan |
-| ISSUES.md | Open issues and improvement opportunities |
+| Document             | Description                                                          |
+| -------------------- | -------------------------------------------------------------------- |
+| TASK_BRIEF.md        | Requirements and objectives from Linear ticket VAN-30                |
+| TASK_PLAN.md         | Investigation findings, strategy options, and implementation plan    |
+| ISSUES.md            | Open issues and improvement opportunities                            |
+| POLICY_MODEL_GAPS.md | DataHub policy model gap analysis (pre-Phase 2 ontology engineering) |

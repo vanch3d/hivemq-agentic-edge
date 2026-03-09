@@ -1,13 +1,18 @@
 /**
  * V2 Graph Assembler — Ontology-driven domain graph construction.
  *
- * Organized by the v2 ontology taxonomy:
- *   1. Orchestrators (Edge Broker, DataHub)
- *   2. Connectors (Adapter, Bridge)
- *   3. Integration Points (OT Device, Tag, Topic, TopicFilter)
- *   4. Mappers (NorthboundMapper, SouthboundMapper, Combiner, BridgeSubscription)
- *   5. Policies (DataPolicy, BehaviorPolicy)
- *   6. Resources (Schema, Script)
+ * Each domain area has its own assembly function for clarity:
+ *   1. Orchestrators   — assembleOrchestrators
+ *   2. Adapters        — assembleAdapters
+ *   3. Bridges         — assembleBridges
+ *   4. Topic Filters   — assembleTopicFilters
+ *   5. Topics          — assembleTopics
+ *   6. Mappers         — assembleMappers
+ *   7. Data Policies   — assembleDataPolicies
+ *   8. Behavior Pol.   — assembleBehaviorPolicies
+ *   9. Resources       — assembleResources
+ *  10. Wildcard Match  — assembleWildcardMatches
+ *  11. Prune & DAG     — pruneDedupDag
  *
  * Pure function — no side effects, no API calls.
  */
@@ -44,6 +49,9 @@ import {
   deriveSouthboundMappers,
   deriveBridgeSubscriptions,
   extractRedirectTopics,
+  deriveValidators,
+  deriveDataPolicyPipelines,
+  deriveBehaviorPolicyTransitions,
   computeWildcardMatches,
   ensureDag,
 } from "./entity-derivation";
@@ -72,6 +80,29 @@ export interface ApiDataV2 {
   adapterSouthboundMappings?: Record<string, SouthboundMapping[]>;
 }
 
+// --- Collector (accumulates nodes + edges) ---
+
+type Collector = {
+  nodes: Map<string, GraphNode>;
+  edges: GraphEdge[];
+};
+
+function addNode(c: Collector, n: GraphNode) {
+  if (!c.nodes.has(n.id)) c.nodes.set(n.id, n);
+}
+
+function addEdge(c: Collector, e: GraphEdge) {
+  c.edges.push(e);
+}
+
+function addAll(
+  c: Collector,
+  result: { nodes: GraphNode[]; edges: GraphEdge[] },
+) {
+  result.nodes.forEach((n) => addNode(c, n));
+  result.edges.forEach((e) => addEdge(c, e));
+}
+
 // --- Helpers ---
 
 function statusFromApi(s?: Status): GraphNode["data"]["status"] {
@@ -86,45 +117,19 @@ function statusFromApi(s?: Status): GraphNode["data"]["status"] {
   };
 }
 
-type Collector = {
-  nodes: Map<string, GraphNode>;
-  edges: GraphEdge[];
-};
+// ── 1. Orchestrators ─────────────────────────────────────────────────────
 
-function addNode(c: Collector, n: GraphNode) {
-  if (!c.nodes.has(n.id)) c.nodes.set(n.id, n);
-}
-
-function addEdge(c: Collector, e: GraphEdge) {
-  // Only add if both endpoints exist (or will be added)
-  c.edges.push(e);
-}
-
-function addAll(c: Collector, result: { nodes: GraphNode[]; edges: GraphEdge[] }) {
-  result.nodes.forEach((n) => addNode(c, n));
-  result.edges.forEach((e) => addEdge(c, e));
-}
-
-// --- Main assembler ---
-
-export function assembleFullGraphV2(data: ApiDataV2): {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-} {
-  const c: Collector = { nodes: new Map(), edges: [] };
-
-  // ── 1. Orchestrators ─────────────────────────────────────────
-
-  // Edge Broker (singleton)
+function assembleOrchestrators(c: Collector): GraphNode {
   addNode(c, deriveEdgeBroker());
-
-  // DataHub (singleton)
   const dataHubNode = deriveDataHub();
   addNode(c, dataHubNode);
+  return dataHubNode;
+}
 
-  // ── 2. Connectors ────────────────────────────────────────────
+// ── 2. Adapters ──────────────────────────────────────────────────────────
 
-  // Adapters
+function assembleAdapters(c: Collector, data: ApiDataV2): void {
+  // Adapter nodes
   data.adapters?.forEach((a) => {
     addNode(
       c,
@@ -139,7 +144,16 @@ export function assembleFullGraphV2(data: ApiDataV2): {
     );
   });
 
-  // Bridges
+  // OT Devices (1 per Adapter)
+  addAll(c, deriveOtDevices(data.adapters));
+
+  // Tags (scoped by adapter)
+  addAll(c, deriveTags(data.adapterTags));
+}
+
+// ── 3. Bridges ───────────────────────────────────────────────────────────
+
+function assembleBridges(c: Collector, data: ApiDataV2): void {
   data.bridges?.forEach((b) => {
     addNode(
       c,
@@ -156,17 +170,15 @@ export function assembleFullGraphV2(data: ApiDataV2): {
 
   // Remote Brokers (1 per Bridge)
   addAll(c, deriveRemoteBrokers(data.bridges));
+}
 
-  // ── 3. Integration Points ────────────────────────────────────
+// ── 4. Topic Filters ─────────────────────────────────────────────────────
+// Collected from multiple sources: API list, SB mappers, bridge subs, data policies
 
-  // OT Devices (1 per Adapter)
-  addAll(c, deriveOtDevices(data.adapters));
-
-  // Tags (scoped by adapter, via per-adapter domain tags)
-  addAll(c, deriveTags(data.adapterTags));
-
-  // Topic Filters (from API)
+function assembleTopicFilters(c: Collector, data: ApiDataV2): string[] {
   const topicFilterNodeIds: string[] = [];
+
+  // From API topic filter list
   data.topicFilters?.forEach((tf) => {
     const id = makeNodeId("topicFilter", tf.topicFilter);
     addNode(
@@ -178,7 +190,7 @@ export function assembleFullGraphV2(data: ApiDataV2): {
     topicFilterNodeIds.push(id);
   });
 
-  // Ensure topic filter nodes for SB mapper sources
+  // From SB mapper sources (ensure filter nodes exist)
   if (data.adapterSouthboundMappings) {
     for (const mappings of Object.values(data.adapterSouthboundMappings)) {
       mappings.forEach((sb) => {
@@ -197,7 +209,7 @@ export function assembleFullGraphV2(data: ApiDataV2): {
     }
   }
 
-  // Ensure topic filter nodes for bridge subscription filters
+  // From bridge subscription filters
   data.bridges?.forEach((b) => {
     [...(b.localSubscriptions ?? []), ...(b.remoteSubscriptions ?? [])].forEach(
       (sub) => {
@@ -218,7 +230,7 @@ export function assembleFullGraphV2(data: ApiDataV2): {
     );
   });
 
-  // Ensure topic filter nodes for data policy matching
+  // From data policy matching
   data.dataPolicies?.forEach((dp) => {
     if (dp.matching?.topicFilter) {
       const tfId = makeNodeId("topicFilter", dp.matching.topicFilter);
@@ -239,10 +251,17 @@ export function assembleFullGraphV2(data: ApiDataV2): {
     }
   });
 
-  // Extract redirect topics from DataPolicy pipelines
+  // Ownership edges (EdgeBroker → owns → TopicFilter)
+  deriveTopicFilterOwnership(topicFilterNodeIds).forEach((e) => addEdge(c, e));
+
+  return topicFilterNodeIds;
+}
+
+// ── 5. Topics ────────────────────────────────────────────────────────────
+
+function assembleTopics(c: Collector, data: ApiDataV2): void {
   const redirectTopics = extractRedirectTopics(data.dataPolicies);
 
-  // Topics (derived from NB mapper destinations, combiners, bridges, redirects)
   addAll(
     c,
     deriveTopics({
@@ -252,14 +271,11 @@ export function assembleFullGraphV2(data: ApiDataV2): {
       redirectTopics,
     }),
   );
+}
 
-  // TopicFilter ownership (EdgeBroker → ownsFilter)
-  deriveTopicFilterOwnership(topicFilterNodeIds).forEach((e) =>
-    addEdge(c, e),
-  );
+// ── 6. Mappers ───────────────────────────────────────────────────────────
 
-  // ── 4. Mappers ───────────────────────────────────────────────
-
+function assembleMappers(c: Collector, data: ApiDataV2): void {
   // Northbound Mappers
   addAll(c, deriveNorthboundMappers(data.adapterNorthboundMappings));
 
@@ -282,10 +298,7 @@ export function assembleFullGraphV2(data: ApiDataV2): {
     cmb.sources?.items?.forEach((ref) => {
       const refType = ref.type?.toLowerCase();
       if (refType === "adapter" || refType === "bridge") {
-        const sourceId = makeNodeId(
-          refType as "adapter" | "bridge",
-          ref.id,
-        );
+        const sourceId = makeNodeId(refType as "adapter" | "bridge", ref.id);
         addEdge(c, edge(sourceId, id, REL.sources));
       }
     });
@@ -301,10 +314,15 @@ export function assembleFullGraphV2(data: ApiDataV2): {
 
   // Bridge Subscriptions
   addAll(c, deriveBridgeSubscriptions(data.bridges));
+}
 
-  // ── 5. Policies ──────────────────────────────────────────────
+// ── 7. Data Policies ─────────────────────────────────────────────────────
 
-  // Data Policies
+function assembleDataPolicies(
+  c: Collector,
+  data: ApiDataV2,
+  dataHubNode: GraphNode,
+): void {
   data.dataPolicies?.forEach((dp) => {
     const id = makeNodeId("dataPolicy", dp.id);
     addNode(
@@ -322,59 +340,36 @@ export function assembleFullGraphV2(data: ApiDataV2): {
       const tfId = makeNodeId("topicFilter", dp.matching.topicFilter);
       addEdge(c, edge(id, tfId, REL.attachedTo));
     }
-
-    // DataPolicy → validates → Schema
-    dp.validation?.validators?.forEach((v) => {
-      const args = v.arguments as Record<string, unknown> | undefined;
-      const schemaId = args?.schemaId as string | undefined;
-      if (schemaId) {
-        addEdge(c, edge(id, makeNodeId("schema", schemaId), REL.validates));
-      }
-    });
-
-    // DataPolicy → executes → Script
-    [dp.onSuccess, dp.onFailure].forEach((action) => {
-      action?.pipeline?.forEach((op) => {
-        if (op.functionId && !op.functionId.startsWith("Delivery.")) {
-          addEdge(
-            c,
-            edge(id, makeNodeId("script", op.functionId), REL.executes),
-          );
-        }
-      });
-    });
-
-    // DataPolicy → redirects → Topic (from Delivery.redirectTo)
-    [dp.onSuccess, dp.onFailure].forEach((action) => {
-      action?.pipeline?.forEach((op) => {
-        if (op.functionId === "Delivery.redirectTo") {
-          const args = op.arguments as Record<string, unknown>;
-          const topic = args?.topic as string | undefined;
-          if (topic) {
-            addEdge(
-              c,
-              edge(id, makeNodeId("topic", topic), REL.redirects),
-            );
-          }
-        }
-      });
-    });
   });
 
-  // Behavior Policies
+  // Validators (DataPolicy → validatesWith → Validator → validates → Schema)
+  addAll(c, deriveValidators(data.dataPolicies));
+
+  // Pipeline operations (DataPolicy → chains → Op → chains → Op → invokes/serializes/redirectsTo)
+  addAll(c, deriveDataPolicyPipelines(data.dataPolicies));
+}
+
+// ── 8. Behavior Policies ─────────────────────────────────────────────────
+
+function assembleBehaviorPolicies(
+  c: Collector,
+  data: ApiDataV2,
+  dataHubNode: GraphNode,
+): void {
   data.behaviorPolicies?.forEach((bp) => {
     const id = makeNodeId("behaviorPolicy", bp.id);
     addNode(
       c,
       node(id, "behaviorPolicy", bp.id, bp.matching?.clientIdRegex, undefined, {
         ...bp,
+        behaviorId: bp.behavior?.id,
       } as unknown as Record<string, unknown>),
     );
 
     // DataHub → owns → BehaviorPolicy
     addEdge(c, edge(dataHubNode.id, id, REL.owns));
 
-    // BehaviorPolicy → deserializes → Schema
+    // BehaviorPolicy → deserializes → Schema (publish/will)
     if (bp.deserialization) {
       [bp.deserialization.publish, bp.deserialization.will].forEach(
         (deserializer) => {
@@ -391,33 +386,19 @@ export function assembleFullGraphV2(data: ApiDataV2): {
         },
       );
     }
-
-    // BehaviorPolicy → executes → Script
-    bp.onTransitions?.forEach((transition) => {
-      const eventKeys = [
-        "Connection.OnDisconnect",
-        "Event.OnAny",
-        "Mqtt.OnInboundConnect",
-        "Mqtt.OnInboundDisconnect",
-        "Mqtt.OnInboundPublish",
-        "Mqtt.OnInboundSubscribe",
-      ] as const;
-      eventKeys.forEach((key) => {
-        const event = transition[key];
-        event?.pipeline?.forEach((op) => {
-          if (op.functionId) {
-            addEdge(
-              c,
-              edge(id, makeNodeId("script", op.functionId), REL.executes),
-            );
-          }
-        });
-      });
-    });
   });
 
-  // ── 6. Resources ─────────────────────────────────────────────
+  // FSM Transitions + their pipeline operations
+  addAll(c, deriveBehaviorPolicyTransitions(data.behaviorPolicies));
+}
 
+// ── 9. Resources ─────────────────────────────────────────────────────────
+
+function assembleResources(
+  c: Collector,
+  data: ApiDataV2,
+  dataHubNode: GraphNode,
+): void {
   // Schemas
   data.schemas?.forEach((s) => {
     const id = makeNodeId("schema", s.id);
@@ -427,7 +408,6 @@ export function assembleFullGraphV2(data: ApiDataV2): {
         ...s,
       } as unknown as Record<string, unknown>),
     );
-    // DataHub → owns → Schema
     addEdge(c, edge(dataHubNode.id, id, REL.owns));
   });
 
@@ -440,12 +420,13 @@ export function assembleFullGraphV2(data: ApiDataV2): {
         ...s,
       } as unknown as Record<string, unknown>),
     );
-    // DataHub → owns → Script
     addEdge(c, edge(dataHubNode.id, id, REL.owns));
   });
+}
 
-  // ── 7. MQTT Wildcard Matching ────────────────────────────────
+// ── 10. MQTT Wildcard Matching ───────────────────────────────────────────
 
+function assembleWildcardMatches(c: Collector): void {
   const topicFilterNodes = Array.from(c.nodes.values()).filter(
     (n) => n.data.entityType === "topicFilter",
   );
@@ -455,10 +436,17 @@ export function assembleFullGraphV2(data: ApiDataV2): {
   computeWildcardMatches(topicFilterNodes, topicNodes).forEach((e) =>
     addEdge(c, e),
   );
+}
 
-  // ── 8. Prune Edges & Ensure DAG ─────────────────────────────
-  // Remove edges whose endpoints don't exist
+// ── 11. Prune & Ensure DAG ──────────────────────────────────────────────
+
+function pruneDedupDag(c: Collector): {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+} {
   const validNodeIds = new Set(c.nodes.keys());
+
+  // Remove edges whose endpoints don't exist
   let prunedEdges = c.edges.filter(
     (e) => validNodeIds.has(e.source) && validNodeIds.has(e.target),
   );
@@ -474,10 +462,36 @@ export function assembleFullGraphV2(data: ApiDataV2): {
   // Ensure DAG (remove back-edges from cycles)
   const finalEdges = ensureDag(Array.from(c.nodes.keys()), prunedEdges);
 
-  const result = {
+  return {
     nodes: Array.from(c.nodes.values()),
     edges: finalEdges,
   };
-  log("assembled: %d nodes, %d edges", result.nodes.length, result.edges.length);
+}
+
+// ── Main assembler (orchestrator) ────────────────────────────────────────
+
+export function assembleFullGraphV2(data: ApiDataV2): {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+} {
+  const c: Collector = { nodes: new Map(), edges: [] };
+
+  const dataHubNode = assembleOrchestrators(c);
+  assembleAdapters(c, data);
+  assembleBridges(c, data);
+  assembleTopicFilters(c, data);
+  assembleTopics(c, data);
+  assembleMappers(c, data);
+  assembleDataPolicies(c, data, dataHubNode);
+  assembleBehaviorPolicies(c, data, dataHubNode);
+  assembleResources(c, data, dataHubNode);
+  assembleWildcardMatches(c);
+
+  const result = pruneDedupDag(c);
+  log(
+    "assembled: %d nodes, %d edges",
+    result.nodes.length,
+    result.edges.length,
+  );
   return result;
 }

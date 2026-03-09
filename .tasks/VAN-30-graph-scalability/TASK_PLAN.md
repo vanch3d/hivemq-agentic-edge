@@ -226,24 +226,129 @@ A layered approach, combining multiple techniques. Ordered by impact/effort rati
 
 **Expected impact**: Handles ~1000 nodes with acceptable performance. Visual vocabulary makes the graph legible even at overview zoom — you can see the _shape_ of the deployment (which adapters are heavy, where the data flows) without reading labels.
 
-### Phase 2: Aggregate nodes (medium architecture change)
+### Phase 1.5: Policy model ontology expansion (pre-Phase 2)
 
-- [ ] **2.1** Define `AggregateNode` type — represents a collapsed group of entities
-  - Properties: `entityType`, `count`, `parentEntityId`, `expandable: true`
-  - Renders as: icon + count badge (e.g., "247 tags")
-- [ ] **2.2** Modify assembler to produce aggregate nodes when cardinality exceeds threshold
-  - Per-adapter: if tags > N, emit one aggregate tag node instead of N individual tags
-  - Same for NB mappers, SB mappers, topics derived from that adapter
+Expanded the ontology with 3 new entity types for the DataHub policy chain, which were under-represented (flat policy→resource edges instead of structured subgraphs). See `POLICY_MODEL_GAPS.md` for full analysis.
+
+- [x] **1.5.1** Add `validator` entity — DataPolicy.validation.validators[] with strategy + schema references
+- [x] **1.5.2** Add `fsmTransition` entity — BehaviorPolicy.onTransitions[] with fromState/toState and event pipelines
+- [x] **1.5.3** Add `pipelineOperation` entity — PolicyOperation in onSuccess/onFailure/onEvent pipelines, wired to scripts/schemas/topics
+- [x] **1.5.4** Add 6 new relationship types: `hasValidator`, `transition`, `pipelineStep`, `invokes`, `usesSchema`, `redirectsTo`
+- [x] **1.5.5** Update ontology definitions (DataPolicy, BehaviorPolicy relationships now route through intermediates)
+- [x] **1.5.6** Refactor assembler into separate domain-area functions for readability
+- [x] **1.5.7** Register 3 new node components (PipelineOperationNode, FsmTransitionNode, ValidatorNode)
+
+**Expected impact**: Policy subgraphs now have structured intermediate nodes, enabling meaningful progressive expand/collapse in Phase 2. Assembler is readable per-domain-area.
+
+### Phase 2: Automatic clustering & aggregate nodes (medium architecture change)
+
+Phase 2 combines two complementary ideas:
+
+- **Clustering**: domain-aware rules that identify which nodes naturally group together
+- **Aggregation**: replacing a cluster with a single representative node (expandable on demand)
+
+Clustering is the _analysis_ step; aggregation is the _visual_ step. The assembler runs clustering rules first, then decides whether to emit individual nodes or aggregate representatives.
+
+#### 2A. Clustering Rules
+
+The ontology has natural clustering patterns. Each rule produces a **cluster**: a set of nodes that share a structural relationship and can be represented as a group.
+
+##### Rule 1: Adapter subtree (scope-based)
+
+The strongest cluster. Tags, NB mappers, and SB mappers are identity-scoped to their adapter. The full subtree for one adapter is:
+
+```
+Adapter → OT Device → Tag[1..N] → NB Mapper[1..N] → Topic[1..N]
+                     ↑ SB Mapper[1..N] ← TopicFilter[1..N]
+```
+
+**Cluster**: All entities scoped to a single adapter form one cluster.
+**Trigger**: tag count > threshold (e.g., 10).
+**Aggregate node**: "opcua-adapter-01 (247 tags, 247 NB mappers)" — one node replacing the entire subtree below OT Device.
+**Note**: The adapter and OT Device nodes remain visible (they're low-cardinality). Only ranks 2-3 (tags + mappers) collapse.
+
+##### Rule 2: Orphan tags (connectivity-based)
+
+Tags with no outgoing mapper edges are "orphan" — they expose data but nothing consumes it. This is common for adapters with many tags where only a subset is mapped. Orphans are structurally uninteresting in the data flow view.
+
+**Cluster**: Tags of a given adapter that have zero outgoing `feeds` edges.
+**Trigger**: orphan count > 0 (always cluster orphans separately from mapped tags).
+**Aggregate node**: "5 unmapped tags" — visually distinct (dimmed/dashed) to signal incomplete configuration.
+**Insight**: This separates the "active data path" (mapped tags) from the "available but unused" tags, which is a meaningful domain distinction.
+
+##### Rule 3: Topic filter fan-in (match-based)
+
+Multiple tags may feed NB mappers that publish to topics matching the same topic filter. From the topic filter's perspective, this is a fan-in cluster: N tags → N mappers → N topics → 1 filter.
+
+**Cluster**: All tags whose NB mapper's destination topic matches a given topic filter (via MQTT wildcard).
+**Trigger**: matched tag count > threshold.
+**Aggregate node**: "factory/# matches 42 topics" — attached to the topic filter node.
+**Note**: This is a cross-adapter cluster — tags from different adapters may match the same filter. It's particularly useful in the policy impact scope, where you want to see "which data does this policy affect?"
+
+##### Rule 4: Topic convergence (destination-based)
+
+Multiple mappers may publish to the same topic (e.g., multiple adapters mapping different tags to `factory/line1/combined`). From the topic's perspective, this is a fan-in.
+
+**Cluster**: All mappers (NB, combiner, bridge sub) that publish to the same topic.
+**Trigger**: publisher count > threshold.
+**Aggregate node**: "3 sources → factory/line1/combined" — replaces the individual mapper→topic edges with a single aggregate→topic edge.
+
+##### Rule 5: Bridge subtree (scope-based)
+
+Mirrors Rule 1 for bridges. Each bridge owns subscriptions (local + remote), each subscription references a topic filter and a destination topic.
+
+**Cluster**: All bridge subscriptions + their referenced filters/topics for a single bridge.
+**Trigger**: subscription count > threshold.
+**Aggregate node**: "mqtt-bridge-01 (4 local, 2 remote subs)".
+
+##### Rule 6: Policy chain (attachment-based)
+
+A data policy attaches to a topic filter and references schemas + scripts. The entire policy→filter→schemas→scripts subgraph is a natural cluster.
+
+**Cluster**: DataPolicy + its attached TopicFilter + validated Schemas + executed Scripts.
+**Trigger**: Always cluster (policies are few but their resource edges create visual noise).
+**Aggregate node**: Not aggregated by default (policies are low-cardinality), but the cluster membership is used for focus/highlight interactions.
+
+##### Rule priority and overlap
+
+Clusters can overlap (a tag may be orphan AND part of an adapter subtree). Resolution:
+
+1. **Orphan rule wins over adapter subtree** — orphans are separated into their own cluster first.
+2. **Adapter subtree applies to remaining (mapped) tags** — the "active" tags cluster.
+3. **Topic filter fan-in is orthogonal** — it groups across adapters, used primarily in policy/filter-focused views.
+4. **Cluster membership is stored as metadata**, not as exclusive partitioning. A node can belong to multiple clusters for different purposes.
+
+#### 2B. Aggregate Node Implementation
+
+- [ ] **2.1** Define clustering rule engine
+  - Input: assembled graph (nodes + edges)
+  - Output: `ClusterSet` — map of clusterId → { rule, memberNodeIds, parentEntityId, metadata }
+  - Runs as a post-assembly pass (after Stage 8 of assembler)
+  - Rules are composable: each rule function returns candidate clusters, engine merges/resolves overlaps
+- [ ] **2.2** Define `AggregateNode` type
+  - Properties: `clusterId`, `clusterRule`, `memberEntityTypes` (bag of types + counts), `parentEntityId`, `expandable: true`
+  - Renders as: role-colored node with breakdown (e.g., "247 tags · 247 mappers · 42 topics")
+  - Visual distinction by rule: orphan cluster → dimmed/dashed, active cluster → solid, cross-adapter cluster → different shape
+- [ ] **2.3** Modify assembler to emit aggregate nodes when cluster exceeds threshold
+  - Per-adapter: if active tags > N, emit one aggregate for tags+mappers+topics
+  - Orphan tags always aggregated if count > 0
   - Threshold configurable (default: 10)
-- [ ] **2.3** Implement expand/collapse interaction
+  - Edges rewired: aggregate inherits external edges of its members (e.g., adapter→owns→aggregate instead of adapter→owns→tag×N)
+- [ ] **2.4** Implement expand/collapse interaction
   - Click aggregate → store dispatches expansion, assembler re-runs for that scope
   - Collapse → remove children, restore aggregate node
   - Layout re-runs on expand/collapse (scoped to affected subgraph if possible)
-- [ ] **2.4** Defer per-adapter API queries until expansion
+- [ ] **2.5** Defer per-adapter API queries until expansion
   - `useQueries()` for tags/mappings enabled only for expanded adapters
   - Reduces initial data fetch for large deployments
+- [ ] **2.6** Scope-aware clustering
+  - `dataFlow` scope: Rules 1-4 active (adapter subtrees, orphans, topic convergence)
+  - `adapterTopology` scope: Rule 1-2 only (adapter-centric)
+  - `policyImpact` scope: Rules 3, 6 active (topic filter fan-in, policy chains)
+  - `bridgeTopology` scope: Rule 5 active
+  - `full` scope: All rules
 
-**Expected impact**: Initial graph stays at ~50-100 nodes regardless of deployment size. User can drill into specific adapters on demand.
+**Expected impact**: Initial graph stays at ~50-100 nodes regardless of deployment size. Clustering rules make aggregation semantically meaningful — not just "too many nodes" but "these nodes form a coherent group." User can drill into specific clusters on demand.
 
 ### Phase 3: Semantic zoom (larger architecture change)
 
@@ -275,12 +380,14 @@ A layered approach, combining multiple techniques. Ordered by impact/effort rati
 
 ## Key Architectural Decisions (pending)
 
-| #    | Question                              | Options                                       | Leaning                                                       |
-| ---- | ------------------------------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| AD-1 | Where does aggregation happen?        | Assembler (data layer) vs. store (view layer) | Assembler — keeps store simple, aggregation is a data concern |
-| AD-2 | How to handle expand/collapse layout? | Full re-layout vs. incremental insert         | Full re-layout initially; incremental is complex              |
-| AD-3 | Replace WebCola?                      | Keep + optimize vs. switch to ELK vs. Dagre   | Keep for now, evaluate ELK in Phase 4                         |
-| AD-4 | Semantic zoom scope                   | Node rendering only vs. node visibility       | Both — rendering at all zooms, visibility for extreme cases   |
+| #    | Question                              | Options                                       | Leaning                                                                 |
+| ---- | ------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
+| AD-1 | Where does aggregation happen?        | Assembler (data layer) vs. store (view layer) | Assembler — clustering is a data concern, post-assembly pass            |
+| AD-2 | How to handle expand/collapse layout? | Full re-layout vs. incremental insert         | Full re-layout initially; incremental is complex                        |
+| AD-3 | Replace WebCola?                      | Keep + optimize vs. switch to ELK vs. Dagre   | Keep for now, evaluate ELK in Phase 4                                   |
+| AD-4 | Semantic zoom scope                   | Node rendering only vs. node visibility       | Both — rendering at all zooms, visibility for extreme cases             |
+| AD-5 | Cluster overlap resolution            | Exclusive partition vs. multi-membership      | Multi-membership — clusters serve different purposes per scope          |
+| AD-6 | Clustering scope                      | Global rules vs. scope-aware rules            | Scope-aware — different view scopes activate different clustering rules |
 
 ## Files Likely Affected
 
@@ -292,13 +399,14 @@ A layered approach, combining multiple techniques. Ordered by impact/effort rati
 | `src/graph/constants.ts`                        | 1     | Revised color palette (role-based), node dimensions per role, zoom thresholds |
 | `src/graph/graph-tokens.css`                    | 1     | New/revised color tokens for role-based palette                               |
 | `src/graph/layout.ts`                           | 1     | Grid-only fallback, role-aware node dimensions                                |
-| `src/graph/assembler-v2.ts`                     | 2     | Aggregate node generation                                                     |
+| `src/graph/clustering.ts`                       | 2     | New: clustering rule engine (post-assembly pass)                              |
+| `src/graph/assembler-v2.ts`                     | 2     | Invoke clustering, emit aggregate nodes, rewire edges                         |
 | `src/graph/entity-derivation.ts`                | 2     | Aggregate node helpers                                                        |
-| `src/graph/types.ts`                            | 2     | `AggregateNode` type                                                          |
+| `src/graph/types.ts`                            | 2     | `ClusterSet`, `AggregateNode` types                                           |
 | `src/graph/store.ts`                            | 2-3   | Expand/collapse actions, zoom-driven visibility                               |
-| `src/graph/components/nodes/aggregate-node.tsx` | 2     | New component                                                                 |
+| `src/graph/components/nodes/aggregate-node.tsx` | 2     | New component (role-colored, rule-styled)                                     |
 | `src/graph/use-graph-data.ts`                   | 2     | Deferred per-adapter queries                                                  |
-| `src/graph/constants.ts`                        | 2     | Aggregation thresholds                                                        |
+| `src/graph/constants.ts`                        | 2     | Clustering thresholds, per-scope rule activation                              |
 
 ---
 

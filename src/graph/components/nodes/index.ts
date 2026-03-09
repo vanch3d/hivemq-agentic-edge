@@ -20,6 +20,9 @@ import { TopicNode } from "./topic-node";
 import { MapperNode } from "./mapper-node";
 import { BridgeSubscriptionNode } from "./bridge-subscription-node";
 import { SchemaClassNode } from "./schema-class-node";
+import { PipelineOperationNode } from "./pipeline-operation-node";
+import { FsmTransitionNode } from "./fsm-transition-node";
+import { ValidatorNode } from "./validator-node";
 
 /** Custom node types for React Flow — must be defined at module scope */
 export const nodeTypes: NodeTypes = {
@@ -46,6 +49,10 @@ export const nodeTypes: NodeTypes = {
   southboundMapper: MapperNode,
   assetMapper: MapperNode,
   bridgeSubscription: BridgeSubscriptionNode,
+  // Policy internals
+  pipelineOperation: PipelineOperationNode,
+  fsmTransition: FsmTransitionNode,
+  validator: ValidatorNode,
   // Schema/class view
   schemaClass: SchemaClassNode,
 };

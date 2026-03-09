@@ -46,7 +46,12 @@ export function computeLayout(
     return [{ ...nodes[0], position: { x: 0, y: 0 } }];
   }
 
-  log("input: %d nodes, %d edges, direction=%s", nodes.length, edges.length, direction);
+  log(
+    "input: %d nodes, %d edges, direction=%s",
+    nodes.length,
+    edges.length,
+    direction,
+  );
 
   const isLR = direction === "LR";
   const flowAxis = isLR ? "x" : "y";
@@ -57,9 +62,14 @@ export function computeLayout(
 
   // ── Phase 1: Rank grid with barycenter ordering ─────────────────────
 
+  // Resolve rank per node: per-node override takes precedence over type-based default
+  const nodeRank = nodes.map(
+    (n) => n.data.layoutRank ?? ENTITY_RANK[n.data.entityType],
+  );
+
   const rankGroups = new Map<number, number[]>();
-  nodes.forEach((n, i) => {
-    const rank = ENTITY_RANK[n.data.entityType];
+  nodes.forEach((_, i) => {
+    const rank = nodeRank[i];
     if (!rankGroups.has(rank)) rankGroups.set(rank, []);
     rankGroups.get(rank)!.push(i);
   });
@@ -200,8 +210,8 @@ export function computeLayout(
     const constraintSet = new Set<string>();
 
     for (const link of colaLinks) {
-      const sr = ENTITY_RANK[nodes[link.source].data.entityType];
-      const tr = ENTITY_RANK[nodes[link.target].data.entityType];
+      const sr = nodeRank[link.source];
+      const tr = nodeRank[link.target];
       if (sr === tr) continue;
       const [left, right] =
         sr < tr ? [link.source, link.target] : [link.target, link.source];
@@ -239,7 +249,11 @@ export function computeLayout(
 
     colaLayout.start(3, 5, 3);
   } else {
-    log("skipping WebCola refinement: %d nodes > threshold %d", nodes.length, GRID_ONLY_THRESHOLD);
+    log(
+      "skipping WebCola refinement: %d nodes > threshold %d",
+      nodes.length,
+      GRID_ONLY_THRESHOLD,
+    );
   }
 
   // ── Extract final positions ─────────────────────────────────────────

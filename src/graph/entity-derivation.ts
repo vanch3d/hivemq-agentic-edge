@@ -13,9 +13,11 @@ import type {
   NorthboundMapping,
   SouthboundMapping,
   DataPolicy,
+  BehaviorPolicy,
 } from "@/api/types.gen";
 import type { GraphNode, GraphEdge, DomainEntityType } from "./types";
 import { REL } from "./relationships";
+import { ENTITY_RANK } from "./constants";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -30,20 +32,17 @@ function node(
   sublabel: string | undefined,
   status: GraphNode["data"]["status"],
   raw: Record<string, unknown>,
+  layoutRank?: number,
 ): GraphNode {
   return {
     id,
     type: entityType,
     position: { x: 0, y: 0 },
-    data: { entityType, label, sublabel, status, raw },
+    data: { entityType, label, sublabel, status, raw, layoutRank },
   };
 }
 
-function edge(
-  source: string,
-  target: string,
-  relationship: string,
-): GraphEdge {
+function edge(source: string, target: string, relationship: string): GraphEdge {
   return {
     id: `${source}-${relationship}-${target}`,
     source,
@@ -127,11 +126,18 @@ export function deriveRemoteBrokers(
   (bridges as Bridge[] | undefined)?.forEach((b) => {
     const rbId = makeNodeId("remoteBroker", b.id);
     nodes.push(
-      node(rbId, "remoteBroker", `${b.host}:${b.port}`, "Remote broker", undefined, {
-        host: b.host,
-        port: b.port,
-        bridgeId: b.id,
-      }),
+      node(
+        rbId,
+        "remoteBroker",
+        `${b.host}:${b.port}`,
+        "Remote broker",
+        undefined,
+        {
+          host: b.host,
+          port: b.port,
+          bridgeId: b.id,
+        },
+      ),
     );
     // Bridge → connectsTo → RemoteBroker
     edges.push(edge(makeNodeId("bridge", b.id), rbId, REL.connectsTo));
@@ -141,9 +147,10 @@ export function deriveRemoteBrokers(
 
 // ── OT Devices (1 per Adapter) ───────────────────────────────────────────
 
-export function deriveOtDevices(
-  adapters: Adapter[] | undefined,
-): { nodes: GraphNode[]; edges: GraphEdge[] } {
+export function deriveOtDevices(adapters: Adapter[] | undefined): {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+} {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   adapters?.forEach((a) => {
@@ -196,7 +203,12 @@ export function deriveTags(
  */
 export function deriveTopics(opts: {
   adapterNbMappings: Record<string, NorthboundMapping[]> | undefined;
-  combiners: Array<{ id: string; mappings?: { items?: Array<{ destination?: { topic?: string } }> } }> | undefined;
+  combiners:
+    | Array<{
+        id: string;
+        mappings?: { items?: Array<{ destination?: { topic?: string } }> };
+      }>
+    | undefined;
   bridges: Bridge[] | undefined;
   redirectTopics: string[];
 }): { nodes: GraphNode[]; edges: GraphEdge[] } {
@@ -347,9 +359,10 @@ export function deriveSouthboundMappers(
 
 // ── Bridge Subscriptions ─────────────────────────────────────────────────
 
-export function deriveBridgeSubscriptions(
-  bridges: Bridge[] | undefined,
-): { nodes: GraphNode[]; edges: GraphEdge[] } {
+export function deriveBridgeSubscriptions(bridges: Bridge[] | undefined): {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+} {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
 
@@ -359,17 +372,11 @@ export function deriveBridgeSubscriptions(
     b.localSubscriptions?.forEach((sub, i) => {
       const subId = makeNodeId("bridgeSubscription", `${b.id}/local/${i}`);
       nodes.push(
-        node(
-          subId,
-          "bridgeSubscription",
-          sub.destination,
-          "local",
-          undefined,
-          { ...sub, bridgeId: b.id, direction: "local" } as unknown as Record<
-            string,
-            unknown
-          >,
-        ),
+        node(subId, "bridgeSubscription", sub.destination, "local", undefined, {
+          ...sub,
+          bridgeId: b.id,
+          direction: "local",
+        } as unknown as Record<string, unknown>),
       );
       // Bridge → owns → BridgeSubscription
       edges.push(edge(bridgeNodeId, subId, REL.owns));
@@ -447,6 +454,310 @@ export function extractRedirectTopics(
   return Array.from(topics);
 }
 
+// ── Validators (derived from DataPolicy.validation) ─────────────────────
+
+/**
+ * Creates Validator nodes from DataPolicy validation.validators[].
+ * Each validator references schemas via validates edges.
+ */
+export function deriveValidators(dataPolicies: DataPolicy[] | undefined): {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+} {
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  dataPolicies?.forEach((dp) => {
+    const policyId = makeNodeId("dataPolicy", dp.id);
+    dp.validation?.validators?.forEach((v, i) => {
+      const args = v.arguments as Record<string, unknown> | undefined;
+
+      // Extract strategy and schema references from arguments
+      const strategy = (args?.strategy as string) ?? "ALL_OF";
+      const schemas = (args?.schemas as Array<{ schemaId: string }>) ?? [];
+      // Fallback: single schemaId at top level (simplified API format)
+      const singleSchemaId = args?.schemaId as string | undefined;
+
+      const validatorId = makeNodeId("validator", `${dp.id}/${i}`);
+      nodes.push(
+        node(
+          validatorId,
+          "validator",
+          `${v.type ?? "SCHEMA"} validator`,
+          strategy,
+          undefined,
+          {
+            policyId: dp.id,
+            index: i,
+            type: v.type,
+            strategy,
+            schemaCount: schemas.length || (singleSchemaId ? 1 : 0),
+            ...args,
+          },
+          ENTITY_RANK.dataPolicy + 1,
+        ),
+      );
+
+      // DataPolicy → validatesWith → Validator
+      edges.push(edge(policyId, validatorId, REL.validatesWith));
+
+      // Validator → validates → Schema
+      if (schemas.length > 0) {
+        schemas.forEach((ref) => {
+          if (ref.schemaId) {
+            edges.push(
+              edge(
+                validatorId,
+                makeNodeId("schema", ref.schemaId),
+                REL.validates,
+              ),
+            );
+          }
+        });
+      } else if (singleSchemaId) {
+        edges.push(
+          edge(
+            validatorId,
+            makeNodeId("schema", singleSchemaId),
+            REL.validates,
+          ),
+        );
+      }
+    });
+  });
+
+  return { nodes, edges };
+}
+
+// ── Pipeline Operations (derived from policy pipelines) ─────────────────
+
+/** Built-in function IDs — NOT user scripts */
+const BUILT_IN_FUNCTIONS = new Set([
+  "System.log",
+  "Metrics.Counter.increment",
+  "Mqtt.UserProperties.add",
+  "Serdes.deserialize",
+  "Serdes.serialize",
+  "Delivery.redirectTo",
+  "Mqtt.drop",
+  "Mqtt.disconnect",
+]);
+
+const TERMINAL_FUNCTIONS = new Set([
+  "Delivery.redirectTo",
+  "Mqtt.drop",
+  "Mqtt.disconnect",
+]);
+
+/**
+ * Creates PipelineOperation nodes from a DataPolicy's onSuccess/onFailure pipelines.
+ * Wires operations to their referenced scripts, schemas, and topics.
+ */
+export function deriveDataPolicyPipelines(
+  dataPolicies: DataPolicy[] | undefined,
+): { nodes: GraphNode[]; edges: GraphEdge[] } {
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  dataPolicies?.forEach((dp) => {
+    const policyId = makeNodeId("dataPolicy", dp.id);
+
+    const phases = [
+      { phase: "onSuccess", action: dp.onSuccess },
+      { phase: "onFailure", action: dp.onFailure },
+    ] as const;
+
+    const pipelineBaseRank = ENTITY_RANK.dataPolicy + 1;
+
+    phases.forEach(({ phase, action }) => {
+      let prevOpId: string | null = null;
+      action?.pipeline?.forEach((op, i) => {
+        if (!op.functionId) return;
+        const opId = makeNodeId("pipelineOperation", `${dp.id}/${phase}/${i}`);
+        const isBuiltIn = BUILT_IN_FUNCTIONS.has(op.functionId);
+        const isTerminal = TERMINAL_FUNCTIONS.has(op.functionId);
+
+        nodes.push(
+          node(
+            opId,
+            "pipelineOperation",
+            op.id || op.functionId,
+            op.functionId,
+            undefined,
+            {
+              policyId: dp.id,
+              functionId: op.functionId,
+              pipelinePhase: phase,
+              order: i,
+              isBuiltIn,
+              isTerminal,
+              ...(op.arguments as Record<string, unknown>),
+            },
+            pipelineBaseRank + i,
+          ),
+        );
+
+        // Chain: policy → chains → op[0] → chains → op[1] → ...
+        if (prevOpId === null) {
+          edges.push(edge(policyId, opId, REL.chains));
+        } else {
+          edges.push(edge(prevOpId, opId, REL.chains));
+        }
+        prevOpId = opId;
+
+        // Wire to referenced resources
+        wirePipelineOperation(
+          opId,
+          op.functionId,
+          op.arguments as Record<string, unknown>,
+          edges,
+        );
+      });
+    });
+  });
+
+  return { nodes, edges };
+}
+
+/**
+ * Creates FsmTransition nodes and their PipelineOperation nodes
+ * from BehaviorPolicy.onTransitions[].
+ */
+export function deriveBehaviorPolicyTransitions(
+  behaviorPolicies: BehaviorPolicy[] | undefined,
+): { nodes: GraphNode[]; edges: GraphEdge[] } {
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  const eventKeys = [
+    "Connection.OnDisconnect",
+    "Event.OnAny",
+    "Mqtt.OnInboundConnect",
+    "Mqtt.OnInboundDisconnect",
+    "Mqtt.OnInboundPublish",
+    "Mqtt.OnInboundSubscribe",
+  ] as const;
+
+  const transitionRank = ENTITY_RANK.behaviorPolicy + 1;
+  const behaviorPipelineBaseRank = transitionRank + 1;
+
+  behaviorPolicies?.forEach((bp) => {
+    const policyId = makeNodeId("behaviorPolicy", bp.id);
+
+    bp.onTransitions?.forEach((tr, ti) => {
+      const fromState = tr.fromState ?? "?";
+      const toState = tr.toState ?? "?";
+      const transitionId = makeNodeId(
+        "fsmTransition",
+        `${bp.id}/${fromState}/${toState}`,
+      );
+
+      nodes.push(
+        node(
+          transitionId,
+          "fsmTransition",
+          `${fromState} → ${toState}`,
+          undefined,
+          undefined,
+          { policyId: bp.id, fromState, toState, index: ti },
+          transitionRank,
+        ),
+      );
+
+      // BehaviorPolicy → transitionsVia → FsmTransition
+      edges.push(edge(policyId, transitionId, REL.transitionsVia));
+
+      // For each event type, derive pipeline operations (chained)
+      eventKeys.forEach((eventKey) => {
+        const event = tr[eventKey];
+        let prevOpId: string | null = null;
+        event?.pipeline?.forEach((op, oi) => {
+          if (!op.functionId) return;
+          const opId = makeNodeId(
+            "pipelineOperation",
+            `${bp.id}/${fromState}/${toState}/${eventKey}/${oi}`,
+          );
+          const isBuiltIn = BUILT_IN_FUNCTIONS.has(op.functionId);
+          const isTerminal = TERMINAL_FUNCTIONS.has(op.functionId);
+
+          nodes.push(
+            node(
+              opId,
+              "pipelineOperation",
+              op.id || op.functionId,
+              op.functionId,
+              undefined,
+              {
+                policyId: bp.id,
+                transitionId: `${fromState}/${toState}`,
+                eventType: eventKey,
+                functionId: op.functionId,
+                pipelinePhase: "onEvent",
+                order: oi,
+                isBuiltIn,
+                isTerminal,
+                ...(op.arguments as Record<string, unknown>),
+              },
+              behaviorPipelineBaseRank + oi,
+            ),
+          );
+
+          // Chain: transition → chains → op[0] → chains → op[1] → ...
+          if (prevOpId === null) {
+            edges.push(edge(transitionId, opId, REL.chains));
+          } else {
+            edges.push(edge(prevOpId, opId, REL.chains));
+          }
+          prevOpId = opId;
+
+          // Wire to referenced resources
+          wirePipelineOperation(
+            opId,
+            op.functionId,
+            op.arguments as Record<string, unknown>,
+            edges,
+          );
+        });
+      });
+    });
+  });
+
+  return { nodes, edges };
+}
+
+/**
+ * Wires a pipeline operation to its referenced resources based on functionId.
+ */
+function wirePipelineOperation(
+  opId: string,
+  functionId: string,
+  args: Record<string, unknown> | undefined,
+  edges: GraphEdge[],
+): void {
+  if (!args) return;
+
+  if (
+    functionId === "Serdes.deserialize" ||
+    functionId === "Serdes.serialize"
+  ) {
+    const schemaId = args.schemaId as string | undefined;
+    if (schemaId) {
+      edges.push(edge(opId, makeNodeId("schema", schemaId), REL.serializes));
+    }
+  } else if (functionId === "Delivery.redirectTo") {
+    const topic = args.topic as string | undefined;
+    if (topic) {
+      edges.push(edge(opId, makeNodeId("topic", topic), REL.redirectsTo));
+    }
+  } else if (!BUILT_IN_FUNCTIONS.has(functionId)) {
+    // User script: functionId is the script ID (or fn:<scriptId>)
+    const scriptId = functionId.startsWith("fn:")
+      ? functionId.slice(3)
+      : functionId;
+    edges.push(edge(opId, makeNodeId("script", scriptId), REL.invokes));
+  }
+}
+
 // ── MQTT Wildcard Matching Edges ─────────────────────────────────────────
 
 /**
@@ -484,10 +795,7 @@ export function computeWildcardMatches(
  * Uses iterative DFS with coloring (white/gray/black).
  * Returns the filtered edge list.
  */
-export function ensureDag(
-  nodeIds: string[],
-  edges: GraphEdge[],
-): GraphEdge[] {
+export function ensureDag(nodeIds: string[], edges: GraphEdge[]): GraphEdge[] {
   // Build adjacency list
   const adj = new Map<string, Array<{ edge: GraphEdge; target: string }>>();
   for (const id of nodeIds) adj.set(id, []);
@@ -495,7 +803,9 @@ export function ensureDag(
     adj.get(e.source)?.push({ edge: e, target: e.target });
   }
 
-  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const WHITE = 0,
+    GRAY = 1,
+    BLACK = 2;
   const color = new Map<string, number>();
   for (const id of nodeIds) color.set(id, WHITE);
 

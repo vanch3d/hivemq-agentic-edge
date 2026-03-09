@@ -26,6 +26,10 @@ export const ENTITY_TYPES = [
   "southboundMapper",
   "assetMapper",
   "bridgeSubscription",
+  // v2 policy internals
+  "pipelineOperation",
+  "fsmTransition",
+  "validator",
 ] as const;
 
 export type DomainEntityType = (typeof ENTITY_TYPES)[number];
@@ -54,6 +58,8 @@ export type GraphNodeData = {
   sublabel?: string;
   status?: StatusOverlay;
   raw: Record<string, unknown>;
+  /** Per-node rank override for layout. When set, takes precedence over ENTITY_RANK[entityType]. */
+  layoutRank?: number;
 };
 
 export type GraphEdgeData = {

@@ -32,16 +32,29 @@ export const REL = {
   sources: "sources",
   /** DataPolicy → TopicFilter (policy attachment) */
   attachedTo: "attachedTo",
-  /** DataPolicy → Schema (payload validation) */
+  /** Validator → Schema (payload validation) */
   validates: "validates",
-  /** Policy → Script (pipeline execution) */
+  /** Policy → Script (pipeline execution — legacy flat edge, kept for backward compat) */
   executes: "executes",
-  /** DataPolicy → Topic (Delivery.redirectTo) */
+  /** DataPolicy → Topic (Delivery.redirectTo — legacy flat edge) */
   redirects: "redirects",
   /** BehaviorPolicy → Schema (deserialization) */
   deserializes: "deserializes",
   /** TopicFilter → Topic (MQTT wildcard match) */
   matches: "matches",
+  // --- Policy internals ---
+  /** DataPolicy → Validator (policy validates with this validator) */
+  validatesWith: "validatesWith",
+  /** BehaviorPolicy → FsmTransition (policy transitions via this state change) */
+  transitionsVia: "transitionsVia",
+  /** Policy/FsmTransition → first PipelineOperation; PipelineOperation → next PipelineOperation (sequential chain) */
+  chains: "chains",
+  /** PipelineOperation → Script (user-defined transformation) */
+  invokes: "invokes",
+  /** PipelineOperation → Schema (Serdes.deserialize/serialize) */
+  serializes: "serializes",
+  /** PipelineOperation → Topic (Delivery.redirectTo) */
+  redirectsTo: "redirectsTo",
 } as const;
 
 export type RelationshipKey = (typeof REL)[keyof typeof REL];

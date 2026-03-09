@@ -122,13 +122,28 @@ const adapter: EntityClass = {
   role: "connector",
   apiType: "Adapter",
   properties: [
-    { name: "id", type: "string", description: "Unique adapter identifier.", required: true },
-    { name: "type", type: "string", description: "Protocol type (e.g. opc-ua, modbus)." },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique adapter identifier.",
+      required: true,
+    },
+    {
+      name: "type",
+      type: "string",
+      description: "Protocol type (e.g. opc-ua, modbus).",
+    },
     {
       name: "connectionStatus",
       type: "enum",
       description: "Connection state.",
-      enumValues: ["CONNECTED", "DISCONNECTED", "STATELESS", "UNKNOWN", "ERROR"],
+      enumValues: [
+        "CONNECTED",
+        "DISCONNECTED",
+        "STATELESS",
+        "UNKNOWN",
+        "ERROR",
+      ],
     },
     {
       name: "runtimeStatus",
@@ -172,14 +187,25 @@ const bridge: EntityClass = {
   role: "connector",
   apiType: "Bridge",
   properties: [
-    { name: "id", type: "string", description: "Unique bridge identifier.", required: true },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique bridge identifier.",
+      required: true,
+    },
     { name: "host", type: "string", description: "Remote broker hostname." },
     { name: "port", type: "number", description: "Remote broker port." },
     {
       name: "connectionStatus",
       type: "enum",
       description: "Connection state.",
-      enumValues: ["CONNECTED", "DISCONNECTED", "STATELESS", "UNKNOWN", "ERROR"],
+      enumValues: [
+        "CONNECTED",
+        "DISCONNECTED",
+        "STATELESS",
+        "UNKNOWN",
+        "ERROR",
+      ],
     },
     {
       name: "runtimeStatus",
@@ -244,8 +270,17 @@ const tag: EntityClass = {
   apiType: "DomainTag",
   identityScope: "adapter",
   properties: [
-    { name: "name", type: "string", description: "Tag name (protocol-specific).", required: true },
-    { name: "description", type: "string", description: "Human-readable description." },
+    {
+      name: "name",
+      type: "string",
+      description: "Tag name (protocol-specific).",
+      required: true,
+    },
+    {
+      name: "description",
+      type: "string",
+      description: "Human-readable description.",
+    },
   ],
   relationships: [],
   visual: { icon: "LuTag", color: "teal.400", rank: 3 },
@@ -264,7 +299,12 @@ const topic: EntityClass = {
   },
   identityScope: "edgeBroker",
   properties: [
-    { name: "topicPath", type: "string", description: "The exact MQTT topic string.", required: true },
+    {
+      name: "topicPath",
+      type: "string",
+      description: "The exact MQTT topic string.",
+      required: true,
+    },
   ],
   relationships: [],
   visual: { icon: "LuMessageSquare", color: "green.500", rank: 5 },
@@ -285,7 +325,11 @@ const topicFilter: EntityClass = {
       description: "The wildcard pattern (e.g. factory/+/temperature).",
       required: true,
     },
-    { name: "description", type: "string", description: "Human-readable description." },
+    {
+      name: "description",
+      type: "string",
+      description: "Human-readable description.",
+    },
   ],
   relationships: [
     {
@@ -317,8 +361,16 @@ const northboundMapper: EntityClass = {
       description: "Maximum MQTT QoS level.",
       enumValues: ["AT_MOST_ONCE", "AT_LEAST_ONCE", "EXACTLY_ONCE"],
     },
-    { name: "includeTimestamp", type: "boolean", description: "Include timestamp in payload." },
-    { name: "includeTagNames", type: "boolean", description: "Include tag names in payload." },
+    {
+      name: "includeTimestamp",
+      type: "boolean",
+      description: "Include timestamp in payload.",
+    },
+    {
+      name: "includeTagNames",
+      type: "boolean",
+      description: "Include tag names in payload.",
+    },
   ],
   relationships: [
     {
@@ -375,7 +427,12 @@ const combiner: EntityClass = {
   role: "mapper",
   apiType: "Combiner",
   properties: [
-    { name: "id", type: "string", description: "Unique combiner identifier.", required: true },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique combiner identifier.",
+      required: true,
+    },
   ],
   relationships: [
     {
@@ -405,7 +462,12 @@ const assetMapper: EntityClass = {
   apiType: "Combiner",
   superClass: "combiner",
   properties: [
-    { name: "id", type: "string", description: "Unique asset mapper identifier.", required: true },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique asset mapper identifier.",
+      required: true,
+    },
   ],
   relationships: [
     {
@@ -499,7 +561,12 @@ const dataPolicy: EntityClass = {
   role: "policy",
   apiType: "DataPolicy",
   properties: [
-    { name: "id", type: "string", description: "Unique policy identifier.", required: true },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique policy identifier.",
+      required: true,
+    },
   ],
   relationships: [
     {
@@ -510,26 +577,19 @@ const dataPolicy: EntityClass = {
       edgeStyle: "validates",
     },
     {
-      name: "validates",
-      target: "schema",
-      cardinality: "N:M",
-      description: "Schemas used for payload validation.",
-      edgeStyle: "validates",
+      name: "validatesWith",
+      target: "validator",
+      cardinality: "1:N",
+      description: "Validation steps with strategy and schema references.",
+      edgeStyle: "validatesWith",
     },
     {
-      name: "executes",
-      target: "script",
-      cardinality: "N:M",
-      description: "Scripts executed in onSuccess/onFailure pipelines.",
-      edgeStyle: "executes",
-    },
-    {
-      name: "redirects",
-      target: "topic",
-      cardinality: "0..N",
+      name: "chains",
+      target: "pipelineOperation",
+      cardinality: "1:N",
       description:
-        "Topics created by Delivery.redirectTo in pipelines. Static targets create concrete edges; interpolated targets create pattern edges.",
-      edgeStyle: "redirects",
+        "Pipeline operations in onSuccess/onFailure (sequential chain).",
+      edgeStyle: "chains",
     },
   ],
   visual: { icon: "LuShield", color: "purple.500", rank: 5 },
@@ -543,11 +603,23 @@ const behaviorPolicy: EntityClass = {
   role: "policy",
   apiType: "BehaviorPolicy",
   properties: [
-    { name: "id", type: "string", description: "Unique policy identifier.", required: true },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique policy identifier.",
+      required: true,
+    },
     {
       name: "clientIdRegex",
       type: "string",
-      description: "Regex pattern matching MQTT client IDs (IT device identifier).",
+      description:
+        "Regex pattern matching MQTT client IDs (IT device identifier).",
+    },
+    {
+      name: "behaviorId",
+      type: "enum",
+      description: "FSM behavior model reference.",
+      enumValues: ["Mqtt.events", "Publish.duplicate", "Publish.quota"],
     },
   ],
   relationships: [
@@ -559,14 +631,156 @@ const behaviorPolicy: EntityClass = {
       edgeStyle: "deserializes",
     },
     {
-      name: "executes",
-      target: "script",
-      cardinality: "N:M",
-      description: "Scripts executed in onTransitions pipelines.",
-      edgeStyle: "executes",
+      name: "transitionsVia",
+      target: "fsmTransition",
+      cardinality: "1:N",
+      description: "FSM state transitions with event-triggered pipelines.",
+      edgeStyle: "transitionsVia",
     },
   ],
   visual: { icon: "LuShield", color: "purple.500", rank: 5 },
+};
+
+// ─── Policy Internals ───────────────────────────────────────────────────
+
+const validator: EntityClass = {
+  key: "validator",
+  label: "Validator",
+  description:
+    "A validation step within a data policy. References one or more schemas with a strategy (ALL_OF or ANY_OF). Derived from DataPolicy.validation.validators[].",
+  role: "resource",
+  derivedFrom: {
+    sourceEntity: "dataPolicy",
+    extractionRule:
+      "One Validator per entry in DataPolicy.validation.validators[]. Identity is (policyId, validatorIndex).",
+  },
+  identityScope: "dataPolicy",
+  properties: [
+    {
+      name: "strategy",
+      type: "enum",
+      description: "Validation strategy.",
+      enumValues: ["ALL_OF", "ANY_OF"],
+    },
+  ],
+  relationships: [
+    {
+      name: "validates",
+      target: "schema",
+      cardinality: "N:M",
+      description: "Schemas used for payload validation.",
+      edgeStyle: "validates",
+    },
+  ],
+  visual: { icon: "LuCheck", color: "purple.300", rank: 6 },
+};
+
+const fsmTransition: EntityClass = {
+  key: "fsmTransition",
+  label: "FSM Transition",
+  description:
+    "A state transition within a behavior policy FSM. Represents a fromState → toState pair with event-triggered pipelines. Derived from BehaviorPolicy.onTransitions[].",
+  role: "resource",
+  derivedFrom: {
+    sourceEntity: "behaviorPolicy",
+    extractionRule:
+      "One FsmTransition per entry in BehaviorPolicy.onTransitions[]. Identity is (policyId, fromState, toState).",
+  },
+  identityScope: "behaviorPolicy",
+  properties: [
+    {
+      name: "fromState",
+      type: "string",
+      description: "Source FSM state.",
+      required: true,
+    },
+    {
+      name: "toState",
+      type: "string",
+      description: "Target FSM state.",
+      required: true,
+    },
+  ],
+  relationships: [
+    {
+      name: "chains",
+      target: "pipelineOperation",
+      cardinality: "1:N",
+      description:
+        "Pipeline operations executed on this transition (sequential chain).",
+      edgeStyle: "chains",
+    },
+  ],
+  visual: { icon: "LuGitBranch", color: "purple.400", rank: 6 },
+};
+
+const pipelineOperation: EntityClass = {
+  key: "pipelineOperation",
+  label: "Pipeline Operation",
+  description:
+    "A single step in a policy pipeline. References a built-in function or user script, with arguments that may reference schemas or topics. Derived from PolicyOperation entries in policy pipelines.",
+  role: "resource",
+  derivedFrom: {
+    sourceEntity: "dataPolicy",
+    extractionRule:
+      "One PipelineOperation per PolicyOperation in onSuccess/onFailure pipelines (data policies) or onTransitions event pipelines (behavior policies).",
+  },
+  properties: [
+    {
+      name: "functionId",
+      type: "string",
+      description: "Built-in function ID or fn:<scriptId>.",
+      required: true,
+    },
+    {
+      name: "pipelinePhase",
+      type: "enum",
+      description: "Which pipeline this operation belongs to.",
+      enumValues: ["onSuccess", "onFailure", "onEvent"],
+    },
+    {
+      name: "order",
+      type: "number",
+      description: "Position in the pipeline (0-based).",
+    },
+    {
+      name: "isBuiltIn",
+      type: "boolean",
+      description:
+        "True if functionId is a built-in function (not a user script).",
+    },
+    {
+      name: "isTerminal",
+      type: "boolean",
+      description: "True if this operation terminates the pipeline.",
+    },
+  ],
+  relationships: [
+    {
+      name: "invokes",
+      target: "script",
+      cardinality: "N:1",
+      description:
+        "User script invoked by this operation (when functionId = fn:<scriptId>).",
+      edgeStyle: "invokes",
+    },
+    {
+      name: "serializes",
+      target: "schema",
+      cardinality: "N:M",
+      description:
+        "Schema referenced by this operation (Serdes.deserialize/serialize).",
+      edgeStyle: "serializes",
+    },
+    {
+      name: "redirectsTo",
+      target: "topic",
+      cardinality: "0..N",
+      description: "Topic redirected to by Delivery.redirectTo.",
+      edgeStyle: "redirectsTo",
+    },
+  ],
+  visual: { icon: "LuPlay", color: "purple.300", rank: 6 },
 };
 
 // ─── Resources ──────────────────────────────────────────────────────────
@@ -579,14 +793,23 @@ const policySchema: EntityClass = {
   role: "resource",
   apiType: "PolicySchema",
   properties: [
-    { name: "id", type: "string", description: "Unique schema identifier.", required: true },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique schema identifier.",
+      required: true,
+    },
     {
       name: "type",
       type: "enum",
       description: "Schema format.",
       enumValues: ["JSON", "PROTOBUF"],
     },
-    { name: "version", type: "number", description: "Auto-incremented version." },
+    {
+      name: "version",
+      type: "number",
+      description: "Auto-incremented version.",
+    },
   ],
   relationships: [],
   visual: { icon: "LuFileText", color: "purple.300", rank: 6 },
@@ -595,12 +818,22 @@ const policySchema: EntityClass = {
 const script: EntityClass = {
   key: "script",
   label: "Script",
-  description: "Custom transformation logic (ECMAScript 2024). Used by policy pipelines.",
+  description:
+    "Custom transformation logic (ECMAScript 2024). Used by policy pipelines.",
   role: "resource",
   apiType: "Script",
   properties: [
-    { name: "id", type: "string", description: "Unique script identifier.", required: true },
-    { name: "version", type: "number", description: "Auto-incremented version." },
+    {
+      name: "id",
+      type: "string",
+      description: "Unique script identifier.",
+      required: true,
+    },
+    {
+      name: "version",
+      type: "number",
+      description: "Auto-incremented version.",
+    },
   ],
   relationships: [],
   visual: { icon: "LuFileCode2", color: "purple.300", rank: 6 },
@@ -633,6 +866,10 @@ export const v2Ontology: DomainOntology = {
     // Policies
     dataPolicy,
     behaviorPolicy,
+    // Policy internals
+    validator,
+    fsmTransition,
+    pipelineOperation,
     // Resources
     schema: policySchema,
     script,
