@@ -13,6 +13,13 @@ import {
 const log = createDebug("edge:graph:layout");
 
 /**
+ * Above this node count, skip the WebCola refinement phase and use
+ * the rank-grid positions directly. The grid produces acceptable results
+ * and is O(V+E), while WebCola's constraint solver is O(V²) per iteration.
+ */
+const GRID_ONLY_THRESHOLD = 300;
+
+/**
  * Compute graph layout using a two-phase approach:
  *
  * 1. **Rank grid** — Group nodes by ENTITY_RANK, order within each rank
@@ -168,71 +175,72 @@ export function computeLayout(
     flowPos += maxFlowDim + rankSpacing;
   }
 
-  // ── Phase 2: WebCola refinement (no avoidOverlaps) ──────────────────
+  // ── Phase 2: WebCola refinement (skipped for large graphs) ─────────
 
-  const colaLinks = edges
-    .map((e) => ({
-      source: nodeIndexMap.get(e.source),
-      target: nodeIndexMap.get(e.target),
-    }))
-    .filter(
-      (l): l is { source: number; target: number } =>
-        l.source !== undefined && l.target !== undefined,
-    );
+  if (nodes.length <= GRID_ONLY_THRESHOLD) {
+    const colaLinks = edges
+      .map((e) => ({
+        source: nodeIndexMap.get(e.source),
+        target: nodeIndexMap.get(e.target),
+      }))
+      .filter(
+        (l): l is { source: number; target: number } =>
+          l.source !== undefined && l.target !== undefined,
+      );
 
-  // Rank separation constraints (same logic as before)
-  interface RankConstraint {
-    axis: string;
-    left: number;
-    right: number;
-    gap: number;
-  }
-
-  const constraints: RankConstraint[] = [];
-  const constraintSet = new Set<string>();
-
-  for (const link of colaLinks) {
-    const sr = ENTITY_RANK[nodes[link.source].data.entityType];
-    const tr = ENTITY_RANK[nodes[link.target].data.entityType];
-    if (sr === tr) continue;
-    const [left, right] =
-      sr < tr ? [link.source, link.target] : [link.target, link.source];
-    const key = `${left}-${right}`;
-    if (constraintSet.has(key)) continue;
-    constraintSet.add(key);
-    constraints.push({ axis: flowAxis, left, right, gap: rankSpacing });
-  }
-
-  // Inter-rank representative constraints
-  for (let ri = 0; ri < sortedRanks.length - 1; ri++) {
-    const leftGroup = rankGroups.get(sortedRanks[ri])!;
-    const rightGroup = rankGroups.get(sortedRanks[ri + 1])!;
-    const key = `${leftGroup[0]}-${rightGroup[0]}`;
-    if (!constraintSet.has(key)) {
-      constraintSet.add(key);
-      constraints.push({
-        axis: flowAxis,
-        left: leftGroup[0],
-        right: rightGroup[0],
-        gap: rankSpacing,
-      });
+    // Rank separation constraints
+    interface RankConstraint {
+      axis: string;
+      left: number;
+      right: number;
+      gap: number;
     }
+
+    const constraints: RankConstraint[] = [];
+    const constraintSet = new Set<string>();
+
+    for (const link of colaLinks) {
+      const sr = ENTITY_RANK[nodes[link.source].data.entityType];
+      const tr = ENTITY_RANK[nodes[link.target].data.entityType];
+      if (sr === tr) continue;
+      const [left, right] =
+        sr < tr ? [link.source, link.target] : [link.target, link.source];
+      const key = `${left}-${right}`;
+      if (constraintSet.has(key)) continue;
+      constraintSet.add(key);
+      constraints.push({ axis: flowAxis, left, right, gap: rankSpacing });
+    }
+
+    // Inter-rank representative constraints
+    for (let ri = 0; ri < sortedRanks.length - 1; ri++) {
+      const leftGroup = rankGroups.get(sortedRanks[ri])!;
+      const rightGroup = rankGroups.get(sortedRanks[ri + 1])!;
+      const key = `${leftGroup[0]}-${rightGroup[0]}`;
+      if (!constraintSet.has(key)) {
+        constraintSet.add(key);
+        constraints.push({
+          axis: flowAxis,
+          left: leftGroup[0],
+          right: rightGroup[0],
+          gap: rankSpacing,
+        });
+      }
+    }
+
+    log("cola: %d constraints, %d links", constraints.length, colaLinks.length);
+
+    const colaLayout = new cola.Layout()
+      .size([800, 600])
+      .nodes(colaNodes as unknown as cola.Node[])
+      .links(colaLinks as unknown as cola.Link<cola.Node | number>[])
+      .constraints(constraints as unknown[] as cola.Constraint[])
+      .symmetricDiffLinkLengths(rankSpacing * 0.6)
+      .convergenceThreshold(0.3);
+
+    colaLayout.start(3, 5, 3);
+  } else {
+    log("skipping WebCola refinement: %d nodes > threshold %d", nodes.length, GRID_ONLY_THRESHOLD);
   }
-
-  log("cola: %d constraints, %d links", constraints.length, colaLinks.length);
-
-  // Grid positions are good seeds — only need a few RK4 steps for clustering.
-  // Very high convergence threshold (100) ensures each run() phase executes
-  // exactly the requested number of iterations without extra convergence loops.
-  const colaLayout = new cola.Layout()
-    .size([800, 600])
-    .nodes(colaNodes as unknown as cola.Node[])
-    .links(colaLinks as unknown as cola.Link<cola.Node | number>[])
-    .constraints(constraints as unknown[] as cola.Constraint[])
-    .symmetricDiffLinkLengths(rankSpacing * 0.6)
-    .convergenceThreshold(0.3);
-
-  colaLayout.start(3, 5, 3);
 
   // ── Extract final positions ─────────────────────────────────────────
 

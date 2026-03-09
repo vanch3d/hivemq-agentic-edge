@@ -1,10 +1,13 @@
+import { memo } from "react";
 import { Flex, Text } from "@chakra-ui/react";
 import type { NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import type { GraphNodeData } from "@/graph/types";
 import { BaseNode } from "./base-node";
 
-export function BridgeNode(props: NodeProps & { data: GraphNodeData }) {
+export const BridgeNode = memo(function BridgeNode(
+  props: NodeProps & { data: GraphNodeData },
+) {
   const { t } = useTranslation();
   const raw = props.data.raw;
   const localCount = (raw?.localSubscriptions as unknown[])?.length ?? 0;
@@ -17,4 +20,4 @@ export function BridgeNode(props: NodeProps & { data: GraphNodeData }) {
       </Flex>
     </BaseNode>
   );
-}
+});

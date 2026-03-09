@@ -1,9 +1,12 @@
+import { memo } from "react";
 import { Text } from "@chakra-ui/react";
 import type { NodeProps } from "@xyflow/react";
 import type { GraphNodeData } from "@/graph/types";
 import { BaseNode } from "./base-node";
 
-export function DataPolicyNode(props: NodeProps & { data: GraphNodeData }) {
+export const DataPolicyNode = memo(function DataPolicyNode(
+  props: NodeProps & { data: GraphNodeData },
+) {
   const raw = props.data.raw;
   const topicFilter = (raw?.matching as Record<string, unknown>)
     ?.topicFilter as string | undefined;
@@ -16,4 +19,4 @@ export function DataPolicyNode(props: NodeProps & { data: GraphNodeData }) {
       )}
     </BaseNode>
   );
-}
+});

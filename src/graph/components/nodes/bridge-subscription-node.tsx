@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { Text } from "@chakra-ui/react";
 import type { NodeProps } from "@xyflow/react";
 import type { GraphNodeData } from "@/graph/types";
 import { BaseNode } from "./base-node";
 
-export function BridgeSubscriptionNode(
+export const BridgeSubscriptionNode = memo(function BridgeSubscriptionNode(
   props: NodeProps & { data: GraphNodeData },
 ) {
   const direction = props.data.raw?.direction as string | undefined;
@@ -16,4 +17,4 @@ export function BridgeSubscriptionNode(
       )}
     </BaseNode>
   );
-}
+});

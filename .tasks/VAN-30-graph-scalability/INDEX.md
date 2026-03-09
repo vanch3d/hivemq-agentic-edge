@@ -4,3 +4,4 @@
 | --- | --- |
 | TASK_BRIEF.md | Requirements and objectives from Linear ticket VAN-30 |
 | TASK_PLAN.md | Investigation findings, strategy options, and implementation plan |
+| ISSUES.md | Open issues and improvement opportunities |

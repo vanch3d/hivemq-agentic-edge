@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import type { GraphEdgeData } from "@/graph/types";
 import { EDGE_STYLES, DEFAULT_EDGE_STYLE } from "@/graph/constants";
 import { getFloatingEdgeParams } from "./floating-edge-utils";
+import { useZoomDetail } from "@/graph/hooks/use-zoom-level";
 
 export function RelationshipEdge({
   id,
@@ -20,6 +21,7 @@ export function RelationshipEdge({
   selected,
 }: EdgeProps & { data?: GraphEdgeData }) {
   const { t } = useTranslation();
+  const zoomDetail = useZoomDetail();
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
 
@@ -59,7 +61,7 @@ export function RelationshipEdge({
         }}
         markerEnd="url(#arrow)"
       />
-      {label && (
+      {label && zoomDetail === "full" && (
         <EdgeLabelRenderer>
           <Text
             fontSize="2xs"

@@ -6,13 +6,13 @@
 
 ### What we have
 
-| Component | Implementation | Scaling limit |
-| --- | --- | --- |
-| **Rendering** | React Flow v12, all nodes/edges rendered at once | ~500 nodes before stutter |
-| **Layout** | Two-phase: rank grid (O(V+E)) + WebCola (3 iterations in worker) | ~300 nodes before multi-second layout |
-| **Data** | TanStack Query, full graph assembled in one shot | API calls scale linearly with adapter count |
-| **Filtering** | 6 scope views + entity type toggle + 2-hop focus | Reduces visible set but doesn't address within-scope cardinality |
-| **Animation** | CSS transitions + rAF-based enter/settle phases | Fine at any scale (GPU-accelerated) |
+| Component     | Implementation                                                   | Scaling limit                                                    |
+| ------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Rendering** | React Flow v12, all nodes/edges rendered at once                 | ~500 nodes before stutter                                        |
+| **Layout**    | Two-phase: rank grid (O(V+E)) + WebCola (3 iterations in worker) | ~300 nodes before multi-second layout                            |
+| **Data**      | TanStack Query, full graph assembled in one shot                 | API calls scale linearly with adapter count                      |
+| **Filtering** | 6 scope views + entity type toggle + 2-hop focus                 | Reduces visible set but doesn't address within-scope cardinality |
+| **Animation** | CSS transitions + rAF-based enter/settle phases                  | Fine at any scale (GPU-accelerated)                              |
 
 ### Where the bottleneck is
 
@@ -24,6 +24,7 @@ The **entity fan-out** is the core problem. The relationship structure creates m
 ```
 
 For 5 adapters with 200 tags each:
+
 - Rank 0-1: 5 adapters + 5 OT devices = 10 nodes
 - Rank 2: 1000 tags
 - Rank 3: 1000 NB mappers (+ possible SB mappers)
@@ -49,6 +50,7 @@ The graph is **wide** at ranks 2-3 (tags, mappers) and **dense** in edges betwee
 
 **What**: `useStore(s => s.transform[2])` gives current zoom level. Nodes can render differently at different zoom levels.
 **Application**:
+
 - **Zoomed out** (< 0.5): Render nodes as colored dots (no text, no handles, no sublabel). Massive render savings.
 - **Medium** (0.5-1.0): Render compact nodes (label only, no sublabel, smaller).
 - **Zoomed in** (> 1.0): Full node rendering (current behavior).
@@ -61,15 +63,17 @@ The graph is **wide** at ranks 2-3 (tags, mappers) and **dense** in edges betwee
 
 **What**: Nodes with `parentId` are rendered inside a parent container. Children can be hidden/shown.
 **Application**: Group tags under their adapter. The adapter node becomes an expandable container:
+
 - **Collapsed**: Adapter node shows "opcua-adapter-01 (247 tags)" as a single node.
 - **Expanded**: Click to expand → tags appear as child nodes inside the adapter's bounding box.
 
 **Impact**: Reduces initial node count from thousands to tens (just adapters, bridges, policies, etc.). Tags/mappers/topics load on demand.
 **Limitation**:
+
 - React Flow sub-flows are rendered inside parent SVG group — layout of children is separate from parent layout.
 - Expanding a group needs to re-layout the group's children AND adjust surrounding nodes.
 - Not natively collapsible — we'd build the expand/collapse behavior ourselves.
-**Verdict**: **High value but high complexity.** The most architecturally significant change. Requires rethinking layout.
+  **Verdict**: **High value but high complexity.** The most architecturally significant change. Requires rethinking layout.
 
 #### 1d. Node `hidden` property
 
@@ -85,7 +89,7 @@ The graph is **wide** at ranks 2-3 (tags, mappers) and **dense** in edges betwee
 - Reduce iterations further (currently 3, could try 1-2 with better seeds)
 - Remove rank separation constraints for large graphs (rely entirely on grid seed)
 - Skip WebCola phase entirely beyond a node threshold (e.g., >500 nodes → grid-only layout)
-**Verdict**: Quick win. Grid-only layout is O(V+E) and produces acceptable results.
+  **Verdict**: Quick win. Grid-only layout is O(V+E) and produces acceptable results.
 
 #### 2b. ELK (Eclipse Layout Kernel)
 
@@ -130,6 +134,7 @@ Implementation: The assembler produces a **summary graph** by default (Level 0).
 #### 3b. Aggregate nodes (cluster representatives)
 
 Instead of showing 200 individual tags, show a single "Tags (200)" aggregate node connected to the adapter. The aggregate node:
+
 - Shows count + entity type icon
 - On click: navigates to a focused sub-graph of just that adapter's tags
 - On double-click: expands inline (if sub-flow approach is used)
@@ -139,6 +144,7 @@ This is semantically richer than just hiding — the user sees the cardinality w
 #### 3c. Scope-aware cardinality thresholds
 
 Configure per-scope thresholds:
+
 - If an adapter has ≤ 10 tags: show all tags inline
 - If > 10 tags: show aggregate node with count
 - Focus view (2-hop from a specific entity): always expand fully
@@ -148,6 +154,7 @@ This provides automatic level-of-detail based on data size.
 #### 3d. Agent-driven graph exploration
 
 The agent already has `queryGraph` with scope/focus. Extend this:
+
 - Agent can "expand" an aggregate node by switching to a focused scope
 - Agent can suggest "this adapter has 247 tags — would you like me to show a focused view?"
 - The chat graph (compact view) always uses summary graph; full page supports expansion
@@ -157,6 +164,7 @@ The agent already has `queryGraph` with scope/focus. Extend this:
 #### 4a. Treemap / Icicle for cardinality overview
 
 Use Nivo's `@nivo/treemap` or `@nivo/icicle` alongside the graph to show entity distribution:
+
 - Rectangles sized by cardinality (adapter with 200 tags gets a big rectangle)
 - Click a rectangle → focus the graph on that entity
 - This gives the "full picture" without rendering 3000 nodes
@@ -164,6 +172,7 @@ Use Nivo's `@nivo/treemap` or `@nivo/icicle` alongside the graph to show entity 
 #### 4b. Adjacency matrix for dense connections
 
 When edges become unreadable (many-to-many between tags and topics), switch to a matrix view:
+
 - Rows: source entities, Columns: target entities, Cells: relationship presence
 - Nivo `@nivo/heatmap` could render this
 
@@ -174,6 +183,7 @@ Magnify the area around the cursor, compress distant areas. React Flow supports 
 #### 4d. Semantic zoom with multiple detail levels
 
 Combine contextual zoom with domain semantics:
+
 - **Zoom 0.1-0.3**: System overview — only orchestrators + connectors visible (5-10 nodes)
 - **Zoom 0.3-0.7**: Entity groups visible — adapters, bridges, aggregate nodes for tags/mappers
 - **Zoom 0.7+**: Full detail — individual tags, mappers, topics, policies
@@ -188,8 +198,8 @@ A layered approach, combining multiple techniques. Ordered by impact/effort rati
 
 ### Phase 1: Quick wins (no architecture change)
 
-- [ ] **1.1** Enable `onlyRenderVisibleElements` on ReactFlow component
-- [ ] **1.2** Redefine entity visual vocabulary (shapes, sizes, colors by ontology role)
+- [x] **1.1** Enable `onlyRenderVisibleElements` on ReactFlow component
+- [x] **1.2** Redefine entity visual vocabulary (shapes, sizes, colors by ontology role)
   - **Orchestrators** (Edge Broker, DataHub, Pulse): singletons — distinctive shape (e.g., rounded rectangle with double border or hexagon), larger, muted/neutral color. They anchor the graph but don't need to compete for attention.
   - **Connectors** (Adapter, Bridge): primary actors — robust/prominent shape, larger than average, strong saturated color. These are significant data transformation points.
   - **Integration points** (Tag, Topic, Topic Filter): high-cardinality, low-information — small shapes (small circle, pill, or dot). Tag especially has no content beyond its name, so minimal footprint. Name itself is a candidate for progressive rendering (show on hover/zoom only).
@@ -203,15 +213,18 @@ A layered approach, combining multiple techniques. Ordered by impact/effort rati
     - Policies: purples
     - Resources: grays
     - Orchestrators: distinct accent (cyan, slate)
-- [ ] **1.3** Implement contextual zoom on node components (3 detail levels)
-  - **Zoomed out** (< 0.3): Colored dot/shape only — shape encodes role, color encodes type. No text.
-  - **Medium** (0.3-0.7): Compact — icon + label, no sublabel, smaller dimensions.
-  - **Zoomed in** (> 0.7): Full rendering (current behavior with status, sublabel, handles).
-  - Tags at medium zoom: show count badge on parent adapter instead of individual nodes (preview of Phase 2 aggregation).
-- [ ] **1.4** Add grid-only layout fallback when node count > threshold
-- [ ] **1.5** Memo-wrap all custom node components with `React.memo`
+- [x] **1.3** Implement contextual zoom on node components (3 detail levels)
+  - **Dot** (zoom < 0.4): Colored filled shape only — shape encodes role (square, circle, pill), color encodes entity type. No text, no border, minimal handles (left+right). Sizes: orchestrator 40px, connector 32px, endpoint 28px, resource 20px, mapper 28x20px, policy 28px, artifact 20px.
+  - **Compact** (zoom 0.4–0.8): Color-filled shape with white label text. No border (avoids confusion with edges), no badge/sublabel/children. Role-specific border-radius preserved.
+  - **Full** (zoom > 0.8): Full rendering (current behavior with badge, status, sublabel, handles, children).
+  - Thresholds defined in `src/graph/hooks/use-zoom-level.ts` (`ZOOM_COMPACT=0.4`, `ZOOM_FULL=0.8`).
+  - Edge labels hidden at dot/compact levels.
+  - `useZoomDetail()` hook uses `useStore` with custom equality — only re-renders when detail bucket changes, not on every zoom tick.
+  - Added 1:1 zoom button in graph toolbar for testing.
+- [x] **1.4** Add grid-only layout fallback when node count > threshold (`GRID_ONLY_THRESHOLD=300` in `layout.ts`)
+- [x] **1.5** Memo-wrap all custom node components with `React.memo` (19 files)
 
-**Expected impact**: Handles ~1000 nodes with acceptable performance. Visual vocabulary makes the graph legible even at overview zoom — you can see the *shape* of the deployment (which adapters are heavy, where the data flows) without reading labels.
+**Expected impact**: Handles ~1000 nodes with acceptable performance. Visual vocabulary makes the graph legible even at overview zoom — you can see the _shape_ of the deployment (which adapters are heavy, where the data flows) without reading labels.
 
 ### Phase 2: Aggregate nodes (medium architecture change)
 
@@ -262,27 +275,41 @@ A layered approach, combining multiple techniques. Ordered by impact/effort rati
 
 ## Key Architectural Decisions (pending)
 
-| # | Question | Options | Leaning |
-| --- | --- | --- | --- |
-| AD-1 | Where does aggregation happen? | Assembler (data layer) vs. store (view layer) | Assembler — keeps store simple, aggregation is a data concern |
-| AD-2 | How to handle expand/collapse layout? | Full re-layout vs. incremental insert | Full re-layout initially; incremental is complex |
-| AD-3 | Replace WebCola? | Keep + optimize vs. switch to ELK vs. Dagre | Keep for now, evaluate ELK in Phase 4 |
-| AD-4 | Semantic zoom scope | Node rendering only vs. node visibility | Both — rendering at all zooms, visibility for extreme cases |
+| #    | Question                              | Options                                       | Leaning                                                       |
+| ---- | ------------------------------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| AD-1 | Where does aggregation happen?        | Assembler (data layer) vs. store (view layer) | Assembler — keeps store simple, aggregation is a data concern |
+| AD-2 | How to handle expand/collapse layout? | Full re-layout vs. incremental insert         | Full re-layout initially; incremental is complex              |
+| AD-3 | Replace WebCola?                      | Keep + optimize vs. switch to ELK vs. Dagre   | Keep for now, evaluate ELK in Phase 4                         |
+| AD-4 | Semantic zoom scope                   | Node rendering only vs. node visibility       | Both — rendering at all zooms, visibility for extreme cases   |
 
 ## Files Likely Affected
 
-| File | Phase | Changes |
-| --- | --- | --- |
-| `src/graph/components/graph-canvas.tsx` | 1 | `onlyRenderVisibleElements`, zoom subscription |
-| `src/graph/components/nodes/base-node.tsx` | 1 | Contextual zoom detail levels, role-based shape/size |
-| `src/graph/components/nodes/*.tsx` | 1 | `React.memo` wrapping, shape/size adjustments |
-| `src/graph/constants.ts` | 1 | Revised color palette (role-based), node dimensions per role, zoom thresholds |
-| `src/graph/graph-tokens.css` | 1 | New/revised color tokens for role-based palette |
-| `src/graph/layout.ts` | 1 | Grid-only fallback, role-aware node dimensions |
-| `src/graph/assembler-v2.ts` | 2 | Aggregate node generation |
-| `src/graph/entity-derivation.ts` | 2 | Aggregate node helpers |
-| `src/graph/types.ts` | 2 | `AggregateNode` type |
-| `src/graph/store.ts` | 2-3 | Expand/collapse actions, zoom-driven visibility |
-| `src/graph/components/nodes/aggregate-node.tsx` | 2 | New component |
-| `src/graph/use-graph-data.ts` | 2 | Deferred per-adapter queries |
-| `src/graph/constants.ts` | 2 | Aggregation thresholds |
+| File                                            | Phase | Changes                                                                       |
+| ----------------------------------------------- | ----- | ----------------------------------------------------------------------------- |
+| `src/graph/components/graph-canvas.tsx`         | 1     | `onlyRenderVisibleElements`, zoom subscription                                |
+| `src/graph/components/nodes/base-node.tsx`      | 1     | Contextual zoom detail levels, role-based shape/size                          |
+| `src/graph/components/nodes/*.tsx`              | 1     | `React.memo` wrapping, shape/size adjustments                                 |
+| `src/graph/constants.ts`                        | 1     | Revised color palette (role-based), node dimensions per role, zoom thresholds |
+| `src/graph/graph-tokens.css`                    | 1     | New/revised color tokens for role-based palette                               |
+| `src/graph/layout.ts`                           | 1     | Grid-only fallback, role-aware node dimensions                                |
+| `src/graph/assembler-v2.ts`                     | 2     | Aggregate node generation                                                     |
+| `src/graph/entity-derivation.ts`                | 2     | Aggregate node helpers                                                        |
+| `src/graph/types.ts`                            | 2     | `AggregateNode` type                                                          |
+| `src/graph/store.ts`                            | 2-3   | Expand/collapse actions, zoom-driven visibility                               |
+| `src/graph/components/nodes/aggregate-node.tsx` | 2     | New component                                                                 |
+| `src/graph/use-graph-data.ts`                   | 2     | Deferred per-adapter queries                                                  |
+| `src/graph/constants.ts`                        | 2     | Aggregation thresholds                                                        |
+
+---
+
+## Future: Synthetic Stress Test
+
+Build a mock fixture that generates a large graph (e.g., 5 adapters x 200 tags each = 3000+ nodes) to stress-test rendering, layout, and interaction performance. Useful for:
+
+- Verifying viewport culling (`onlyRenderVisibleElements`) reduces DOM node count (quick check: `document.querySelectorAll('.react-flow__node').length` at different zoom levels)
+- Benchmarking layout time (grid-only vs WebCola) at scale
+- Validating contextual zoom rendering cost savings
+- Testing aggregate node thresholds (Phase 2)
+- Regression testing after layout engine changes (Phase 4)
+
+Implementation: add a `stress` scope or toggle in mock handlers that multiplies tag/mapper/topic counts per adapter. Can be a dev-only feature flag.

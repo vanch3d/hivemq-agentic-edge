@@ -112,8 +112,8 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
         onPaneClick={onPaneClick}
         colorMode={colorMode}
         onlyRenderVisibleElements
-        minZoom={0.2}
-        maxZoom={3}
+        minZoom={0.1}
+        maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
         <Background

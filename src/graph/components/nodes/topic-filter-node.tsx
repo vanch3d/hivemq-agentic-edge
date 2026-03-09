@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Box } from "@chakra-ui/react";
 import type { NodeProps } from "@xyflow/react";
 import type { GraphNodeData } from "@/graph/types";
@@ -28,11 +29,13 @@ function FilterNotch({ selected }: { selected: boolean }) {
   );
 }
 
-export function TopicFilterNode(props: NodeProps & { data: GraphNodeData }) {
+export const TopicFilterNode = memo(function TopicFilterNode(
+  props: NodeProps & { data: GraphNodeData },
+) {
   return (
     <BaseNode
       {...props}
       leftDecorator={<FilterNotch selected={!!props.selected} />}
     />
   );
-}
+});

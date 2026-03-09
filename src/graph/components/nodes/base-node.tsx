@@ -12,6 +12,7 @@ import {
   STATUS_COLORS,
   type VisualRole,
 } from "@/graph/constants";
+import { useZoomDetail } from "@/graph/hooks/use-zoom-level";
 
 const pulseKeyframes = keyframes`
   0%, 100% { opacity: 1; }
@@ -41,7 +42,7 @@ function isError(status?: GraphNodeData["status"]): boolean {
   return status?.connection === "ERROR";
 }
 
-// --- Role-based visual properties ---
+// --- Role-based visual properties (full detail level) ---
 
 interface RoleStyle {
   borderRadius: string;
@@ -58,7 +59,6 @@ interface RoleStyle {
 }
 
 const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
-  // Orchestrators: large, double-border, rounded — distinctive singletons
   orchestrator: {
     borderRadius: "lg",
     borderWidth: "3px",
@@ -72,7 +72,6 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
     showBadge: true,
     showSublabel: true,
   },
-  // Connectors: robust, prominent — key entry points
   connector: {
     borderRadius: "md",
     borderWidth: "2px",
@@ -86,7 +85,6 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
     showBadge: true,
     showSublabel: true,
   },
-  // Endpoints: medium, slightly rounded
   endpoint: {
     borderRadius: "md",
     borderWidth: "2px",
@@ -100,7 +98,6 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
     showBadge: true,
     showSublabel: true,
   },
-  // Resources: compact pills — high-cardinality, minimal footprint
   resource: {
     borderRadius: "full",
     borderWidth: "1.5px",
@@ -114,7 +111,6 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
     showBadge: false,
     showSublabel: false,
   },
-  // Mappers: medium, rounded — transforms
   mapper: {
     borderRadius: "xl",
     borderWidth: "1.5px",
@@ -128,7 +124,6 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
     showBadge: true,
     showSublabel: false,
   },
-  // Policies: medium, dashed border — governance
   policy: {
     borderRadius: "md",
     borderWidth: "2px",
@@ -142,7 +137,6 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
     showBadge: true,
     showSublabel: true,
   },
-  // Artifacts: small, dotted border — supporting files
   artifact: {
     borderRadius: "sm",
     borderWidth: "1.5px",
@@ -158,6 +152,136 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
   },
 };
 
+// --- Dot-level shapes per role (colored shape, no text) ---
+// Sized to be clearly visible at < 0.4 zoom — bigger than you'd think at 1x
+
+const DOT_SHAPES: Record<VisualRole, { w: string; h: string; radius: string }> = {
+  orchestrator: { w: "40px", h: "40px", radius: "lg" },
+  connector:    { w: "32px", h: "32px", radius: "md" },
+  endpoint:     { w: "28px", h: "28px", radius: "md" },
+  resource:     { w: "24px", h: "24px", radius: "full" },
+  mapper:       { w: "28px", h: "20px", radius: "full" },  // wider = directional
+  policy:       { w: "28px", h: "28px", radius: "sm" },
+  artifact:     { w: "24px", h: "24px", radius: "sm" },
+};
+
+// --- Handles (shared across compact and full) ---
+
+function NodeHandles() {
+  return (
+    <>
+      <Handle type="source" position={Position.Top} />
+      <Handle type="target" position={Position.Top} />
+      <Handle type="source" position={Position.Right} />
+      <Handle type="target" position={Position.Right} />
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="target" position={Position.Bottom} />
+      <Handle type="source" position={Position.Left} />
+      <Handle type="target" position={Position.Left} />
+    </>
+  );
+}
+
+// ─── Dot detail level ─────────────────────────────────────────────────────────
+
+function DotNode({
+  data,
+  selected,
+}: {
+  data: GraphNodeData;
+  selected?: boolean;
+}) {
+  const color = ENTITY_COLORS[data.entityType];
+  const role = VISUAL_ROLE[data.entityType];
+  const dot = DOT_SHAPES[role];
+  const hasError = isError(data.status);
+
+  return (
+    <Box
+      w={dot.w}
+      h={dot.h}
+      borderRadius={dot.radius}
+      bg={hasError ? "red.500" : color}
+      borderWidth={selected ? "2px" : "0"}
+      borderColor="blue.500"
+      opacity={getStatusOpacity(data.status)}
+      animation={
+        hasError ? `${pulseKeyframes} 2s ease-in-out infinite` : undefined
+      }
+    >
+      {/* Minimal handles — only left+right for dot level */}
+      <Handle type="source" position={Position.Right} />
+      <Handle type="target" position={Position.Left} />
+    </Box>
+  );
+}
+
+// ─── Compact detail level ─────────────────────────────────────────────────────
+// Color-filled shape with white label — visually distinct from edges (no border).
+// "prominent" roles (orchestrator, connector, endpoint) get a two-line compact
+// (type + label) so they don't shrink smaller than their dot representation.
+
+interface CompactStyle {
+  radius: string;
+  showType: boolean;  // two-line: type label + name
+  px: string;
+  py: string;
+  minW?: string;
+}
+
+const COMPACT_STYLES: Record<VisualRole, CompactStyle> = {
+  orchestrator: { radius: "lg", showType: true,  px: "2.5", py: "1",   minW: "60px" },
+  connector:    { radius: "md", showType: true,  px: "2",   py: "1",   minW: "50px" },
+  endpoint:     { radius: "md", showType: true,  px: "2",   py: "0.5", minW: "40px" },
+  resource:     { radius: "full", showType: false, px: "2", py: "0.5" },
+  mapper:       { radius: "xl", showType: false, px: "2",   py: "0.5" },
+  policy:       { radius: "md", showType: true,  px: "2",   py: "0.5" },
+  artifact:     { radius: "sm", showType: false, px: "1.5", py: "0.5" },
+};
+
+function CompactNode({
+  data,
+  selected,
+}: {
+  data: GraphNodeData;
+  selected?: boolean;
+}) {
+  const color = ENTITY_COLORS[data.entityType];
+  const role = VISUAL_ROLE[data.entityType];
+  const hasError = isError(data.status);
+  const style = COMPACT_STYLES[role];
+
+  return (
+    <Box
+      bg={hasError ? "red.500" : color}
+      borderWidth={selected ? "2px" : "0"}
+      borderColor="blue.500"
+      borderRadius={style.radius}
+      px={style.px}
+      py={style.py}
+      minW={style.minW}
+      opacity={getStatusOpacity(data.status)}
+      textAlign="center"
+      animation={
+        hasError ? `${pulseKeyframes} 2s ease-in-out infinite` : undefined
+      }
+    >
+      {style.showType && (
+        <Text fontSize="3xs" color="whiteAlpha.800" lineHeight="1" truncate>
+          {ENTITY_LABELS[data.entityType]}
+        </Text>
+      )}
+      <Text fontSize="2xs" fontWeight="semibold" color="white" lineHeight="1.2" truncate>
+        {data.label}
+      </Text>
+
+      <NodeHandles />
+    </Box>
+  );
+}
+
+// ─── Full detail level ────────────────────────────────────────────────────────
+
 export function BaseNode({
   data,
   selected,
@@ -169,6 +293,19 @@ export function BaseNode({
   /** Optional element rendered flush against the left edge (e.g. semi-circle for topicFilter) */
   leftDecorator?: React.ReactNode;
 }) {
+  const zoomDetail = useZoomDetail();
+
+  // --- Dot level: colored shape only ---
+  if (zoomDetail === "dot") {
+    return <DotNode data={data} selected={selected} />;
+  }
+
+  // --- Compact level: color-filled shape with label ---
+  if (zoomDetail === "compact") {
+    return <CompactNode data={data} selected={selected} />;
+  }
+
+  // --- Full level: complete rendering ---
   const color = ENTITY_COLORS[data.entityType];
   const palette = ENTITY_COLOR_PALETTE[data.entityType];
   const EntityIcon = ENTITY_ICONS[data.entityType];
@@ -241,15 +378,7 @@ export function BaseNode({
       {/* Type-specific content */}
       {children}
 
-      {/* Handles — source + target on all four sides for floating edges */}
-      <Handle type="source" position={Position.Top} />
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Right} />
-      <Handle type="target" position={Position.Right} />
-      <Handle type="source" position={Position.Bottom} />
-      <Handle type="target" position={Position.Bottom} />
-      <Handle type="source" position={Position.Left} />
-      <Handle type="target" position={Position.Left} />
+      <NodeHandles />
     </Box>
   );
 }

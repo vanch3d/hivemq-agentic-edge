@@ -1,9 +1,12 @@
+import { memo } from "react";
 import { Text } from "@chakra-ui/react";
 import type { NodeProps } from "@xyflow/react";
 import type { GraphNodeData } from "@/graph/types";
 import { BaseNode } from "./base-node";
 
-export function DomainTagNode(props: NodeProps & { data: GraphNodeData }) {
+export const DomainTagNode = memo(function DomainTagNode(
+  props: NodeProps & { data: GraphNodeData },
+) {
   const def = props.data.raw?.definition as Record<string, unknown> | undefined;
   const dataType = def?.dataType as string | undefined;
   return (
@@ -15,4 +18,4 @@ export function DomainTagNode(props: NodeProps & { data: GraphNodeData }) {
       )}
     </BaseNode>
   );
-}
+});
