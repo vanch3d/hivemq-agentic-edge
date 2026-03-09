@@ -8,56 +8,56 @@ This document compares the current v1 ontology with the formal OWL ontology and 
 
 These are the entity types currently represented as graph nodes in `src/graph/types.ts`:
 
-| Entity | Graph Node | API Source | Notes |
-|--------|-----------|------------|-------|
-| adapter | Yes | `Adapter` | Configured protocol adapter instance |
-| bridge | Yes | `Bridge` | MQTT-to-MQTT connection |
-| domainTag | Yes | `DomainTag` | Named data point on device |
-| topicFilter | Yes | `TopicFilter` | MQTT wildcard pattern |
-| dataPolicy | Yes | `DataPolicy` | Payload validation policy |
-| behaviorPolicy | Yes | `BehaviorPolicy` | Client behavior policy |
-| schema | Yes | `PolicySchema` | JSON Schema / Protobuf definition |
-| script | Yes | `Script` | Transformation logic |
-| combiner | Yes | `Combiner` | Data aggregation entity |
-| listener | Yes | `Listener` | Network listener (MQTT endpoint) |
+| Entity         | Graph Node | API Source       | Notes                                |
+| -------------- | ---------- | ---------------- | ------------------------------------ |
+| adapter        | Yes        | `Adapter`        | Configured protocol adapter instance |
+| bridge         | Yes        | `Bridge`         | MQTT-to-MQTT connection              |
+| domainTag      | Yes        | `DomainTag`      | Named data point on device           |
+| topicFilter    | Yes        | `TopicFilter`    | MQTT wildcard pattern                |
+| dataPolicy     | Yes        | `DataPolicy`     | Payload validation policy            |
+| behaviorPolicy | Yes        | `BehaviorPolicy` | Client behavior policy               |
+| schema         | Yes        | `PolicySchema`   | JSON Schema / Protobuf definition    |
+| script         | Yes        | `Script`         | Transformation logic                 |
+| combiner       | Yes        | `Combiner`       | Data aggregation entity              |
+| listener       | Yes        | `Listener`       | Network listener (MQTT endpoint)     |
 
 ## OWL Ontology Classes (13)
 
 From `DOMAIN_ONTOLOGY.ttl` — the formal model maintained by the Edge frontend team:
 
-| OWL Class | Namespace | Layer | V1 Equivalent | Gap? |
-|-----------|-----------|-------|---------------|------|
-| `edge:Adapter` | edge: | Physical | adapter | - |
-| `edge:Device` | edge: | Physical | *(none)* | **Missing** |
-| `edge:Tag` | edge: | Physical | domainTag | Rename only |
-| `mqtt:Topic` | mqtt: | Broker | *(none)* | **Missing** |
-| `mqtt:TopicFilter` | mqtt: | Broker | topicFilter | - |
-| `edge:NorthboundMapping` | edge: | Mapping | *(flattened)* | **Missing** |
-| `edge:SouthboundMapping` | edge: | Mapping | *(flattened)* | **Missing** |
-| `edge:Combiner` | edge: | Aggregation | combiner | - |
-| `edge:DataCombining` | edge: | Aggregation | *(flattened)* | **Missing** |
-| `edge:AssetMapper` | edge: | Aggregation | *(none)* | **Missing** |
-| `edge:Bridge` | edge: | Connectivity | bridge | - |
-| `edge:BridgeSubscription` | edge: | Connectivity | *(flattened)* | **Missing** |
-| `datahub:DataPolicy` | datahub: | DataHub | dataPolicy | - |
+| OWL Class                 | Namespace | Layer        | V1 Equivalent | Gap?        |
+| ------------------------- | --------- | ------------ | ------------- | ----------- |
+| `edge:Adapter`            | edge:     | Physical     | adapter       | -           |
+| `edge:Device`             | edge:     | Physical     | _(none)_      | **Missing** |
+| `edge:Tag`                | edge:     | Physical     | domainTag     | Rename only |
+| `mqtt:Topic`              | mqtt:     | Broker       | _(none)_      | **Missing** |
+| `mqtt:TopicFilter`        | mqtt:     | Broker       | topicFilter   | -           |
+| `edge:NorthboundMapping`  | edge:     | Mapping      | _(flattened)_ | **Missing** |
+| `edge:SouthboundMapping`  | edge:     | Mapping      | _(flattened)_ | **Missing** |
+| `edge:Combiner`           | edge:     | Aggregation  | combiner      | -           |
+| `edge:DataCombining`      | edge:     | Aggregation  | _(flattened)_ | **Missing** |
+| `edge:AssetMapper`        | edge:     | Aggregation  | _(none)_      | **Missing** |
+| `edge:Bridge`             | edge:     | Connectivity | bridge        | -           |
+| `edge:BridgeSubscription` | edge:     | Connectivity | _(flattened)_ | **Missing** |
+| `datahub:DataPolicy`      | datahub:  | DataHub      | dataPolicy    | -           |
 
 ### Classes NOT in OWL but in V1
 
-| V1 Entity | Why it exists in V1 | In OWL? | Decision for V2 |
-|-----------|---------------------|---------|------------------|
-| behaviorPolicy | Graph visualization of DataHub policies | No | **Keep** — valuable for policy impact analysis |
-| schema | Referenced by data/behavior policies | No | **Keep** — essential for validation chain |
-| script | Referenced by policy pipelines | No | **Keep** — essential for transformation chain |
-| listener | Network entry point visualization | No | **Keep** — useful for connectivity overview |
+| V1 Entity      | Why it exists in V1                     | In OWL? | Decision for V2                                |
+| -------------- | --------------------------------------- | ------- | ---------------------------------------------- |
+| behaviorPolicy | Graph visualization of DataHub policies | No      | **Keep** — valuable for policy impact analysis |
+| schema         | Referenced by data/behavior policies    | No      | **Keep** — essential for validation chain      |
+| script         | Referenced by policy pipelines          | No      | **Keep** — essential for transformation chain  |
+| listener       | Network entry point visualization       | No      | **Keep** — useful for connectivity overview    |
 
 ### Classes NOT in V1 and NOT in OWL
 
-| Entity | API Type | Why consider for V2? |
-|--------|----------|---------------------|
-| Broker | *(no API type)* | Central entity that owns Topics and TopicFilters. Edge Broker is a singleton; remote brokers exist per Bridge. Conceptualizes the message bus that everything flows through. **Included in V2.** |
-| ProtocolAdapter | `ProtocolAdapter` | Type/instance distinction — adapter types define capabilities, instances are configured connections |
-| Event | `Event` | Not a graph entity — ephemeral log entries |
-| ManagedAsset | `ManagedAsset` | Pulse cloud assets; AssetMapper already covers the mapping |
+| Entity          | API Type          | Why consider for V2?                                                                                                                                                                             |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Broker          | _(no API type)_   | Central entity that owns Topics and TopicFilters. Edge Broker is a singleton; remote brokers exist per Bridge. Conceptualizes the message bus that everything flows through. **Included in V2.** |
+| ProtocolAdapter | `ProtocolAdapter` | Type/instance distinction — adapter types define capabilities, instances are configured connections                                                                                              |
+| Event           | `Event`           | Not a graph entity — ephemeral log entries                                                                                                                                                       |
+| ManagedAsset    | `ManagedAsset`    | Pulse cloud assets; AssetMapper already covers the mapping                                                                                                                                       |
 
 ---
 
@@ -99,46 +99,47 @@ The entities in the system fall into four distinct **roles**, not layers:
 
 #### Orchestrators (singletons that own and manage resources)
 
-| Orchestrator | What it owns | Role |
-|-------------|-------------|------|
-| Edge Broker | Topics, TopicFilters | Local MQTT message bus — the OT/IT meeting point |
-| DataHub | DataPolicies, BehaviorPolicies, Schemas, Scripts | Validates and transforms OT-to-IT traffic |
-| Pulse | ManagedAssets | Cloud platform integration, asset management |
+| Orchestrator | What it owns                                     | Role                                             |
+| ------------ | ------------------------------------------------ | ------------------------------------------------ |
+| Edge Broker  | Topics, TopicFilters                             | Local MQTT message bus — the OT/IT meeting point |
+| DataHub      | DataPolicies, BehaviorPolicies, Schemas, Scripts | Validates and transforms OT-to-IT traffic        |
+| Pulse        | ManagedAssets                                    | Cloud platform integration, asset management     |
 
 Orchestrators are system-level singletons. They don't flow data themselves — they own the resources that participate in data flow.
 
 #### Connectors (data sources — the "entities" that bridge worlds)
 
-| Connector | World | What it connects to | What it owns |
-|-----------|-------|---------------------|--------------|
-| Adapter | OT | OT Device via protocol (Modbus, OPC-UA, S7) | Device, Mappers (northbound + southbound) |
-| Bridge | IT | Remote Broker via MQTT | BridgeSubscriptions |
+| Connector | World | What it connects to                         | What it owns                              |
+| --------- | ----- | ------------------------------------------- | ----------------------------------------- |
+| Adapter   | OT    | OT Device via protocol (Modbus, OPC-UA, S7) | Device, Mappers (northbound + southbound) |
+| Bridge    | IT    | Remote Broker via MQTT                      | BridgeSubscriptions                       |
 
 Connectors are the gateways between the HiveMQ Edge system and the outside world. Adapters reach into the OT world; Bridges reach into the IT world.
 
 #### Integration Points (data points — where data lives)
 
-| Integration Point | Where | Description |
-|-------------------|-------|-------------|
-| Tag | OT Device | Protocol-specific data point (e.g., `ns=3;s=Temperature`) |
-| Topic | Broker | Exact MQTT topic string (e.g., `factory/floor1/temp`) |
-| TopicFilter | Broker | Wildcard pattern matching topics (e.g., `factory/+/temp`) |
-| Device (OT) | Adapter | Physical system whose tags are exposed via adapter |
-| Device (IT) | Broker | Cloud/enterprise system, abstracted by broker (implicit) |
+| Integration Point | Where     | Description                                               |
+| ----------------- | --------- | --------------------------------------------------------- |
+| Tag               | OT Device | Protocol-specific data point (e.g., `ns=3;s=Temperature`) |
+| Topic             | Broker    | Exact MQTT topic string (e.g., `factory/floor1/temp`)     |
+| TopicFilter       | Broker    | Wildcard pattern matching topics (e.g., `factory/+/temp`) |
+| Device (OT)       | Adapter   | Physical system whose tags are exposed via adapter        |
+| Device (IT)       | Broker    | Cloud/enterprise system, abstracted by broker (implicit)  |
 
 Integration points are the data endpoints. Tags are where OT data originates; Topics are where it lands on the broker. TopicFilters are the subscription patterns that catch topics.
 
 #### Mappers (route data between integration points)
 
-| Mapper | Sources | Destination | Owned by |
-|--------|---------|-------------|----------|
-| NorthboundMapper | 1 Tag (from 1 Adapter) | 1 Topic | Adapter |
-| SouthboundMapper | 1 TopicFilter | 1 Tag (on 1 Adapter) | Adapter |
-| Combiner | N Tags/TopicFilters (from N Adapters/Bridges) | 1 Topic | System |
-| AssetMapper | N sources (like Combiner) | 1 Pulse Asset | Pulse |
-| BridgeSubscription | 1 TopicFilter | 1 Topic (on other broker) | Bridge |
+| Mapper             | Sources                                       | Destination               | Owned by |
+| ------------------ | --------------------------------------------- | ------------------------- | -------- |
+| NorthboundMapper   | 1 Tag (from 1 Adapter)                        | 1 Topic                   | Adapter  |
+| SouthboundMapper   | 1 TopicFilter                                 | 1 Tag (on 1 Adapter)      | Adapter  |
+| Combiner           | N Tags/TopicFilters (from N Adapters/Bridges) | 1 Topic                   | System   |
+| AssetMapper        | N sources (like Combiner)                     | 1 Pulse Asset             | Pulse    |
+| BridgeSubscription | 1 TopicFilter                                 | 1 Topic (on other broker) | Bridge   |
 
 **Key insight**: These are all the same concept at different levels of flexibility:
+
 - **NorthboundMapper** = simplest case: 1 source → 1 destination, owned by 1 adapter
 - **Combiner** = generalized mapper: N sources → 1 destination, owned by multiple entities. Since N could be 1, a Combiner is a more flexible NorthboundMapper.
 - **AssetMapper** = specialized Combiner where the destination is a Pulse-managed asset
@@ -183,12 +184,14 @@ DataPolicy
 **API reality**: Devices have **no API representation**. The OpenAPI spec has no `/devices` endpoint and no `Device` schema. The adapter `config` contains connection parameters (host, port, URI) that point to the physical device, but there is no explicit device model.
 
 **Conceptual model**: Despite having no API endpoint, Device is a real domain concept:
+
 - A **Device** is the physical or virtual system that an adapter connects to.
 - A **Device owns Tags** — the data points exposed by that device.
 - An **Adapter owns NorthboundMappings and SouthboundMappings** — the data routing rules.
 - The adapter connects to the device, reads its tags, and routes data via mappings.
 
 The ownership chain is:
+
 ```
 Adapter → manages → Device → exposes → Tag
 Adapter → hasMapping → NorthboundMapping (reads from Tag, publishes to Topic)
@@ -198,6 +201,7 @@ Adapter → hasMapping → SouthboundMapping (subscribes to TopicFilter, writes 
 **V2 decision**: Include Device as a **conceptual entity**. In the current API, there is a 1:1 relationship between adapter and device (one adapter connects to one device). The device can be represented as a derived node whose identity comes from the adapter it belongs to. Future API versions may introduce explicit device support — the ontology should be ready for that.
 
 **Open question**: How to derive device identity. Options:
+
 - **Option A**: 1:1 with adapter — every adapter implicitly has one device. Simple but may not reflect reality (an adapter could connect to a gateway with multiple sub-devices).
 - **Option B**: Protocol-specific heuristics — e.g., OPC-UA tag paths may encode device structure in namespace/node hierarchy.
 - **Recommendation**: Start with Option A (1:1). It's correct for the current API and can be refined later.
@@ -209,22 +213,26 @@ Adapter → hasMapping → SouthboundMapping (subscribes to TopicFilter, writes 
 **OWL model**: The OWL ontology does not define a Broker class either. But the Edge architecture doc (`DOMAIN_MODEL.md`) describes the broker as the central message bus.
 
 **Conceptual model**: The broker is the entity that **owns Topics and TopicFilters**:
+
 - A NorthboundMapping publishes a Tag's value to a **Topic on the broker**.
 - A SouthboundMapping subscribes to a **TopicFilter on the broker** and writes incoming messages to a Tag.
 - DataPolicies attach to **TopicFilters on the broker**.
 - BridgeSubscriptions forward messages between the local broker and a remote broker.
 
 There are **two kinds of broker** in the system:
+
 - **Edge Broker** — the local HiveMQ Edge MQTT broker. It owns all locally-published topics and topic filters.
 - **Remote Broker** (via Bridge) — a remote MQTT broker that a Bridge connects to. It also owns topics and topic filters (the remote subscriptions).
 
 Both can be conceptualized as a **"gateway to broker"** — they own some of the topic/topic filter entities. A Bridge is effectively a conduit between two broker instances.
 
 **V2 decision**: Include **Broker** as a first-class entity with two instances:
+
 - One **Edge Broker** node (always present, singleton)
 - One **Remote Broker** node per Bridge connection
 
 Ownership:
+
 ```
 Edge Broker → owns → Topic (locally published topics)
 Edge Broker → owns → TopicFilter (local subscriptions)
@@ -264,6 +272,7 @@ Adapter → hasSouthboundMapping → SouthboundMapping
 ```
 
 **V2 decision**: **Two options** to evaluate:
+
 - **Option A**: Promote mappings to first-class nodes. More faithful to the ontology but adds visual clutter — every tag-to-topic connection becomes three nodes instead of an edge.
 - **Option B**: Keep mappings as edge metadata (current approach) but enrich the edge data with mapping properties (QoS, timestamp inclusion, user properties). Mappings appear in the class/schema view but not in the instance view.
 
@@ -306,6 +315,7 @@ The OWL ontology explicitly documents this as a limitation:
 **V2 requirement**: With Topic as a first-class entity, we need a runtime wildcard matcher. The `mqtt-match` npm package (referenced in the OWL README) can evaluate `+` (single level) and `#` (multi-level) wildcards.
 
 **Algorithm**: After collecting all Topics and TopicFilters, compute matches:
+
 ```
 for each topicFilter:
   for each topic:
@@ -321,29 +331,29 @@ Organized by taxonomy role rather than arbitrary layers:
 
 ### Orchestrators (3)
 
-| #  | Entity    | Source                                  | New?    |
-|----|-----------|-----------------------------------------|---------|
-| 1  | Edge Broker | Derived (singleton)                   | **New** |
-| 2  | DataHub   | Derived (singleton)                     | **New** (implicit in v1) |
-| 3  | Pulse     | Derived (singleton, if activated)       | **New** |
+| #   | Entity      | Source                            | New?                     |
+| --- | ----------- | --------------------------------- | ------------------------ |
+| 1   | Edge Broker | Derived (singleton)               | **New**                  |
+| 2   | DataHub     | Derived (singleton)               | **New** (implicit in v1) |
+| 3   | Pulse       | Derived (singleton, if activated) | **New**                  |
 
 **Note**: These are system-level singletons, not API entities. They exist to express ownership: Edge Broker owns topics/filters, DataHub owns policies/schemas/scripts, Pulse owns managed assets.
 
 ### Connectors (2)
 
-| #  | Entity  | Source         | New? |
-|----|---------|----------------|------|
-| 4  | Adapter | API `Adapter`  | -    |
-| 5  | Bridge  | API `Bridge`   | -    |
+| #   | Entity  | Source        | New? |
+| --- | ------- | ------------- | ---- |
+| 4   | Adapter | API `Adapter` | -    |
+| 5   | Bridge  | API `Bridge`  | -    |
 
 ### Integration Points (4)
 
-| #  | Entity      | Source                                  | New?    |
-|----|-------------|-----------------------------------------|---------|
-| 6  | OT Device   | Derived (1:1 with adapter)              | **New** |
-| 7  | Tag         | API `DomainTag`                         | Rename  |
-| 8  | Topic       | Derived from mappers/combiners/bridges  | **New** |
-| 9  | TopicFilter | API `TopicFilter`                       | -       |
+| #   | Entity      | Source                                 | New?    |
+| --- | ----------- | -------------------------------------- | ------- |
+| 6   | OT Device   | Derived (1:1 with adapter)             | **New** |
+| 7   | Tag         | API `DomainTag`                        | Rename  |
+| 8   | Topic       | Derived from mappers/combiners/bridges | **New** |
+| 9   | TopicFilter | API `TopicFilter`                      | -       |
 
 **Note**: Tag names are simple protocol-specific identifiers (e.g., `ns=3;s=Temperature`, `holding-register-0`) — they do NOT embed device or adapter IDs.
 
@@ -351,24 +361,24 @@ Organized by taxonomy role rather than arbitrary layers:
 
 ### Mappers (5)
 
-| #  | Entity              | Source                    | New?    |
-|----|---------------------|---------------------------|---------|
-| 10 | NorthboundMapper    | API `NorthboundMapping`   | **New** |
-| 11 | SouthboundMapper    | API `SouthboundMapping`   | **New** |
-| 12 | Combiner            | API `Combiner`            | -       |
-| 13 | AssetMapper         | API (Pulse asset mapper)  | **New** |
-| 14 | BridgeSubscription  | API `BridgeSubscription`  | **New** |
+| #   | Entity             | Source                   | New?    |
+| --- | ------------------ | ------------------------ | ------- |
+| 10  | NorthboundMapper   | API `NorthboundMapping`  | **New** |
+| 11  | SouthboundMapper   | API `SouthboundMapping`  | **New** |
+| 12  | Combiner           | API `Combiner`           | -       |
+| 13  | AssetMapper        | API (Pulse asset mapper) | **New** |
+| 14  | BridgeSubscription | API `BridgeSubscription` | **New** |
 
 All mappers are **first-class nodes** in both schema and instance views. Combiner is the generalized case of NorthboundMapper (N sources → 1 topic instead of 1 → 1). AssetMapper is a specialized Combiner where the destination is a Pulse asset. The mapper unification is clearest when all are visible as concrete nodes of the same taxonomic role.
 
 ### Policies & Resources (4, owned by DataHub)
 
-| #  | Entity         | Source                | New? |
-|----|----------------|-----------------------|------|
-| 15 | DataPolicy     | API `DataPolicy`      | -    |
-| 16 | BehaviorPolicy | API `BehaviorPolicy`  | -    |
-| 17 | Schema         | API `PolicySchema`    | -    |
-| 18 | Script         | API `Script`          | -    |
+| #   | Entity         | Source               | New? |
+| --- | -------------- | -------------------- | ---- |
+| 15  | DataPolicy     | API `DataPolicy`     | -    |
+| 16  | BehaviorPolicy | API `BehaviorPolicy` | -    |
+| 17  | Schema         | API `PolicySchema`   | -    |
+| 18  | Script         | API `Script`         | -    |
 
 **Note**: DataPolicy has implicit `redirectsTo → Topic` edges extracted from `Delivery.redirectTo` in pipelines (static targets = concrete edges; interpolated targets = pattern edges with runtime matching).
 
@@ -384,61 +394,61 @@ All mappers are **first-class nodes** in both schema and instance views. Combine
 
 ### Orchestrator Ownership
 
-| From        | Relationship | To             | Cardinality | Notes |
-|-------------|--------------|----------------|-------------|-------|
-| Edge Broker | owns         | Topic          | 1:N         | Locally-published topics |
-| Edge Broker | owns         | TopicFilter    | 1:N         | Local subscriptions |
-| DataHub     | owns         | DataPolicy     | 1:N         | Policy management |
-| DataHub     | owns         | BehaviorPolicy | 1:N         | Client behavior monitoring |
+| From        | Relationship | To             | Cardinality | Notes                         |
+| ----------- | ------------ | -------------- | ----------- | ----------------------------- |
+| Edge Broker | owns         | Topic          | 1:N         | Locally-published topics      |
+| Edge Broker | owns         | TopicFilter    | 1:N         | Local subscriptions           |
+| DataHub     | owns         | DataPolicy     | 1:N         | Policy management             |
+| DataHub     | owns         | BehaviorPolicy | 1:N         | Client behavior monitoring    |
 | DataHub     | owns         | Schema         | 1:N         | Payload structure definitions |
-| DataHub     | owns         | Script         | 1:N         | Transformation logic |
-| Pulse       | owns         | ManagedAsset   | 1:N         | Cloud-defined assets |
+| DataHub     | owns         | Script         | 1:N         | Transformation logic          |
+| Pulse       | owns         | ManagedAsset   | 1:N         | Cloud-defined assets          |
 
 ### Connector → Integration Point
 
-| From    | Relationship         | To                | Cardinality | V1 Equiv              |
-|---------|----------------------|--------------------|-------------|------------------------|
-| Adapter | manages              | OT Device          | 1:1 (*)     | *(new)*                |
-| OT Device | exposes            | Tag                | 1:N         | hasTags (adapter→tag)  |
-| Bridge  | connectsTo           | Remote Broker      | 1:1         | *(new)*                |
+| From      | Relationship | To            | Cardinality | V1 Equiv              |
+| --------- | ------------ | ------------- | ----------- | --------------------- |
+| Adapter   | manages      | OT Device     | 1:1 (\*)    | _(new)_               |
+| OT Device | exposes      | Tag           | 1:N         | hasTags (adapter→tag) |
+| Bridge    | connectsTo   | Remote Broker | 1:1         | _(new)_               |
 
-(*) 1:1 for now — one adapter connects to one OT device. May become 1:N if the API evolves.
+(\*) 1:1 for now — one adapter connects to one OT device. May become 1:N if the API evolves.
 
 ### Mapper Relationships
 
-| From               | Relationship        | To          | Cardinality | V1 Equiv                  |
-|--------------------|----------------------|-------------|-------------|---------------------------|
-| Adapter            | hasNorthboundMapper | NorthboundMapper | 1:N    | *(flattened)*              |
-| NorthboundMapper   | sourceTag           | Tag         | N:1         | *(flattened)*              |
-| NorthboundMapper   | destinationTopic    | Topic       | N:1         | publishesTo (tag→filter)   |
-| Adapter            | hasSouthboundMapper | SouthboundMapper | 1:N   | *(flattened)*              |
-| SouthboundMapper   | sourceFilter        | TopicFilter | N:1         | *(flattened)*              |
-| SouthboundMapper   | destinationTag      | Tag         | N:1         | writesTo (filter→tag)      |
-| Combiner           | sourceEntities      | Adapter/Bridge | N:M     | combines                   |
-| Combiner           | destinationTopic    | Topic       | N:1         | outputs                    |
-| AssetMapper        | destinationAsset    | ManagedAsset | N:1        | *(new)*                    |
-| Bridge             | hasSubscription     | BridgeSubscription | 1:N  | *(flattened)*              |
-| BridgeSubscription | subscriptionFilter  | TopicFilter | N:1         | subscribes                 |
-| BridgeSubscription | subscriptionDest    | Topic       | N:1         | forwards                   |
+| From               | Relationship        | To                 | Cardinality | V1 Equiv                 |
+| ------------------ | ------------------- | ------------------ | ----------- | ------------------------ |
+| Adapter            | hasNorthboundMapper | NorthboundMapper   | 1:N         | _(flattened)_            |
+| NorthboundMapper   | sourceTag           | Tag                | N:1         | _(flattened)_            |
+| NorthboundMapper   | destinationTopic    | Topic              | N:1         | publishesTo (tag→filter) |
+| Adapter            | hasSouthboundMapper | SouthboundMapper   | 1:N         | _(flattened)_            |
+| SouthboundMapper   | sourceFilter        | TopicFilter        | N:1         | _(flattened)_            |
+| SouthboundMapper   | destinationTag      | Tag                | N:1         | writesTo (filter→tag)    |
+| Combiner           | sourceEntities      | Adapter/Bridge     | N:M         | combines                 |
+| Combiner           | destinationTopic    | Topic              | N:1         | outputs                  |
+| AssetMapper        | destinationAsset    | ManagedAsset       | N:1         | _(new)_                  |
+| Bridge             | hasSubscription     | BridgeSubscription | 1:N         | _(flattened)_            |
+| BridgeSubscription | subscriptionFilter  | TopicFilter        | N:1         | subscribes               |
+| BridgeSubscription | subscriptionDest    | Topic              | N:1         | forwards                 |
 
 ### Broker Matching
 
 | From        | Relationship | To    | Cardinality | V1 Equiv         |
-|-------------|--------------|-------|-------------|-------------------|
-| TopicFilter | matches      | Topic | N:M         | *(not computed)*  |
+| ----------- | ------------ | ----- | ----------- | ---------------- |
+| TopicFilter | matches      | Topic | N:M         | _(not computed)_ |
 
 Computed at runtime using MQTT wildcard evaluation (`mqtt-match`).
 
 ### Policy Relationships
 
-| From            | Relationship   | To             | Cardinality | V1 Equiv     |
-|-----------------|----------------|----------------|-------------|--------------|
-| DataPolicy      | attachedTo     | TopicFilter    | N:1         | matches      |
-| DataPolicy      | validates      | Schema         | N:M         | validates    |
-| DataPolicy      | executes       | Script         | N:M         | executes     |
-| DataPolicy      | redirectsTo    | Topic          | 0..N        | *(new)*      |
-| BehaviorPolicy  | deserializes   | Schema         | N:M         | deserializes |
-| BehaviorPolicy  | executes       | Script         | N:M         | executes     |
+| From           | Relationship | To          | Cardinality | V1 Equiv     |
+| -------------- | ------------ | ----------- | ----------- | ------------ |
+| DataPolicy     | attachedTo   | TopicFilter | N:1         | matches      |
+| DataPolicy     | validates    | Schema      | N:M         | validates    |
+| DataPolicy     | executes     | Script      | N:M         | executes     |
+| DataPolicy     | redirectsTo  | Topic       | 0..N        | _(new)_      |
+| BehaviorPolicy | deserializes | Schema      | N:M         | deserializes |
+| BehaviorPolicy | executes     | Script      | N:M         | executes     |
 
 **Note on `redirectsTo`**: Extracted by scanning `onSuccess`/`onFailure` pipeline operations for `Delivery.redirectTo` actions. Static targets create concrete edges. Interpolated targets (e.g., `factory/${clientId}/alerts`) create edges to a "pattern topic" node; the assembler then checks if existing TopicFilters or Tags match the interpolation and creates dynamic `matchesPattern` edges.
 

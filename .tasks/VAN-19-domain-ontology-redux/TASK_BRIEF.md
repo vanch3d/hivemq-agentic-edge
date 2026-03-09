@@ -32,15 +32,15 @@ The result works but is unsatisfactory in several areas:
 
 ## Reference Materials
 
-| Source | Location | What it provides |
-|--------|----------|------------------|
-| v1 ontology (markdown) | `server/ontology/core.md`, `datahub.md`, `adapters.md` | Current entity descriptions, relationship graph, enums |
-| v1 graph assembler | `src/graph/assembler.ts` | Current procedural transformation logic (383 lines) |
-| v1 graph types | `src/graph/types.ts`, `constants.ts` | Entity types, icons, colors, edge styles, rank ordering |
-| v1 graph store | `src/graph/store.ts` | Zustand state, view scopes, filtering logic |
-| Formal OWL ontology | External: `docs/ontology/DOMAIN_ONTOLOGY.ttl` | 13 OWL classes, object/data properties, cardinality axioms |
-| OWL ontology README | External: `docs/ontology/README.md` | Loading, querying, extending the TTL file |
-| Domain model (prose) | External: `docs/architecture/DOMAIN_MODEL.md` | Prose entity definitions, Mermaid diagrams, transformation flows |
-| Domain ontology reference | `.tasks/DOMAIN_ONTOLOGY.md` | Entity catalog from OpenAPI spec review |
-| OpenAPI spec | `.docs/openapi-bundle.yaml` | 180+ schema types, 105 API operations |
-| Settings system | `src/hooks/use-settings.ts`, `src/settings.tsx` | Current RJSF-based settings with localStorage persistence |
+| Source                    | Location                                               | What it provides                                                 |
+| ------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------- |
+| v1 ontology (markdown)    | `server/ontology/core.md`, `datahub.md`, `adapters.md` | Current entity descriptions, relationship graph, enums           |
+| v1 graph assembler        | `src/graph/assembler.ts`                               | Current procedural transformation logic (383 lines)              |
+| v1 graph types            | `src/graph/types.ts`, `constants.ts`                   | Entity types, icons, colors, edge styles, rank ordering          |
+| v1 graph store            | `src/graph/store.ts`                                   | Zustand state, view scopes, filtering logic                      |
+| Formal OWL ontology       | External: `docs/ontology/DOMAIN_ONTOLOGY.ttl`          | 13 OWL classes, object/data properties, cardinality axioms       |
+| OWL ontology README       | External: `docs/ontology/README.md`                    | Loading, querying, extending the TTL file                        |
+| Domain model (prose)      | External: `docs/architecture/DOMAIN_MODEL.md`          | Prose entity definitions, Mermaid diagrams, transformation flows |
+| Domain ontology reference | `.tasks/DOMAIN_ONTOLOGY.md`                            | Entity catalog from OpenAPI spec review                          |
+| OpenAPI spec              | `.docs/openapi-bundle.yaml`                            | 180+ schema types, 105 API operations                            |
+| Settings system           | `src/hooks/use-settings.ts`, `src/settings.tsx`        | Current RJSF-based settings with localStorage persistence        |

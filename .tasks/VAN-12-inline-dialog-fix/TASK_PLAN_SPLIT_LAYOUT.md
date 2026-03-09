@@ -9,6 +9,7 @@ The fix: restructure the drawer into three layout states — normal, form-active
 ## Layout States
 
 ### Normal (no form, no approval)
+
 ```
 DrawerBody
   Flex (flex=1, overflow=hidden)
@@ -18,6 +19,7 @@ DrawerBody
 ```
 
 ### Form active
+
 ```
 DrawerBody
   Splitter (vertical, 50/50, resizable)
@@ -29,6 +31,7 @@ DrawerBody
 ```
 
 ### Approval active
+
 ```
 DrawerBody
   Flex (flex=1, overflow=hidden)
@@ -50,6 +53,7 @@ Add an explicit `ref` prop to `SchemaFormProps` and pass it to the RJSF `<Form>`
 **Delete:** `src/components/chat/chat-form.tsx` (code moves to two new files)
 
 **Create:** `src/components/chat/chat-form-fields.tsx`
+
 - Renders the heading + `SchemaForm` with form fields only
 - Accepts `formRef` prop (passed to `SchemaForm` ref) for external submit
 - Accepts `showAll` prop to control required-only vs full schema display
@@ -57,6 +61,7 @@ Add an explicit `ref` prop to `SchemaFormProps` and pass it to the RJSF `<Form>`
 - Preserves the `key={showAll ? "full" : "required"}` pattern to remount on schema toggle
 
 **Create:** `src/components/chat/chat-form-footer.tsx`
+
 - Renders Submit, Cancel, and "Show all fields" toggle in a horizontal `Flex`
 - Submit calls `formRef.current?.submit()` — triggers RJSF validation + submit flow
 - Cancel calls `onCancel()`
@@ -83,13 +88,13 @@ Minimal visual indicator — thin horizontal line (2-4px, subtle bg, hover highl
 
 ## Files Changed
 
-| File | Action |
-|------|--------|
-| `src/components/schema-form.tsx` | Add `ref` prop forwarding to RJSF Form |
-| `src/components/chat/chat-form.tsx` | Delete (code moves to new files) |
-| `src/components/chat/chat-form-fields.tsx` | **New** — form fields panel |
-| `src/components/chat/chat-form-footer.tsx` | **New** — footer controls |
-| `src/components/chat/chat-drawer.tsx` | Major restructure — three-state layout with Splitter |
+| File                                       | Action                                               |
+| ------------------------------------------ | ---------------------------------------------------- |
+| `src/components/schema-form.tsx`           | Add `ref` prop forwarding to RJSF Form               |
+| `src/components/chat/chat-form.tsx`        | Delete (code moves to new files)                     |
+| `src/components/chat/chat-form-fields.tsx` | **New** — form fields panel                          |
+| `src/components/chat/chat-form-footer.tsx` | **New** — footer controls                            |
+| `src/components/chat/chat-drawer.tsx`      | Major restructure — three-state layout with Splitter |
 
 ## Key Technical Details
 

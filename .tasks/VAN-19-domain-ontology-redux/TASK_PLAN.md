@@ -227,21 +227,25 @@ Auto-generate the LLM system prompt ontology text from the v2 ontology definitio
 Post-implementation fixes after testing with a real HiveMQ Edge API.
 
 **Performance**:
+
 - WebCola `avoidOverlaps(true)` was causing 4.5s freezes (O(n²) per iteration)
 - Replaced with two-phase layout: rank-grid seed (O(V+E)) + short Cola refinement without `avoidOverlaps`
 - Freeze reduced from 4.5s → ~500ms
 
 **Floating edges**:
+
 - Implemented React Flow floating edge pattern (dynamic handle selection based on node positions)
 - Nodes now have source + target handles on all 4 sides
 - Edges connect to closest side, producing cleaner routing
 
 **Rank ordering** (OT→IT data flow):
+
 - Adapter/Bridge at rank 0 (symmetric connectors)
 - OT Device/Remote Broker at rank 1 (what connectors reach)
 - Tag(2) → Mappers(3) → Topic/Broker(4) → DataHub(5) → Policies(6) → Resources(7)
 
 **Edge direction fixes** for NB/SB mappers:
+
 - `Tag → feedsInto → NB Mapper → publishesTo → Topic` (was: mapper pointed back to tag)
 - `TopicFilter → feedsInto → SB Mapper → writesTo → Tag` (was: mapper pointed back to filter)
 
@@ -264,6 +268,7 @@ Post-implementation fixes after testing with a real HiveMQ Edge API.
 ### Phase 6c — Layout Worker (deferred)
 
 Move the Cola refinement phase off the main thread via Web Worker or React Suspense pattern. This affects:
+
 - Initial graph assembly (current ~500ms freeze)
 - Direction changes (re-layout on toggle)
 - Scope/flag switching (re-layout on scope change)
@@ -276,11 +281,13 @@ Move the Cola refinement phase off the main thread via Web Worker or React Suspe
 ### Phase 6d — i18n & Relationship Terminology Normalisation ✅
 
 Hardcoded relationship strings appear in `entity-derivation.ts`, `assembler-v2.ts`, `v2-ontology.ts`, and `constants.ts` (edge styles). These need to be:
+
 1. Extracted to a single relationship registry (source of truth)
 2. Made i18n-ready via `en-US.json`
 3. Normalised to follow ontology naming best practices
 
 **Naming conventions** (from OWL/Schema.org/Neo4j research):
+
 - Use **active-voice verb phrases**: `manages`, `exposes`, `validates`
 - **Short specific verbs** over compound nouns: `owns` not `ownsPolicy`
 - **No entity type in the relationship name** — the endpoints define the types
@@ -289,46 +296,47 @@ Hardcoded relationship strings appear in `entity-derivation.ts`, `assembler-v2.t
 
 **Current → Proposed relationship names**:
 
-| Current | Source → Target | Proposed | Rationale |
-|---------|----------------|----------|-----------|
-| `manages` | Adapter → OT Device | `manages` | Already good |
-| `exposes` | OT Device → Tag | `exposes` | Already good |
-| `connectsTo` | Bridge → Remote Broker | `connectsTo` | Already good |
-| `hasNorthboundMapper` | Adapter → NB Mapper | `owns` | Structural ownership, no need to encode direction in name |
-| `hasSouthboundMapper` | Adapter → SB Mapper | `owns` | Same |
-| `hasSubscription` | Bridge → BridgeSub | `owns` | Same |
-| `feedsInto` | Tag → NB Mapper / TF → SB Mapper | `feeds` | Shorter, still clear |
-| `publishesTo` | NB Mapper → Topic | `publishes` | Drop preposition |
-| `writesTo` | SB Mapper → Tag | `writes` | Drop preposition |
-| `subscriptionFilter` | BridgeSub → TopicFilter | `filters` | Verb, not noun |
-| `subscriptionDestination` | BridgeSub → Topic | `delivers` | Verb, specific |
-| `sourceEntities` | Adapter/Bridge → Combiner | `sources` | Verb form |
-| `destinationTopic` | Combiner/Mapper → Topic | `publishes` | Same as NB mapper |
-| `ownsTopic` | EdgeBroker → Topic | `owns` | Drop entity type |
-| `ownsFilter` | EdgeBroker → TopicFilter | `owns` | Drop entity type |
-| `ownsPolicy` | DataHub → DataPolicy | `owns` | Drop entity type |
-| `ownsBehaviorPolicy` | DataHub → BehaviorPolicy | `owns` | Drop entity type |
-| `ownsSchema` | DataHub → Schema | `owns` | Drop entity type |
-| `ownsScript` | DataHub → Script | `owns` | Drop entity type |
-| `attachedTo` | DataPolicy → TopicFilter | `attachedTo` | Already good |
-| `validates` | DataPolicy → Schema | `validates` | Already good |
-| `executes` | Policy → Script | `executes` | Already good |
-| `redirectsTo` | DataPolicy → Topic | `redirects` | Drop preposition |
-| `deserializes` | BehaviorPolicy → Schema | `deserializes` | Already good |
-| `matches` | TopicFilter → Topic | `matches` | Already good |
+| Current                   | Source → Target                  | Proposed       | Rationale                                                 |
+| ------------------------- | -------------------------------- | -------------- | --------------------------------------------------------- |
+| `manages`                 | Adapter → OT Device              | `manages`      | Already good                                              |
+| `exposes`                 | OT Device → Tag                  | `exposes`      | Already good                                              |
+| `connectsTo`              | Bridge → Remote Broker           | `connectsTo`   | Already good                                              |
+| `hasNorthboundMapper`     | Adapter → NB Mapper              | `owns`         | Structural ownership, no need to encode direction in name |
+| `hasSouthboundMapper`     | Adapter → SB Mapper              | `owns`         | Same                                                      |
+| `hasSubscription`         | Bridge → BridgeSub               | `owns`         | Same                                                      |
+| `feedsInto`               | Tag → NB Mapper / TF → SB Mapper | `feeds`        | Shorter, still clear                                      |
+| `publishesTo`             | NB Mapper → Topic                | `publishes`    | Drop preposition                                          |
+| `writesTo`                | SB Mapper → Tag                  | `writes`       | Drop preposition                                          |
+| `subscriptionFilter`      | BridgeSub → TopicFilter          | `filters`      | Verb, not noun                                            |
+| `subscriptionDestination` | BridgeSub → Topic                | `delivers`     | Verb, specific                                            |
+| `sourceEntities`          | Adapter/Bridge → Combiner        | `sources`      | Verb form                                                 |
+| `destinationTopic`        | Combiner/Mapper → Topic          | `publishes`    | Same as NB mapper                                         |
+| `ownsTopic`               | EdgeBroker → Topic               | `owns`         | Drop entity type                                          |
+| `ownsFilter`              | EdgeBroker → TopicFilter         | `owns`         | Drop entity type                                          |
+| `ownsPolicy`              | DataHub → DataPolicy             | `owns`         | Drop entity type                                          |
+| `ownsBehaviorPolicy`      | DataHub → BehaviorPolicy         | `owns`         | Drop entity type                                          |
+| `ownsSchema`              | DataHub → Schema                 | `owns`         | Drop entity type                                          |
+| `ownsScript`              | DataHub → Script                 | `owns`         | Drop entity type                                          |
+| `attachedTo`              | DataPolicy → TopicFilter         | `attachedTo`   | Already good                                              |
+| `validates`               | DataPolicy → Schema              | `validates`    | Already good                                              |
+| `executes`                | Policy → Script                  | `executes`     | Already good                                              |
+| `redirectsTo`             | DataPolicy → Topic               | `redirects`    | Drop preposition                                          |
+| `deserializes`            | BehaviorPolicy → Schema          | `deserializes` | Already good                                              |
+| `matches`                 | TopicFilter → Topic              | `matches`      | Already good                                              |
 
 **Files**:
 
-| Action | File | Purpose |
-|--------|------|---------|
-| CREATE | `src/graph/relationships.ts` | Single registry of all relationship keys + i18n label keys |
-| MODIFY | `src/graph/entity-derivation.ts` | Use relationship constants instead of string literals |
-| MODIFY | `src/graph/assembler-v2.ts` | Use relationship constants instead of string literals |
-| MODIFY | `src/graph/ontology/v2-ontology.ts` | Update relationship names to match |
-| MODIFY | `src/graph/constants.ts` | Update EDGE_STYLES keys to match |
-| MODIFY | `src/locales/en-US.json` | Add `graph.relationship.*` i18n keys |
+| Action | File                                | Purpose                                                    |
+| ------ | ----------------------------------- | ---------------------------------------------------------- |
+| CREATE | `src/graph/relationships.ts`        | Single registry of all relationship keys + i18n label keys |
+| MODIFY | `src/graph/entity-derivation.ts`    | Use relationship constants instead of string literals      |
+| MODIFY | `src/graph/assembler-v2.ts`         | Use relationship constants instead of string literals      |
+| MODIFY | `src/graph/ontology/v2-ontology.ts` | Update relationship names to match                         |
+| MODIFY | `src/graph/constants.ts`            | Update EDGE_STYLES keys to match                           |
+| MODIFY | `src/locales/en-US.json`            | Add `graph.relationship.*` i18n keys                       |
 
 **Acceptance criteria**:
+
 - All relationship strings come from a single `RELATIONSHIPS` constant
 - Edge labels on the graph are i18n-ready (rendered via `t()`)
 - No compound names like `ownsPolicy` — just `owns`
@@ -358,12 +366,12 @@ Solution: CSS custom properties in `src/graph/graph-tokens.css` with `:root` (li
 
 **Files**:
 
-| Action | File | Purpose |
-|--------|------|---------|
-| CREATE | `src/graph/graph-tokens.css` | CSS custom properties for edge colors, background, minimap (light/dark) |
-| MODIFY | `src/graph/layout.ts` | Apply `spacingScale` to nodeSpacing/rankSpacing throughout |
-| MODIFY | `src/graph/store.ts` | Pass `spacingScale=2` for schema view; thread parameter through helpers |
-| MODIFY | `src/graph/constants.ts` | EDGE_STYLES + DEFAULT_EDGE_STYLE use `var(--graph-*)` references |
+| Action | File                                    | Purpose                                                                          |
+| ------ | --------------------------------------- | -------------------------------------------------------------------------------- |
+| CREATE | `src/graph/graph-tokens.css`            | CSS custom properties for edge colors, background, minimap (light/dark)          |
+| MODIFY | `src/graph/layout.ts`                   | Apply `spacingScale` to nodeSpacing/rankSpacing throughout                       |
+| MODIFY | `src/graph/store.ts`                    | Pass `spacingScale=2` for schema view; thread parameter through helpers          |
+| MODIFY | `src/graph/constants.ts`                | EDGE_STYLES + DEFAULT_EDGE_STYLE use `var(--graph-*)` references                 |
 | MODIFY | `src/graph/components/graph-canvas.tsx` | Import tokens CSS, sync `colorMode`, theme-aware Background/MiniMap/arrow marker |
 
 **Progress**:
@@ -386,6 +394,7 @@ Update the agent's query tools to leverage v2 ontology knowledge — richer labe
 **Files**: Query tools in `src/agent/tools/query-*.ts` + snapshot helper.
 
 **Result**: Audit found all query tools are already v2-compatible. No code changes needed.
+
 - All 6 query tools use correct v2 entity type strings
 - Graph store scope filtering covers both v1 and v2 types
 - Snapshot helper is entity-type agnostic

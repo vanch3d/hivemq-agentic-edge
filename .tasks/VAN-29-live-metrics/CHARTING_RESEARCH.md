@@ -3,6 +3,7 @@
 ## Requirements
 
 The charting solution must mirror the project's approach with other UI primitives:
+
 - **RJSF** for forms: JSON Schema -> fully rendered form
 - **TanStack Table** for tabular data: column defs + data -> fully rendered table
 
@@ -34,11 +35,11 @@ Understanding how our app handles theming is essential for evaluating integratio
 
 **Three token access patterns in the project**:
 
-| Pattern | When used | Example |
-| --- | --- | --- |
-| Chakra token strings | Chakra component props | `bg="blue.500"` |
+| Pattern               | When used                       | Example                                                |
+| --------------------- | ------------------------------- | ------------------------------------------------------ |
+| Chakra token strings  | Chakra component props          | `bg="blue.500"`                                        |
 | CSS custom properties | External libraries (React Flow) | `var(--graph-edge-teal)` with `.dark` overrides in CSS |
-| Chakra CSS variables | Raw DOM/JS access | `var(--chakra-colors-blue-300)` |
+| Chakra CSS variables  | Raw DOM/JS access               | `var(--chakra-colors-blue-300)`                        |
 
 **Established precedent**: The graph visualization (`@xyflow/react`) uses a dedicated `graph-tokens.css` file with CSS custom properties that adapt to dark mode via `.dark` selector. This is the proven pattern for bridging external libraries to Chakra theming.
 
@@ -121,14 +122,14 @@ Understanding how our app handles theming is essential for evaluating integratio
 
 ### How Chakra integration would work with each library
 
-| Library | Integration approach | Dark mode | Effort | Quality |
-| --- | --- | --- | --- | --- |
-| **Nivo** | Build a `PartialTheme` from Chakra CSS vars. Nivo's `ThemeProvider` wraps chart area. Text, axis, grid, tooltip all themed from one object. | Rebuild theme on color mode change via `useColorMode()` or use CSS vars in theme values | Low | Excellent -- native theme object matches Chakra's token granularity |
-| **Recharts** | Set individual color props on every component | Manual per-prop, no cascading | High | Poor -- no centralized theme, scattered color props |
-| **Visx** | Direct SVG attribute control, use CSS vars | CSS vars on SVG elements | Medium | Good but manual -- you own every pixel |
-| **uPlot** | Build options object with resolved color values | Must re-create chart on mode change (canvas) | Medium | Fair -- canvas can't use CSS vars, no cascading |
-| **ECharts** | Register theme with resolved tokens | Re-register theme on mode change | Medium | Good but global/imperative |
-| **Observable Plot** | CSS custom properties on rendered SVG | Native CSS `.dark` selector | Low | Good -- pure CSS theming |
+| Library             | Integration approach                                                                                                                        | Dark mode                                                                               | Effort | Quality                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
+| **Nivo**            | Build a `PartialTheme` from Chakra CSS vars. Nivo's `ThemeProvider` wraps chart area. Text, axis, grid, tooltip all themed from one object. | Rebuild theme on color mode change via `useColorMode()` or use CSS vars in theme values | Low    | Excellent -- native theme object matches Chakra's token granularity |
+| **Recharts**        | Set individual color props on every component                                                                                               | Manual per-prop, no cascading                                                           | High   | Poor -- no centralized theme, scattered color props                 |
+| **Visx**            | Direct SVG attribute control, use CSS vars                                                                                                  | CSS vars on SVG elements                                                                | Medium | Good but manual -- you own every pixel                              |
+| **uPlot**           | Build options object with resolved color values                                                                                             | Must re-create chart on mode change (canvas)                                            | Medium | Fair -- canvas can't use CSS vars, no cascading                     |
+| **ECharts**         | Register theme with resolved tokens                                                                                                         | Re-register theme on mode change                                                        | Medium | Good but global/imperative                                          |
+| **Observable Plot** | CSS custom properties on rendered SVG                                                                                                       | Native CSS `.dark` selector                                                             | Low    | Good -- pure CSS theming                                            |
 
 ### Nivo theme <-> Chakra bridge (concrete example)
 
@@ -139,34 +140,41 @@ function useNivoTheme(): PartialTheme {
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
 
-  return useMemo((): PartialTheme => ({
-    background: isDark ? "var(--chakra-colors-gray-900)" : "var(--chakra-colors-white)",
-    text: {
-      fontSize: 11,
-      fill: isDark ? "var(--chakra-colors-gray-300)" : "var(--chakra-colors-gray-700)",
-      fontFamily: "var(--chakra-fonts-body)",
-    },
-    axis: {
-      domain: { line: { stroke: isDark ? "#525252" : "#d4d4d4" } },
-      ticks: {
-        line: { stroke: isDark ? "#525252" : "#d4d4d4" },
-        text: { fill: isDark ? "#a3a3a3" : "#737373" },
+  return useMemo(
+    (): PartialTheme => ({
+      background: isDark
+        ? "var(--chakra-colors-gray-900)"
+        : "var(--chakra-colors-white)",
+      text: {
+        fontSize: 11,
+        fill: isDark
+          ? "var(--chakra-colors-gray-300)"
+          : "var(--chakra-colors-gray-700)",
+        fontFamily: "var(--chakra-fonts-body)",
       },
-    },
-    grid: {
-      line: { stroke: isDark ? "#2d2d2d" : "#ededed" },
-    },
-    tooltip: {
-      container: {
-        background: isDark ? "#1a1a2e" : "#ffffff",
-        color: isDark ? "#e5e5e5" : "#333333",
-        fontSize: 12,
+      axis: {
+        domain: { line: { stroke: isDark ? "#525252" : "#d4d4d4" } },
+        ticks: {
+          line: { stroke: isDark ? "#525252" : "#d4d4d4" },
+          text: { fill: isDark ? "#a3a3a3" : "#737373" },
+        },
       },
-    },
-    crosshair: {
-      line: { stroke: isDark ? "#a3a3a3" : "#666666" },
-    },
-  }), [isDark]);
+      grid: {
+        line: { stroke: isDark ? "#2d2d2d" : "#ededed" },
+      },
+      tooltip: {
+        container: {
+          background: isDark ? "#1a1a2e" : "#ffffff",
+          color: isDark ? "#e5e5e5" : "#333333",
+          fontSize: 12,
+        },
+      },
+      crosshair: {
+        line: { stroke: isDark ? "#a3a3a3" : "#666666" },
+      },
+    }),
+    [isDark],
+  );
 }
 ```
 
@@ -180,18 +188,21 @@ function useUPlotTheme() {
   const isDark = colorMode === "dark";
 
   // Must return resolved color strings -- canvas can't use CSS vars
-  return useMemo(() => ({
-    axes: {
-      stroke: isDark ? "#525252" : "#d4d4d4",
-      font: `11px ${getComputedStyle(document.documentElement).getPropertyValue("--chakra-fonts-body")}`,
-      ticks: { stroke: isDark ? "#525252" : "#d4d4d4" },
-      grid: { stroke: isDark ? "#2d2d2d" : "#ededed" },
-    },
-    series: {
-      stroke: isDark ? "#60a5fa" : "#3b82f6",
-      fill: isDark ? "rgba(96,165,250,0.1)" : "rgba(59,130,246,0.1)",
-    },
-  }), [isDark]);
+  return useMemo(
+    () => ({
+      axes: {
+        stroke: isDark ? "#525252" : "#d4d4d4",
+        font: `11px ${getComputedStyle(document.documentElement).getPropertyValue("--chakra-fonts-body")}`,
+        ticks: { stroke: isDark ? "#525252" : "#d4d4d4" },
+        grid: { stroke: isDark ? "#2d2d2d" : "#ededed" },
+      },
+      series: {
+        stroke: isDark ? "#60a5fa" : "#3b82f6",
+        fill: isDark ? "rgba(96,165,250,0.1)" : "rgba(59,130,246,0.1)",
+      },
+    }),
+    [isDark],
+  );
 }
 // Caveat: changing color mode requires destroying and recreating the uPlot instance
 ```
@@ -200,14 +211,14 @@ function useUPlotTheme() {
 
 ## Revised Evaluation Matrix
 
-| Library | Config-driven | React-native | Theming | Chart range | Bundle | Real-time | Overall |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| **Nivo** | Excellent | Excellent | Excellent | Excellent (30+) | Medium (60-80KB) | Fair | **A** |
-| Recharts | Good | Excellent | Poor | Good (12) | Large (170KB) | Fair | B |
-| Visx | Low | Excellent | Manual | DIY | Small (30-50KB) | Good | B- |
-| uPlot | Excellent | Wrapper | Fair | Limited (5) | Tiny (30KB) | Excellent | B+ |
-| ECharts | Excellent | Wrapper | Good | Excellent (20+) | Huge (350KB) | Good | B |
-| Observable Plot | Excellent | None | Good (CSS) | Flexible | Medium (90KB) | Fair | B |
+| Library         | Config-driven | React-native | Theming    | Chart range     | Bundle           | Real-time | Overall |
+| --------------- | ------------- | ------------ | ---------- | --------------- | ---------------- | --------- | ------- |
+| **Nivo**        | Excellent     | Excellent    | Excellent  | Excellent (30+) | Medium (60-80KB) | Fair      | **A**   |
+| Recharts        | Good          | Excellent    | Poor       | Good (12)       | Large (170KB)    | Fair      | B       |
+| Visx            | Low           | Excellent    | Manual     | DIY             | Small (30-50KB)  | Good      | B-      |
+| uPlot           | Excellent     | Wrapper      | Fair       | Limited (5)     | Tiny (30KB)      | Excellent | B+      |
+| ECharts         | Excellent     | Wrapper      | Good       | Excellent (20+) | Huge (350KB)     | Good      | B       |
+| Observable Plot | Excellent     | None         | Good (CSS) | Flexible        | Medium (90KB)    | Fair      | B       |
 
 ---
 
@@ -244,8 +255,8 @@ The `ChartSpec` abstraction from the tool layer maps naturally to Nivo component
 ```typescript
 type ChartSpec = {
   type: "line" | "bar" | "pie" | "heatmap" | "radar";
-  data: unknown;  // Nivo-specific data shape per chart type
-  config?: Record<string, unknown>;  // Nivo props passthrough
+  data: unknown; // Nivo-specific data shape per chart type
+  config?: Record<string, unknown>; // Nivo props passthrough
 };
 ```
 

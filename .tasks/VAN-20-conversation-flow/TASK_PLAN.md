@@ -34,11 +34,11 @@ This avoids the duplication feeling without trying to parse/strip LLM output.
 
 ## Files
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/chat/chat-markdown.tsx` | **Create** | `ChatMarkdown` + `CollapsibleTextPart` components |
+| File                                     | Action     | Description                                                                     |
+| ---------------------------------------- | ---------- | ------------------------------------------------------------------------------- |
+| `src/components/chat/chat-markdown.tsx`  | **Create** | `ChatMarkdown` + `CollapsibleTextPart` components                               |
 | `src/components/chat/message-bubble.tsx` | **Modify** | Use `ChatMarkdown` for assistant text, `CollapsibleTextPart` after tool results |
-| `src/locales/en-US.json` | **Modify** | Add `chat.analysis` translation key |
+| `src/locales/en-US.json`                 | **Modify** | Add `chat.analysis` translation key                                             |
 
 ## Key references
 

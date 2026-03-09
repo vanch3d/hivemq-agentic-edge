@@ -36,6 +36,7 @@ The existing `ChatDrawer` contains all the chat UI logic (form split view, appro
 ### D3. Splitter sizing
 
 The Chakra UI Splitter uses percentage-based sizes. We set:
+
 - **Default split**: `[35, 65]` — conversation gets ~35% of viewport width
 - **Min sizes**: chat panel `minSize={25}`, outlet panel `minSize={30}`
 - The absolute minimum width of the chat panel (at 25% of a 1024px viewport) is ~256px, which is comfortable for the conversation UI
@@ -53,6 +54,7 @@ Create a new route `/workspace/snapshots` that renders the snapshot list as a fu
 ### D6. Sidebar removal
 
 Delete `src/components/workspace/sidebar.tsx`. Its responsibilities are redistributed:
+
 - **Graph nav link** → Toolbar
 - **Snapshot list** → New `/workspace/snapshots` route
 - **Logout button** → Already in toolbar user menu
@@ -63,17 +65,17 @@ Remove the drawer-related state (`isOpen`, `onOpen`, `onClose`, `onToggle`) from
 
 ## File Changes
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/chat/chat-panel.tsx` | **Create** | New component: extracts chat body from `ChatDrawer` (header + message list + input/form/approval). Pure flex column, no drawer. |
-| `src/routes/_authenticated/workspace.tsx` | **Modify** | Replace `Sidebar + Box + ChatDrawer` with `Splitter[ ChatPanel | Outlet ]` |
-| `src/components/workspace/toolbar.tsx` | **Modify** | Remove `ChatToggleButton`. Add nav links (Graph, Snapshots). Add caret to user menu trigger. |
-| `src/context/chat-context.tsx` | **Modify** | Remove `isOpen`/`onOpen`/`onClose`/`onToggle` state and Cmd+K toggle. Optionally add `inputRef` for Cmd+K focus. |
-| `src/components/chat/chat-toggle-button.tsx` | **Delete** | No longer needed |
-| `src/components/workspace/sidebar.tsx` | **Delete** | Replaced by toolbar nav + snapshots page |
-| `src/components/chat/chat-drawer.tsx` | **Modify** | Strip to re-export or delete. All logic moves to `chat-panel.tsx`. |
-| `src/routes/_authenticated/workspace/snapshots.tsx` | **Create** | New route: full-page snapshot list |
-| `src/locales/en-US.json` | **Modify** | Add `nav.snapshots` key, update `chat.toggle` if needed |
+| File                                                | Action     | Description                                                                                                                     |
+| --------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `src/components/chat/chat-panel.tsx`                | **Create** | New component: extracts chat body from `ChatDrawer` (header + message list + input/form/approval). Pure flex column, no drawer. |
+| `src/routes/_authenticated/workspace.tsx`           | **Modify** | Replace `Sidebar + Box + ChatDrawer` with `Splitter[ ChatPanel                                                                  | Outlet ]` |
+| `src/components/workspace/toolbar.tsx`              | **Modify** | Remove `ChatToggleButton`. Add nav links (Graph, Snapshots). Add caret to user menu trigger.                                    |
+| `src/context/chat-context.tsx`                      | **Modify** | Remove `isOpen`/`onOpen`/`onClose`/`onToggle` state and Cmd+K toggle. Optionally add `inputRef` for Cmd+K focus.                |
+| `src/components/chat/chat-toggle-button.tsx`        | **Delete** | No longer needed                                                                                                                |
+| `src/components/workspace/sidebar.tsx`              | **Delete** | Replaced by toolbar nav + snapshots page                                                                                        |
+| `src/components/chat/chat-drawer.tsx`               | **Modify** | Strip to re-export or delete. All logic moves to `chat-panel.tsx`.                                                              |
+| `src/routes/_authenticated/workspace/snapshots.tsx` | **Create** | New route: full-page snapshot list                                                                                              |
+| `src/locales/en-US.json`                            | **Modify** | Add `nav.snapshots` key, update `chat.toggle` if needed                                                                         |
 
 ## Implementation Steps
 
@@ -94,12 +96,22 @@ Remove the drawer-related state (`isOpen`, `onOpen`, `onClose`, `onToggle`) from
   - Import `ChatPanel` + Splitter components
   - Replace inner `<Flex>` with:
     ```tsx
-    <Splitter orientation="horizontal" defaultSize={[35, 65]}
-      panels={[{ id: "chat", minSize: 25 }, { id: "content", minSize: 30 }]}>
-      <SplitterPanel id="chat"><ChatPanel /></SplitterPanel>
+    <Splitter
+      orientation="horizontal"
+      defaultSize={[35, 65]}
+      panels={[
+        { id: "chat", minSize: 25 },
+        { id: "content", minSize: 30 },
+      ]}
+    >
+      <SplitterPanel id="chat">
+        <ChatPanel />
+      </SplitterPanel>
       <SplitterResizeTrigger id="chat:content" />
       <SplitterPanel id="content">
-        <Box as="main" flex="1" overflow="auto" p="6"><Outlet /></Box>
+        <Box as="main" flex="1" overflow="auto" p="6">
+          <Outlet />
+        </Box>
       </SplitterPanel>
     </Splitter>
     ```

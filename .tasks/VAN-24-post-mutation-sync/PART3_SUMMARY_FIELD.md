@@ -3,6 +3,7 @@
 ## Problem
 
 When the LLM executes a mutation tool (e.g. "create a bridge"), the tool result sent back to the LLM is raw JSON — `{ data: {...}, error: undefined }`. The LLM (especially smaller models like Haiku) doesn't reliably generate a clear success acknowledgment from this raw data. The user sees the form, submits it, and then the LLM continuation either:
+
 - Describes the form fields back ("The bridge was configured with host X, port Y...")
 - Says nothing useful about whether it actually succeeded
 
@@ -19,9 +20,11 @@ This is a **structured hint** — the LLM sees both the summary and raw data, bu
 Added `summary` to the `outputSchema` of all 4 mutation tools (`mutateBridge`, `mutateAdapter`, `mutateDataHub`, `mutateSystem`):
 
 ```ts
-summary: z.string().optional().describe(
-  "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user."
-)
+summary: z.string()
+  .optional()
+  .describe(
+    "Human-readable outcome of the mutation (e.g. 'Bridge test-bridge created successfully'). Use this to acknowledge the result to the user.",
+  );
 ```
 
 ### 2. Tool implementations
@@ -34,6 +37,7 @@ Each mutation operation now returns `summary` on success, `undefined` on error:
 - **`src/agent/tools/mutate-system.ts`** (7 ops): add/update/delete for topic filters and combiners, setIsa95
 
 Example return value:
+
 ```ts
 return {
   summary: error ? undefined : `Bridge "${id}" created successfully.`,

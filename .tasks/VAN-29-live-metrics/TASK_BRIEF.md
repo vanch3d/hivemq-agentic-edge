@@ -26,10 +26,10 @@ Beyond point-in-time reads, a natural follow-up is "show me a live update of tha
 
 ## API endpoints involved
 
-| Endpoint | Operation | Status |
-| --- | --- | --- |
-| `GET /api/v1/metrics` | `getMetrics` | Wired (lists names only) |
-| `GET /api/v1/metrics/{metricName}/latest` | `getSample` | Not wired -- SDK generated, no tool uses it |
+| Endpoint                                  | Operation    | Status                                      |
+| ----------------------------------------- | ------------ | ------------------------------------------- |
+| `GET /api/v1/metrics`                     | `getMetrics` | Wired (lists names only)                    |
+| `GET /api/v1/metrics/{metricName}/latest` | `getSample`  | Not wired -- SDK generated, no tool uses it |
 
 ## Metric naming convention
 

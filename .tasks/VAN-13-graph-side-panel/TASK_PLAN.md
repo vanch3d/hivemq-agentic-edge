@@ -44,11 +44,11 @@ GraphPage (Flex, h="full", w="full")
 
 ## Files Changed
 
-| File | Action |
-|------|--------|
-| `src/graph/components/graph-canvas.tsx` | Add `Panel` overlay with `GraphDetailPanel` |
-| `src/graph/components/graph-detail-panel.tsx` | Remove empty-state prompt |
-| `src/graph/components/graph-page.tsx` | Remove side panel wrapper |
+| File                                          | Action                                      |
+| --------------------------------------------- | ------------------------------------------- |
+| `src/graph/components/graph-canvas.tsx`       | Add `Panel` overlay with `GraphDetailPanel` |
+| `src/graph/components/graph-detail-panel.tsx` | Remove empty-state prompt                   |
+| `src/graph/components/graph-page.tsx`         | Remove side panel wrapper                   |
 
 ## Key Details
 

@@ -7,6 +7,7 @@ When the agent tries to create an adapter (e.g. "create an OPCUA adapter"), thre
 ### Issue 1: Wrong form schema for adapter create/update
 
 The `mutateAdapter.create` form uses the **static** `AdapterSchema` from the OpenAPI spec (`src/api/schemas.gen.ts`). This schema only defines:
+
 - `id` (string)
 - `type` (string)
 - `config` (opaque `JsonNode` — renders as a generic JSON editor)
@@ -39,6 +40,7 @@ The LLM guesses `opc-ua` as the adapter type ID when the user says "OPCUA". The 
 The fundamental gap is that **adapter types are dynamic entities with their own schemas**, but the current code treats adapter creation as a static-schema operation. The form schema registry (`form-schemas.ts`) has no concept of fetching a schema at runtime.
 
 ### Current flow (broken):
+
 ```
 User: "create OPCUA adapter"
 → LLM calls mutateAdapter({ operation: "create", adapterType: "opcua" })
@@ -48,6 +50,7 @@ User: "create OPCUA adapter"
 ```
 
 ### Desired flow:
+
 ```
 User: "create OPCUA adapter"
 → LLM calls mutateAdapter({ operation: "create", adapterType: "opcua" })
@@ -63,7 +66,9 @@ User: "create OPCUA adapter"
 ## Resolved Questions
 
 ### Q1: Payload structure
+
 The API `POST /api/v1/management/protocol-adapters/adapters/{adapterType}` expects:
+
 ```json
 {
   "id": "my-opcua-01",
@@ -75,10 +80,13 @@ The API `POST /api/v1/management/protocol-adapters/adapters/{adapterType}` expec
   }
 }
 ```
+
 The `config` field is a **nested object** whose shape matches the adapter type's `configSchema`. The `configSchema` itself includes `id` at the top level (e.g. mtconnect in `dist/types.json` has `id` in `configSchema.properties`). So the form should use `configSchema` as-is — RJSF collects all fields including `id`, then on submit we split: `id` goes to the top level, everything else goes into `config`.
 
 ### Q2: uiSchema passthrough
+
 **`SchemaForm` already supports `uiSchema`** as a prop. But the chain is broken:
+
 - `FormRequest` type (tool-context.ts) — does NOT include `uiSchema`
 - `ActiveForm` type (chat-context.tsx) — extends `FormRequest`, so also missing
 - `ChatFormFields` component — does NOT accept or pass `uiSchema`
@@ -87,7 +95,9 @@ The `config` field is a **nested object** whose shape matches the adapter type's
 **Fix needed**: Add `uiSchema` to `FormRequest`, thread it through `ChatFormFields` → `SchemaForm`.
 
 ### Q3: Adapter type caching
+
 Adapter types are deployment-time entities — they don't change within a session. **Cache them once at app startup.** This:
+
 - Avoids redundant API calls on every create/update
 - Makes the available types known to the agent via the system prompt (the agent can reference type IDs directly)
 - Serves as the single source of truth for adapter type schemas
@@ -116,6 +126,7 @@ try {
 **File**: `src/mocks/fixtures/adapters.ts`
 
 Update `adapterTypesList` to include realistic `configSchema` and `uiSchema` for each adapter type. Use the real API payload from `dist/types.json` as reference. Changes:
+
 - Rename `opc-ua` → `opcua` to match real system IDs
 - Add `configSchema` with proper JSON Schema (properties, required, types)
 - Add `uiSchema` with `ui:tabs` and `ui:order`
@@ -127,14 +138,17 @@ Update `adapterTypesList` to include realistic `configSchema` and `uiSchema` for
 Use TanStack Query with `staleTime: Infinity` instead of a separate store. This reuses the existing query infrastructure and avoids an extra state management layer.
 
 **File**: `src/agent/tool-context.ts`
+
 - Add a `setQueryClient(qc)` registrar (or reuse the existing invalidator pattern to expose the full `queryClient`)
 - Add a helper: `getAdapterType(typeId: string)` that calls `queryClient.ensureQueryData()` with the adapter types query key and `staleTime: Infinity`. Returns the cached type definition or fetches if not yet loaded.
 
 **File**: `src/context/chat-context.tsx` (or root layout)
+
 - On mount, call `queryClient.prefetchQuery({ queryKey: ["adapterTypes"], queryFn: () => getAdapterTypes(), staleTime: Infinity })` to eagerly populate the cache at app startup.
 - Register the queryClient with `setQueryClient()` so tools can access it.
 
 **How it works**:
+
 - `staleTime: Infinity` means TanStack Query never considers the data stale → no background refetches
 - `ensureQueryData()` returns cached data instantly if available, or fetches once if the cache is cold
 - Mutation tools (which run outside React) access the cache via the registered `queryClient`
@@ -147,18 +161,23 @@ This cache is used by `mutateAdapter` for schema resolution and could later be i
 These changes thread `uiSchema` from the tool all the way to RJSF:
 
 **File**: `src/agent/tool-context.ts`
+
 - Add `uiSchema?: UiSchema` to `FormRequest` type
 
 **File**: `src/context/chat-context.tsx`
+
 - `ActiveForm` extends `FormRequest`, so it picks up `uiSchema` automatically
 
 **File**: `src/components/chat/chat-panel.tsx`
+
 - Pass `activeForm.uiSchema` to `ChatFormFields`
 
 **File**: `src/components/chat/chat-form-fields.tsx`
+
 - Accept `uiSchema` prop, pass to `SchemaForm`
 
 **File**: `src/components/schema-form.tsx`
+
 - Already supports `uiSchema` — no changes needed
 
 ### Part 5: Dynamic schema resolution for adapter create/update
@@ -166,6 +185,7 @@ These changes thread `uiSchema` from the tool all the way to RJSF:
 **File**: `src/agent/tools/mutate-adapter.ts`
 
 For the `create` operation:
+
 1. Look up the adapter type from the cache by `input.adapterType`
 2. If not found, return error `"Unknown adapter type: ${input.adapterType}"`
 3. Extract `configSchema` and `uiSchema` from the type definition
@@ -176,6 +196,7 @@ For the `create` operation:
 For `update`: similar, but pre-fill with existing adapter's config.
 
 **File**: `src/agent/form-schemas.ts`
+
 - Remove static `mutateAdapter.create` and `mutateAdapter.update` entries (no longer needed — schema comes from adapter type cache)
 - Keep `mutateAdapter.transitionStatus` (static, not type-dependent)
 
@@ -184,6 +205,7 @@ For `update`: similar, but pre-fill with existing adapter's config.
 **File**: `.tasks/DOMAIN_ONTOLOGY.md`
 
 Document that:
+
 - Adapter types are dynamic entities that own their `configSchema` and `uiSchema`
 - Adapter creation requires type-specific schema resolution
 - The config payload is nested: `{ id, type, config: { ...typeSpecificFields } }`
@@ -192,17 +214,17 @@ Document that:
 
 ## File Changes Summary
 
-| File | Part | Change |
-|------|------|--------|
-| `src/agent/tools/api-error.ts` | 1 | JSON.stringify fallback for unknown error shapes |
-| `src/mocks/fixtures/adapters.ts` | 2 | Add configSchema, uiSchema to mock types; fix type IDs |
-| `src/agent/tool-context.ts` | 3+4 | Expose queryClient for adapter type cache; add `uiSchema` to `FormRequest` |
-| `src/context/chat-context.tsx` | 3 | Prefetch adapter types at startup; register queryClient |
-| `src/components/chat/chat-panel.tsx` | 4 | Pass `uiSchema` to `ChatFormFields` |
-| `src/components/chat/chat-form-fields.tsx` | 4 | Accept + forward `uiSchema` to `SchemaForm` |
-| `src/agent/tools/mutate-adapter.ts` | 5 | Dynamic schema from type cache; split id/config on submit |
-| `src/agent/form-schemas.ts` | 5 | Remove static adapter create/update entries |
-| `.tasks/DOMAIN_ONTOLOGY.md` | 6 | Document adapter type schema ownership |
+| File                                       | Part | Change                                                                     |
+| ------------------------------------------ | ---- | -------------------------------------------------------------------------- |
+| `src/agent/tools/api-error.ts`             | 1    | JSON.stringify fallback for unknown error shapes                           |
+| `src/mocks/fixtures/adapters.ts`           | 2    | Add configSchema, uiSchema to mock types; fix type IDs                     |
+| `src/agent/tool-context.ts`                | 3+4  | Expose queryClient for adapter type cache; add `uiSchema` to `FormRequest` |
+| `src/context/chat-context.tsx`             | 3    | Prefetch adapter types at startup; register queryClient                    |
+| `src/components/chat/chat-panel.tsx`       | 4    | Pass `uiSchema` to `ChatFormFields`                                        |
+| `src/components/chat/chat-form-fields.tsx` | 4    | Accept + forward `uiSchema` to `SchemaForm`                                |
+| `src/agent/tools/mutate-adapter.ts`        | 5    | Dynamic schema from type cache; split id/config on submit                  |
+| `src/agent/form-schemas.ts`                | 5    | Remove static adapter create/update entries                                |
+| `.tasks/DOMAIN_ONTOLOGY.md`                | 6    | Document adapter type schema ownership                                     |
 
 ---
 
@@ -262,13 +284,15 @@ Document that:
 
 **Symptom**: When the API returned a `ProblemDetails` error (e.g. adapter type not found, validation failure), the error shown in the chat bubble was the raw JSON payload. The LLM received either just the `title` string (e.g. "Adapter type not found") or a full JSON blob — both losing the actionable field-level detail from the `errors[]` array.
 
-**Root cause**: `extractApiError()` only extracted `title` or `detail` from the top-level ProblemDetails object. It completely ignored the `errors` array, which is where the API communicates *which* parameter failed and *why*. For example:
+**Root cause**: `extractApiError()` only extracted `title` or `detail` from the top-level ProblemDetails object. It completely ignored the `errors` array, which is where the API communicates _which_ parameter failed and _why_. For example:
+
 - `errors[0].detail`: `"Adapter of type not found: opc-ua"` — tells the LLM exactly which type ID was wrong
 - `errors[0].parameter`: `"$.required"` — tells the LLM which field caused validation failure
 
 **Fix**: Rewrote `extractApiError()` with a `formatProblemDetails()` helper that understands the full `ProblemDetails` schema (defined in the OpenAPI spec). It now builds a structured string: `title: detail: error.detail (parameter: error.parameter)`. Example output: `"Adapter type not found: Adapter of type not found: opc-ua"`.
 
 **Ontology insight**: This is a strong argument for the importance of a high-quality OpenAPI spec in building the agent's ontology. The `ProblemDetails` schema — with its `title`, `detail`, `errors[].detail`, and `errors[].parameter` structure — is a formal contract for how the API communicates errors. By understanding this contract (rather than treating errors as opaque blobs), the agent can:
+
 1. Present errors to users as readable text instead of raw JSON
 2. Give the LLM precise field-level feedback for self-correction (e.g. retry with the right adapter type ID)
 3. Potentially map `parameter` paths back to form fields in the future

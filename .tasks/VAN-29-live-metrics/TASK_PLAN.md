@@ -8,12 +8,14 @@
 ### AD-1: Add a dedicated `queryMetrics` tool (separate from `querySystem`)
 
 A dedicated tool for metrics because:
+
 - The output schema differs (includes `display: "metric-live"`, `metricName`, `pollInterval`)
 - The agent needs a clear semantic signal: "this result should be rendered as a live chart"
 - Keeps `querySystem` focused on its existing 14 operations
 - The existing `metrics` operation on `querySystem` (list names) stays as-is
 
 **Operations**:
+
 - `getValue` -- single point-in-time read of one metric (returns `DataPoint`)
 - `monitor` -- returns config for live polling visualization (sparkline)
 - `search` -- search metric names by pattern (helpful for LLM to resolve user intent)
@@ -27,6 +29,7 @@ Following the existing pattern (`"graph"` -> ChatGraph, array -> ChatTable), add
 See [CHARTING_RESEARCH.md](./CHARTING_RESEARCH.md) for full evaluation.
 
 **Why Nivo over uPlot**:
+
 - **Theming**: Dedicated `@nivo/theming` with `ThemeProvider`, `PartialTheme` deep-merge -- maps cleanly to Chakra UI tokens via a `useNivoTheme()` bridge hook
 - **React-native**: First-class components, hooks, context -- same mental model as the rest of the app
 - **Chart type range**: 30+ types available as tree-shakeable packages. Only `@nivo/line` needed now, but `@nivo/bar`, `@nivo/pie`, etc. available for future agent capabilities
@@ -51,23 +54,23 @@ The MSW mock for `getSample` generates pseudo-random values that simulate realis
 
 ### New files
 
-| File | Purpose |
-| --- | --- |
-| `src/agent/tools/query-metrics.ts` | Tool implementation for metric queries |
-| `src/components/chat/chat-metric-live.tsx` | Live metric visualization (polling + Nivo sparkline) |
-| `src/components/snapshot/snapshot-metric.tsx` | Full-page metric view for snapshots |
-| `src/hooks/use-nivo-theme.ts` | Chakra-to-Nivo theme bridge hook |
+| File                                          | Purpose                                              |
+| --------------------------------------------- | ---------------------------------------------------- |
+| `src/agent/tools/query-metrics.ts`            | Tool implementation for metric queries               |
+| `src/components/chat/chat-metric-live.tsx`    | Live metric visualization (polling + Nivo sparkline) |
+| `src/components/snapshot/snapshot-metric.tsx` | Full-page metric view for snapshots                  |
+| `src/hooks/use-nivo-theme.ts`                 | Chakra-to-Nivo theme bridge hook                     |
 
 ### Modified files
 
-| File | Changes |
-| --- | --- |
-| `src/agent/tool-definitions.ts` | Add `queryMetricsDef`; register in `allToolDefinitions` |
-| `src/components/chat/tool-status.tsx` | Add `"metric-live"` display type routing |
-| `src/mocks/fixtures/system.ts` | Expand `metricList` with adapter-specific metric names |
-| `src/mocks/handlers/system.ts` | Add `GET /api/v1/metrics/:metricName/latest` handler |
-| `src/locales/en-US.json` | Add i18n keys for metric visualization |
-| `package.json` | Add `@nivo/line`, `@nivo/core` dependencies |
+| File                                  | Changes                                                 |
+| ------------------------------------- | ------------------------------------------------------- |
+| `src/agent/tool-definitions.ts`       | Add `queryMetricsDef`; register in `allToolDefinitions` |
+| `src/components/chat/tool-status.tsx` | Add `"metric-live"` display type routing                |
+| `src/mocks/fixtures/system.ts`        | Expand `metricList` with adapter-specific metric names  |
+| `src/mocks/handlers/system.ts`        | Add `GET /api/v1/metrics/:metricName/latest` handler    |
+| `src/locales/en-US.json`              | Add i18n keys for metric visualization                  |
+| `package.json`                        | Add `@nivo/line`, `@nivo/core` dependencies             |
 
 ### Files NOT changed
 
@@ -164,6 +167,7 @@ The MSW mock for `getSample` generates pseudo-random values that simulate realis
 ## Tool Result Schema (for LLM)
 
 ### `getValue` response
+
 ```json
 {
   "data": { "sampleTime": "2026-03-06T16:00:00.000Z", "value": 42 },
@@ -172,6 +176,7 @@ The MSW mock for `getSample` generates pseudo-random values that simulate realis
 ```
 
 ### `monitor` response (single metric)
+
 ```json
 {
   "display": "metric-live",
@@ -182,6 +187,7 @@ The MSW mock for `getSample` generates pseudo-random values that simulate realis
 ```
 
 ### `monitor` response (multi-metric)
+
 ```json
 {
   "display": "metric-live",
@@ -198,11 +204,16 @@ The MSW mock for `getSample` generates pseudo-random values that simulate realis
 ```
 
 ### `search` response
+
 ```json
 {
   "data": [
-    { "name": "com.hivemq.edge.protocol-adapters.opcua.opcua-adapter-01.connection.success.count" },
-    { "name": "com.hivemq.edge.protocol-adapters.opcua.opcua-adapter-01.publish.success.count" }
+    {
+      "name": "com.hivemq.edge.protocol-adapters.opcua.opcua-adapter-01.connection.success.count"
+    },
+    {
+      "name": "com.hivemq.edge.protocol-adapters.opcua.opcua-adapter-01.publish.success.count"
+    }
   ],
   "snapshotId": "snap-def456"
 }

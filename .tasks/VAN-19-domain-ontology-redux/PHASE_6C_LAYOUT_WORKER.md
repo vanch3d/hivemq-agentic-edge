@@ -43,6 +43,7 @@ The worker imports `computeLayout` from `./layout.ts` and runs it in response to
 **Create** `src/graph/layout.worker.ts`
 
 Thin message handler:
+
 - Receives `{ id, nodes, edges, direction, spacingScale }`
 - Calls `computeLayout(nodes, edges, direction, spacingScale)`
 - Posts back `{ id, nodes: result }`
@@ -54,6 +55,7 @@ Type definitions for the message protocol live here (exported for the bridge).
 **Create** `src/graph/layout-bridge.ts`
 
 Main-thread API wrapping the worker lifecycle:
+
 - `requestLayout(opts): void` — sends request to worker, increments counter
 - `onResult(callback): void` — registers the result handler (called when worker posts back)
 - `cancel(): void` — bumps the counter so any in-flight result is ignored
@@ -66,6 +68,7 @@ Main-thread API wrapping the worker lifecycle:
 **Modify** `src/graph/store.ts`
 
 Add to state interface:
+
 - `isLayoutPending: boolean` (initial: `false`)
 
 Register the worker result callback at module level (outside the store creator). The callback calls `set()` to apply positioned nodes and clear `isLayoutPending`, gated by the request counter.
@@ -101,6 +104,7 @@ Helper functions `fullLayout` and `layoutWithPreservedPositions` become async-aw
 **Modify** `src/graph/components/graph-canvas.tsx`
 
 Read `isLayoutPending` from the store. Two states:
+
 - **Initial load** (`isLayoutPending && nodes.length === 0`): Show centered spinner with "Computing layout..." text over the ReactFlow container
 - **Re-layout** (`isLayoutPending && nodes.length > 0`): Keep existing nodes visible and interactive; optionally show a small spinner badge in the controls area
 
@@ -116,13 +120,13 @@ Add key: `"graph.layoutPending": "Computing layout…"`
 
 ## Files Summary
 
-| Action | File | Purpose |
-|--------|------|---------|
-| CREATE | `src/graph/layout.worker.ts` | Worker entry: receives message, runs computeLayout, posts result |
-| CREATE | `src/graph/layout-bridge.ts` | Main-thread API: create worker, send/receive, stale handling |
-| MODIFY | `src/graph/store.ts` | Add `isLayoutPending`, refactor 4 call sites to async |
-| MODIFY | `src/graph/components/graph-canvas.tsx` | Loading overlay when pending |
-| MODIFY | `src/locales/en-US.json` | Add loading text key |
+| Action | File                                    | Purpose                                                          |
+| ------ | --------------------------------------- | ---------------------------------------------------------------- |
+| CREATE | `src/graph/layout.worker.ts`            | Worker entry: receives message, runs computeLayout, posts result |
+| CREATE | `src/graph/layout-bridge.ts`            | Main-thread API: create worker, send/receive, stale handling     |
+| MODIFY | `src/graph/store.ts`                    | Add `isLayoutPending`, refactor 4 call sites to async            |
+| MODIFY | `src/graph/components/graph-canvas.tsx` | Loading overlay when pending                                     |
+| MODIFY | `src/locales/en-US.json`                | Add loading text key                                             |
 
 `src/graph/layout.ts` stays **unchanged** — imported by the worker as-is.
 

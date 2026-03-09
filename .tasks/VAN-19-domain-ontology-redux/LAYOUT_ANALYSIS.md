@@ -55,6 +55,7 @@ ontology semantics (adapter manages device, device exposes tags).
 ## Question 2: NB Mapper edge flow
 
 **Current edges**:
+
 ```
 Adapter → hasNorthboundMapper → NB Mapper
 NB Mapper → sourceTag → Tag
@@ -229,27 +230,27 @@ flows through the system toward the IT world.
 
 ## Final Proposed Ranks (OT → IT data flow, LR)
 
-| Rank | Entities | Rationale |
-|------|----------|-----------|
-| 0 | OT Device | Physical source (leftmost) |
-| 1 | Adapter | Manages device |
-| 2 | Tag, DomainTag | Exposed by device |
-| 3 | NB Mapper, SB Mapper | Transform between tag ↔ topic |
-| 4 | Topic, TopicFilter, Edge Broker, Pulse | Central messaging layer |
-| 5 | DataHub, Combiner, AssetMapper | Policy engine, aggregation |
-| 6 | DataPolicy, BehaviorPolicy | Policies |
-| 7 | Schema, Script | Policy resources |
-| 8 | Bridge, BridgeSubscription | Outbound to IT |
-| 9 | Remote Broker | External broker (rightmost) |
+| Rank | Entities                               | Rationale                     |
+| ---- | -------------------------------------- | ----------------------------- |
+| 0    | OT Device                              | Physical source (leftmost)    |
+| 1    | Adapter                                | Manages device                |
+| 2    | Tag, DomainTag                         | Exposed by device             |
+| 3    | NB Mapper, SB Mapper                   | Transform between tag ↔ topic |
+| 4    | Topic, TopicFilter, Edge Broker, Pulse | Central messaging layer       |
+| 5    | DataHub, Combiner, AssetMapper         | Policy engine, aggregation    |
+| 6    | DataPolicy, BehaviorPolicy             | Policies                      |
+| 7    | Schema, Script                         | Policy resources              |
+| 8    | Bridge, BridgeSubscription             | Outbound to IT                |
+| 9    | Remote Broker                          | External broker (rightmost)   |
 
 ### Edge direction changes needed
 
-| Current | Proposed | Reason |
-|---------|----------|--------|
-| `Adapter → manages → Device` | **Keep** (adapter at rank 1 → device at rank 0). Constraint will push Device LEFT of Adapter since Device has lower rank. Edge points "backward" but constraint is correct. | Rank constraint overrides edge direction |
-| `NB Mapper → sourceTag → Tag` | **Reverse to** `Tag → mappedBy → NB Mapper` | Flow: tag data → mapper → topic |
-| `SB Mapper → destinationTag → Tag` | **Keep** (SB is download: topic → mapper → tag) | Already correct for southbound |
-| `Bridge → connectsTo → Remote Broker` | **Keep** | Bridge reaches out to remote |
+| Current                               | Proposed                                                                                                                                                                    | Reason                                   |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `Adapter → manages → Device`          | **Keep** (adapter at rank 1 → device at rank 0). Constraint will push Device LEFT of Adapter since Device has lower rank. Edge points "backward" but constraint is correct. | Rank constraint overrides edge direction |
+| `NB Mapper → sourceTag → Tag`         | **Reverse to** `Tag → mappedBy → NB Mapper`                                                                                                                                 | Flow: tag data → mapper → topic          |
+| `SB Mapper → destinationTag → Tag`    | **Keep** (SB is download: topic → mapper → tag)                                                                                                                             | Already correct for southbound           |
+| `Bridge → connectsTo → Remote Broker` | **Keep**                                                                                                                                                                    | Bridge reaches out to remote             |
 
 Actually, the rank constraint handles the positioning regardless of edge
 direction. The edge `Adapter → manages → Device` will still position

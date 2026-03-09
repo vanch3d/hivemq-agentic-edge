@@ -57,17 +57,20 @@ Extend the `queryGraph` tool definition and implementation.
 #### Tool definition changes (`src/agent/tool-definitions.ts`)
 
 Add `selectNodeId` parameter to `queryGraphDef.inputSchema`:
+
 ```
 selectNodeId: z.string().optional()
   .describe("Node ID to select and zoom to (format: entityType:entityId, e.g. 'bridge:my-bridge')")
 ```
 
 Update the `description` to mention the new capability:
+
 - "Use selectNodeId to focus on a specific node (select + zoom). Use focusEntityId to filter the scope to show only neighbors of that entity. Both can be combined."
 
 #### Tool implementation changes (`src/agent/tools/query-graph.ts`)
 
 Two paths:
+
 1. **User already on graph page**: call `useGraphStore.getState().selectNode(selectNodeId)` directly. For fitView, we need the React Flow instance which isn't available from outside the component — store a `setPendingFocus` in the graph store so `graph-canvas.tsx` can pick it up and zoom.
 2. **User on different page**: navigate to `/workspace/graph` with search params `?selectNodeId=xxx&scope=yyy&focusEntityId=zzz`. The graph page reads these on mount.
 
@@ -78,6 +81,7 @@ The tool can detect the current route via `getToolNavigate()` / checking if a "c
 #### Route changes (`src/routes/_authenticated/workspace/graph.tsx`)
 
 Add `validateSearch` to define typed search params:
+
 ```ts
 {
   selectNodeId: z.string().optional(),
@@ -89,6 +93,7 @@ Add `validateSearch` to define typed search params:
 #### Graph page changes (`src/graph/components/graph-page.tsx`)
 
 Read search params. When `selectNodeId` is present:
+
 - If graph is assembled and node exists → set scope/focus, select node, pass to canvas for zoom
 - If graph is not ready (loading/refetching) → store the target, wait for assembly, then focus
 - After focusing, clear the search params (replace URL without params)
@@ -96,12 +101,14 @@ Read search params. When `selectNodeId` is present:
 #### Graph store changes (`src/graph/store.ts`)
 
 Add `pendingFocusNodeId: string | null` and actions:
+
 - `setPendingFocus(nodeId: string)` — sets the pending target
 - `clearPendingFocus()` — clears it after focus is consumed
 
 #### Graph canvas changes (`src/graph/components/graph-canvas.tsx`)
 
 Add `useEffect` watching `pendingFocusNodeId` + `animationPhase`:
+
 - When `pendingFocusNodeId` is set and `animationPhase === "idle"`:
   - `selectNode(pendingFocusNodeId)`
   - `rf.fitView({ nodes: [{ id: pendingFocusNodeId }], padding: 0.5, duration: 500 })`
@@ -110,11 +117,12 @@ Add `useEffect` watching `pendingFocusNodeId` + `animationPhase`:
 
 ### Part 3: LLM response investigation (diagnostic only)
 
-- [ ] **`src/context/chat-context.tsx`** — Add `console.log` in `onChunk` to trace chunk types and confirm continuation fires after tool results. *(deferred — not critical for this implementation)*
+- [ ] **`src/context/chat-context.tsx`** — Add `console.log` in `onChunk` to trace chunk types and confirm continuation fires after tool results. _(deferred — not critical for this implementation)_
 
 ### Part 4: Future — Feature flag for text suppression (design only, not implemented)
 
 A settings toggle ("Clean tool responses") to suppress text that streams alongside tool calls:
+
 - `message-bubble.tsx` checks if a message has both text and tool-call parts → if flag ON, hide text parts
 - Useful as a demo tool showing before/after behavior
 - Not implemented in this task — depends on diagnostic findings from Part 3
@@ -123,23 +131,24 @@ A settings toggle ("Clean tool responses") to suppress text that streams alongsi
 
 ## File Changes
 
-| File | Part | Change |
-|------|------|--------|
-| `src/agent/tool-definitions.ts` | 2 | Add `selectNodeId` param to `queryGraphDef` |
-| `src/agent/tools/query-graph.ts` | 2 | Navigate with search params, handle selectNodeId |
-| `src/routes/_authenticated/workspace/graph.tsx` | 2 | Add `validateSearch` for typed search params |
-| `src/graph/components/graph-page.tsx` | 2 | Read search params, orchestrate focus lifecycle |
-| `src/graph/store.ts` | 2 | Add `pendingFocusNodeId` + actions |
-| `src/graph/components/graph-canvas.tsx` | 2 | Focus effect on pending + idle, adjust existing fitView |
-| `src/context/chat-context.tsx` | 1+3 | Register `setQueryInvalidator`, add diagnostic logging |
-| `src/agent/tools/mutate-bridge.ts` | 1 | Call `invalidateQueries()` after success |
-| `src/agent/tools/mutate-adapter.ts` | 1 | Same |
-| `src/agent/tools/mutate-data-hub.ts` | 1 | Same |
-| `src/agent/tools/mutate-system.ts` | 1 | Same |
+| File                                            | Part | Change                                                  |
+| ----------------------------------------------- | ---- | ------------------------------------------------------- |
+| `src/agent/tool-definitions.ts`                 | 2    | Add `selectNodeId` param to `queryGraphDef`             |
+| `src/agent/tools/query-graph.ts`                | 2    | Navigate with search params, handle selectNodeId        |
+| `src/routes/_authenticated/workspace/graph.tsx` | 2    | Add `validateSearch` for typed search params            |
+| `src/graph/components/graph-page.tsx`           | 2    | Read search params, orchestrate focus lifecycle         |
+| `src/graph/store.ts`                            | 2    | Add `pendingFocusNodeId` + actions                      |
+| `src/graph/components/graph-canvas.tsx`         | 2    | Focus effect on pending + idle, adjust existing fitView |
+| `src/context/chat-context.tsx`                  | 1+3  | Register `setQueryInvalidator`, add diagnostic logging  |
+| `src/agent/tools/mutate-bridge.ts`              | 1    | Call `invalidateQueries()` after success                |
+| `src/agent/tools/mutate-adapter.ts`             | 1    | Same                                                    |
+| `src/agent/tools/mutate-data-hub.ts`            | 1    | Same                                                    |
+| `src/agent/tools/mutate-system.ts`              | 1    | Same                                                    |
 
 ## Future Extension: Query → Graph sync
 
 The `queryGraph` + `selectNodeId` pattern built here for mutations applies equally to query tools. For example, "What are the active bridges?" could:
+
 1. Return the summary table in the chat bubble (current behavior)
 2. Then call `queryGraph({ scope: "bridgeTopology", selectNodeId: "bridge:my-bridge" })` to highlight the result on the graph
 

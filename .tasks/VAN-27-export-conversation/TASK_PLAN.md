@@ -17,13 +17,13 @@ The conversation is `UIMessage[]` from `@tanstack/ai`. Each message has:
 
 ### Part types and their export treatment
 
-| Part type | Content | Export strategy |
-|-----------|---------|----------------|
-| `text` (user) | Plain text | Render as-is under a `**User:**` heading |
-| `text` (assistant) | Already Markdown | Render as-is under a `**Assistant:**` heading |
-| `tool-call` | `name`, `arguments` (JSON string) | Render as a compact line: tool name + summary of arguments |
-| `tool-result` | `content` (JSON string with `{ data, error, display, snapshotId }`) | For errors: show error text. For data: show summary + snapshot link if available |
-| `thinking` | Internal reasoning | Include in a `<details>` collapsible block (optional, can be toggled) |
+| Part type          | Content                                                             | Export strategy                                                                  |
+| ------------------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `text` (user)      | Plain text                                                          | Render as-is under a `**User:**` heading                                         |
+| `text` (assistant) | Already Markdown                                                    | Render as-is under a `**Assistant:**` heading                                    |
+| `tool-call`        | `name`, `arguments` (JSON string)                                   | Render as a compact line: tool name + summary of arguments                       |
+| `tool-result`      | `content` (JSON string with `{ data, error, display, snapshotId }`) | For errors: show error text. For data: show summary + snapshot link if available |
+| `thinking`         | Internal reasoning                                                  | Include in a `<details>` collapsible block (optional, can be toggled)            |
 
 ### Snapshot references
 
@@ -63,9 +63,9 @@ Let me check the bridges for you.
 >
 > 3 bridges found. [View snapshot](#snapshot-abc123)
 
-| id | name | status |
-|----|------|--------|
-| ... | ... | ... |
+| id  | name | status |
+| --- | ---- | ------ |
+| ... | ...  | ...    |
 
 Here are the 3 bridges currently configured...
 
@@ -73,6 +73,7 @@ Here are the 3 bridges currently configured...
 ```
 
 **Rules:**
+
 - Each message becomes a `## User` or `## Assistant` section separated by `---`
 - `text` parts: rendered directly (already markdown for assistant, plain text for user)
 - `tool-call` parts: rendered as a blockquote line with tool name
@@ -92,7 +93,11 @@ Here are the 3 bridges currently configured...
 A utility to trigger a browser file download from a string:
 
 ```ts
-export function downloadAsFile(content: string, filename: string, mimeType = "text/markdown") {
+export function downloadAsFile(
+  content: string,
+  filename: string,
+  mimeType = "text/markdown",
+) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -120,18 +125,19 @@ Add an export icon button next to the existing "new conversation" button. Uses `
 **File**: `src/i18n/en.json` (or equivalent)
 
 Add:
+
 - `chat.exportConversation`: "Export conversation"
 
 ---
 
 ## File Changes Summary
 
-| File | Part | Change |
-|------|------|--------|
-| `src/utils/export-conversation.ts` | 1 | New — `messagesToMarkdown()` pure function |
-| `src/utils/download-file.ts` | 2 | New — `downloadAsFile()` browser utility |
-| `src/components/chat/chat-panel.tsx` | 3 | Add export button in chat header |
-| i18n resource | 4 | Add `chat.exportConversation` key |
+| File                                 | Part | Change                                     |
+| ------------------------------------ | ---- | ------------------------------------------ |
+| `src/utils/export-conversation.ts`   | 1    | New — `messagesToMarkdown()` pure function |
+| `src/utils/download-file.ts`         | 2    | New — `downloadAsFile()` browser utility   |
+| `src/components/chat/chat-panel.tsx` | 3    | Add export button in chat header           |
+| i18n resource                        | 4    | Add `chat.exportConversation` key          |
 
 ---
 
