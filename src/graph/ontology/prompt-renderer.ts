@@ -61,10 +61,7 @@ function renderEntity(entity: EntityClass): string {
   // Relationships
   if (entity.relationships.length > 0) {
     const rels = entity.relationships
-      .map(
-        (r) =>
-          `${r.name} → \`${r.target}\` [${r.cardinality}]`,
-      )
+      .map((r) => `${r.name} → \`${r.target}\` [${r.cardinality}]`)
       .join("; ");
     lines.push(`Relationships: ${rels}`);
   }
@@ -106,7 +103,9 @@ export function renderOntologyPrompt(ontology: DomainOntology): string {
   sections.push(
     "Remote Broker → BridgeSubscription → TopicFilter → SouthboundMapper → Tag → OT Device",
   );
-  sections.push("Topic → DataPolicy → Schema/Script (validation & transformation)");
+  sections.push(
+    "Topic → DataPolicy → Schema/Script (validation & transformation)",
+  );
   sections.push("Combiner: N adapters/bridges → 1 Topic");
   sections.push(
     "DataPolicy.Delivery.redirectTo → new Topic (only DataHub feedback path, must stay DAG)",

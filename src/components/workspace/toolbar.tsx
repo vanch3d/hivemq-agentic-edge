@@ -48,17 +48,8 @@ export function Toolbar() {
       flexShrink={0}
     >
       <Flex align="center" gap="1">
-        <AppLogo
-          h="12"
-          w="auto"
-          aria-label={t("app.title")}
-          color="fg"
-        />
-        <Button
-          asChild
-          variant={isGraphActive ? "subtle" : "ghost"}
-          size="sm"
-        >
+        <AppLogo h="12" w="auto" aria-label={t("app.title")} color="fg" />
+        <Button asChild variant={isGraphActive ? "subtle" : "ghost"} size="sm">
           <Link to="/workspace/graph">
             <LuNetwork />
             <Text display={{ base: "none", md: "block" }}>

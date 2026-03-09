@@ -93,13 +93,15 @@ export function GraphCanvas({ compact = false }: GraphCanvasProps) {
       position="relative"
       width="100%"
       height="100%"
-      className={[
-        animationPhase !== "idle" && "layout-animating",
-        (animationPhase === "enter" || animationPhase === "enter-settle") &&
-          `layout-${animationPhase}`,
-      ]
-        .filter(Boolean)
-        .join(" ") || undefined}
+      className={
+        [
+          animationPhase !== "idle" && "layout-animating",
+          (animationPhase === "enter" || animationPhase === "enter-settle") &&
+            `layout-${animationPhase}`,
+        ]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
     >
       <ReactFlow
         nodes={nodes}

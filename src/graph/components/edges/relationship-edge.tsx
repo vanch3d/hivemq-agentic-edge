@@ -46,7 +46,9 @@ export function RelationshipEdge({
     : DEFAULT_EDGE_STYLE;
 
   const label = data?.relationship
-    ? t(`graph.relationship.${data.relationship}`, { defaultValue: data.relationship })
+    ? t(`graph.relationship.${data.relationship}`, {
+        defaultValue: data.relationship,
+      })
     : undefined;
 
   return (

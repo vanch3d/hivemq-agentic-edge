@@ -61,16 +61,16 @@ Extended reasoning content from models that support it (e.g., Claude with thinki
 interface ToolCallPart {
   type: "tool-call";
   id: string;
-  name: string;           // e.g., "mutateBridge", "queryGraph"
-  arguments: string;      // JSON string of parsed arguments
+  name: string; // e.g., "mutateBridge", "queryGraph"
+  arguments: string; // JSON string of parsed arguments
   state: ToolCallState;
 }
 
 type ToolCallState =
-  | "awaiting-input"      // Waiting for arguments to stream
-  | "input-streaming"     // Arguments streaming from LLM
-  | "input-complete"      // Arguments received, ready to execute
-  | "approval-requested"  // Waiting for user approval
+  | "awaiting-input" // Waiting for arguments to stream
+  | "input-streaming" // Arguments streaming from LLM
+  | "input-complete" // Arguments received, ready to execute
+  | "approval-requested" // Waiting for user approval
   | "approval-responded"; // User approved/rejected
 ```
 
@@ -81,8 +81,8 @@ Represents a tool invocation by the LLM. The `state` field tracks the tool's lif
 ```typescript
 interface ToolResultPart {
   type: "tool-result";
-  toolCallId: string;     // Links back to the ToolCallPart
-  content: string;        // JSON string of the result
+  toolCallId: string; // Links back to the ToolCallPart
+  content: string; // JSON string of the result
   state: ToolResultState;
   error?: string;
 }
@@ -177,27 +177,27 @@ The agent loop continues until the LLM returns `finishReason: "stop"` (no more t
 
 Each LLM turn streams as a sequence of typed events:
 
-| Event | Purpose |
-|-------|---------|
-| `RUN_STARTED` | New agent loop iteration begins |
-| `TEXT_MESSAGE_START` | Assistant text generation begins |
-| `TEXT_MESSAGE_CONTENT` | Incremental text token (`delta`) |
-| `TEXT_MESSAGE_END` | Text block complete |
-| `TOOL_CALL_START` | Tool invocation begins (`toolName`, `toolCallId`) |
-| `TOOL_CALL_ARGS` | Incremental JSON arguments |
-| `TOOL_CALL_END` | Tool call arguments complete |
-| `STEP_FINISHED` | Thinking/reasoning content (extended thinking models) |
-| `RUN_FINISHED` | Turn ends. `finishReason` determines next action |
-| `RUN_ERROR` | Error during generation |
+| Event                  | Purpose                                               |
+| ---------------------- | ----------------------------------------------------- |
+| `RUN_STARTED`          | New agent loop iteration begins                       |
+| `TEXT_MESSAGE_START`   | Assistant text generation begins                      |
+| `TEXT_MESSAGE_CONTENT` | Incremental text token (`delta`)                      |
+| `TEXT_MESSAGE_END`     | Text block complete                                   |
+| `TOOL_CALL_START`      | Tool invocation begins (`toolName`, `toolCallId`)     |
+| `TOOL_CALL_ARGS`       | Incremental JSON arguments                            |
+| `TOOL_CALL_END`        | Tool call arguments complete                          |
+| `STEP_FINISHED`        | Thinking/reasoning content (extended thinking models) |
+| `RUN_FINISHED`         | Turn ends. `finishReason` determines next action      |
+| `RUN_ERROR`            | Error during generation                               |
 
 ### Finish Reasons
 
-| Value | Meaning | Next Action |
-|-------|---------|-------------|
-| `stop` | LLM finished naturally | Conversation halts, wait for user |
-| `tool_calls` | LLM wants to use tools | Execute tools, send results, continue |
-| `length` | Max tokens reached | Conversation halts (truncated) |
-| `content_filter` | Content policy violation | Error shown |
+| Value            | Meaning                  | Next Action                           |
+| ---------------- | ------------------------ | ------------------------------------- |
+| `stop`           | LLM finished naturally   | Conversation halts, wait for user     |
+| `tool_calls`     | LLM wants to use tools   | Execute tools, send results, continue |
+| `length`         | Max tokens reached       | Conversation halts (truncated)        |
+| `content_filter` | Content policy violation | Error shown                           |
 
 ## UI Rendering Pipeline
 
@@ -231,10 +231,10 @@ Because the LLM streams text alongside tool calls in a single response, the **pr
 
 Example of what the user sees:
 
-> *"I'll create the bridge for you..."*        ← prediction (possibly inaccurate)
+> _"I'll create the bridge for you..."_ ← prediction (possibly inaccurate)
 > `mutateBridge`
 > Bridge created: test-bridge
-> *"The bridge 'test-bridge' has been created successfully with..."*  ← accurate
+> _"The bridge 'test-bridge' has been created successfully with..."_ ← accurate
 
 The prediction text can't be removed server-side because it streams before the tool call. Options for managing this:
 

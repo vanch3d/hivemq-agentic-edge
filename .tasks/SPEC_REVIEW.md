@@ -80,22 +80,22 @@ Most list wrapper schemas also lack descriptions: `BridgeList`, `EventList`, `St
 
 **Severity: Medium** — affects form validation and SDK type safety
 
-| Schema                        | Fields that should likely be required      |
-| ----------------------------- | ------------------------------------------ |
-| `UsernamePasswordCredentials` | `userName`, `password`                     |
-| `ApiBearerToken`              | `token`                                    |
-| `StatusTransitionCommand`     | `command`                                  |
-| `Status`                      | `connection`, `runtime` (or at least `id`) |
-| `Notification`                | `title`, `level`                           |
-| `Listener`                    | `hostName`, `port`, `name`                 |
-| `HealthStatus`                | `status`                                   |
-| `Capability`                  | `id`                                       |
-| `ProtocolAdapter`             | `id`, `name`                               |
+| Schema                        | Fields that should likely be required                                                                                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UsernamePasswordCredentials` | `userName`, `password`                                                                                                                                                                              |
+| `ApiBearerToken`              | `token`                                                                                                                                                                                             |
+| `StatusTransitionCommand`     | `command`                                                                                                                                                                                           |
+| `Status`                      | `connection`, `runtime` (or at least `id`)                                                                                                                                                          |
+| `Notification`                | `title`, `level`                                                                                                                                                                                    |
+| `Listener`                    | `hostName`, `port`, `name`                                                                                                                                                                          |
+| `HealthStatus`                | `status`                                                                                                                                                                                            |
+| `Capability`                  | `id`                                                                                                                                                                                                |
+| `ProtocolAdapter`             | `id`, `name`                                                                                                                                                                                        |
 | `Adapter`                     | `type`, `config` (only `id` is required) — **confirmed**: API rejects `POST /adapters/{type}` without `config`, returning 400 `AdapterFailedValidation`. Workaround in `src/agent/form-schemas.ts`. |
-| `Metric`                      | `name`                                     |
-| `DataPoint`                   | `value`                                    |
-| `ObjectNode`                  | `name`, `nodeType`                         |
-| `FsmStateInformationItem`     | `stateName`, `policyId`                    |
+| `Metric`                      | `name`                                                                                                                                                                                              |
+| `DataPoint`                   | `value`                                                                                                                                                                                             |
+| `ObjectNode`                  | `name`, `nodeType`                                                                                                                                                                                  |
+| `FsmStateInformationItem`     | `stateName`, `policyId`                                                                                                                                                                             |
 
 ---
 

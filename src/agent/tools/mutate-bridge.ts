@@ -32,7 +32,8 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
           body: formResult.data as never,
         });
         if (!error) invalidateQueries();
-        const id = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        const id =
+          (formResult.data as Record<string, unknown>)?.id ?? "unknown";
         return {
           summary: error ? undefined : `Bridge "${id}" created successfully.`,
           data,
@@ -60,7 +61,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Bridge "${input.bridgeId}" updated successfully.`,
+          summary: error
+            ? undefined
+            : `Bridge "${input.bridgeId}" updated successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -81,7 +84,9 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Bridge "${input.bridgeId}" deleted successfully.`,
+          summary: error
+            ? undefined
+            : `Bridge "${input.bridgeId}" deleted successfully.`,
           data: error ? null : { deleted: input.bridgeId },
           error: extractApiError(error),
         };
@@ -105,7 +110,8 @@ export const mutateBridge = mutateBridgeDef.client(async (input) => {
         });
         if (!formResult.submitted) return { data: null, error: "Cancelled" };
 
-        const command = (formResult.data as Record<string, unknown>)?.command ?? "unknown";
+        const command =
+          (formResult.data as Record<string, unknown>)?.command ?? "unknown";
         const { data, error } = await transitionBridgeStatus({
           path: { bridgeId: input.bridgeId },
           body: formResult.data as never,

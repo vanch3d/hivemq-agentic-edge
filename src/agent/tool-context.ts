@@ -128,9 +128,7 @@ export function setQueryClient(qc: QueryClient): void {
  * Register the function that fetches adapter types from the API.
  * Keeps sdk.gen imports out of this module.
  */
-export function setAdapterTypesFetcher(
-  fn: () => Promise<unknown[]>,
-): void {
+export function setAdapterTypesFetcher(fn: () => Promise<unknown[]>): void {
   _adapterTypesFetcher = fn;
 }
 
@@ -163,7 +161,5 @@ export async function getAdapterTypeById(
     queryFn: fetcher,
     staleTime: Infinity,
   });
-  return (types as Record<string, unknown>[]).find(
-    (t) => t.id === typeId,
-  );
+  return (types as Record<string, unknown>[]).find((t) => t.id === typeId);
 }

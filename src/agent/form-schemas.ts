@@ -29,7 +29,14 @@ export const formSchemaRegistry: Record<string, FormSchemaEntry> = {
       ...BridgeSchema,
       // OpenAPI spec requires: cleanStart, host, id, keepAlive, port, sessionExpiry
       // cleanStart/keepAlive/sessionExpiry have defaults so RJSF pre-fills them
-      required: ["id", "host", "port", "cleanStart", "keepAlive", "sessionExpiry"],
+      required: [
+        "id",
+        "host",
+        "port",
+        "cleanStart",
+        "keepAlive",
+        "sessionExpiry",
+      ],
     } as unknown as RJSFSchema,
     requiredOnly: true,
   },

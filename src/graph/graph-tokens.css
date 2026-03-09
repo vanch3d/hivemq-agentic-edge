@@ -8,16 +8,16 @@
 
 :root {
   /* Edge colors — semantic groups */
-  --graph-edge-teal: #14b8a6;       /* hasTags, exposes */
-  --graph-edge-green: #22c55e;      /* feedsInto, publishesTo, northbound */
+  --graph-edge-teal: #14b8a6; /* hasTags, exposes */
+  --graph-edge-green: #22c55e; /* feedsInto, publishesTo, northbound */
   --graph-edge-green-dash: #22c55e; /* writesTo, southbound */
-  --graph-edge-green-light: #86efac;/* matches (topicFilter → topic) */
-  --graph-edge-orange: #f97316;     /* subscribes, forwards, connectsTo */
-  --graph-edge-purple: #a855f7;     /* validates, redirectsTo */
-  --graph-edge-purple-light: #c084fc;/* deserializes, uses, executes */
-  --graph-edge-yellow: #eab308;     /* combines, outputs */
-  --graph-edge-blue: #3b82f6;       /* manages */
-  --graph-edge-default: #94a3b8;    /* owns, default, arrow marker */
+  --graph-edge-green-light: #86efac; /* matches (topicFilter → topic) */
+  --graph-edge-orange: #f97316; /* subscribes, forwards, connectsTo */
+  --graph-edge-purple: #a855f7; /* validates, redirectsTo */
+  --graph-edge-purple-light: #c084fc; /* deserializes, uses, executes */
+  --graph-edge-yellow: #eab308; /* combines, outputs */
+  --graph-edge-blue: #3b82f6; /* manages */
+  --graph-edge-default: #94a3b8; /* owns, default, arrow marker */
 
   /* Background / MiniMap */
   --graph-bg-dots: #e2e8f0;
@@ -56,22 +56,28 @@
 
 :root {
   --node-shadow-base: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --node-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --node-shadow-focus: 0 0 0 2px #93c5fd;                          /* blue.300 */
-  --node-shadow-selected: 0 0 0 2px #93c5fd, 0 0 0 5px #dbeafe;   /* blue.300 + blue.100 */
+  --node-shadow-hover:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --node-shadow-focus: 0 0 0 2px #93c5fd; /* blue.300 */
+  --node-shadow-selected:
+    0 0 0 2px #93c5fd, 0 0 0 5px #dbeafe; /* blue.300 + blue.100 */
 }
 
 .dark {
   --node-shadow-base: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --node-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --node-shadow-focus: 0 0 0 2px #60a5fa;                          /* blue.400 */
-  --node-shadow-selected: 0 0 0 2px #60a5fa, 0 0 0 5px #1e3a5f;   /* blue.400 + dark glow */
+  --node-shadow-hover:
+    0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --node-shadow-focus: 0 0 0 2px #60a5fa; /* blue.400 */
+  --node-shadow-selected:
+    0 0 0 2px #60a5fa, 0 0 0 5px #1e3a5f; /* blue.400 + dark glow */
 }
 
 /* Base state */
 .react-flow__node > div:first-child {
   box-shadow: var(--node-shadow-base) !important;
-  transition: box-shadow 0.15s, opacity 0.15s;
+  transition:
+    box-shadow 0.15s,
+    opacity 0.15s;
 }
 
 /* Hover — subtle lift */

@@ -128,7 +128,10 @@ function isConnectionError(msg: string): boolean {
   return msg.includes("fetch failed") || msg.includes("ECONNREFUSED");
 }
 
-function friendlyError(provider: string, msg: string): { error: string; status: 500 | 502 } {
+function friendlyError(
+  provider: string,
+  msg: string,
+): { error: string; status: 500 | 502 } {
   if (msg.includes("not configured")) {
     return { error: msg, status: 500 };
   }
@@ -136,12 +139,14 @@ function friendlyError(provider: string, msg: string): { error: string; status: 
   if (isConnectionError(msg)) {
     if (provider === "ollama") {
       return {
-        error: "Could not connect to Ollama. Is it running? Start it with: ollama serve",
+        error:
+          "Could not connect to Ollama. Is it running? Start it with: ollama serve",
         status: 502,
       };
     }
     return {
-      error: "Could not reach the Anthropic API. Check your network connection.",
+      error:
+        "Could not reach the Anthropic API. Check your network connection.",
       status: 502,
     };
   }
@@ -161,7 +166,9 @@ chatRoute.post("/", async (c) => {
       ? { ...envDefaults, ai: { ...aiDefaults, ...body.settings.ai } }
       : envDefaults;
 
-    provider = ((settings.ai as Record<string, unknown>)?.provider as string) ?? "anthropic";
+    provider =
+      ((settings.ai as Record<string, unknown>)?.provider as string) ??
+      "anthropic";
     const adapter = resolveAdapterFromSettings(settings);
 
     const stream = chat({

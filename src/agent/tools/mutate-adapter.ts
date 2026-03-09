@@ -125,7 +125,8 @@ export const mutateAdapter = mutateAdapterDef.client(async (input) => {
         if (!typeId)
           return {
             data: null,
-            error: "adapterType is required for 'update' to resolve the form schema.",
+            error:
+              "adapterType is required for 'update' to resolve the form schema.",
           };
 
         const typeSchema = await resolveAdapterTypeSchema(typeId, "update");

@@ -155,15 +155,16 @@ const ROLE_STYLES: Record<VisualRole, RoleStyle> = {
 // --- Dot-level shapes per role (colored shape, no text) ---
 // Sized to be clearly visible at < 0.4 zoom — bigger than you'd think at 1x
 
-const DOT_SHAPES: Record<VisualRole, { w: string; h: string; radius: string }> = {
-  orchestrator: { w: "40px", h: "40px", radius: "lg" },
-  connector:    { w: "32px", h: "32px", radius: "md" },
-  endpoint:     { w: "28px", h: "28px", radius: "md" },
-  resource:     { w: "24px", h: "24px", radius: "full" },
-  mapper:       { w: "28px", h: "20px", radius: "full" },  // wider = directional
-  policy:       { w: "28px", h: "28px", radius: "sm" },
-  artifact:     { w: "24px", h: "24px", radius: "sm" },
-};
+const DOT_SHAPES: Record<VisualRole, { w: string; h: string; radius: string }> =
+  {
+    orchestrator: { w: "40px", h: "40px", radius: "lg" },
+    connector: { w: "32px", h: "32px", radius: "md" },
+    endpoint: { w: "28px", h: "28px", radius: "md" },
+    resource: { w: "24px", h: "24px", radius: "full" },
+    mapper: { w: "28px", h: "20px", radius: "full" }, // wider = directional
+    policy: { w: "28px", h: "28px", radius: "sm" },
+    artifact: { w: "24px", h: "24px", radius: "sm" },
+  };
 
 // --- Handles (shared across compact and full) ---
 
@@ -223,20 +224,26 @@ function DotNode({
 
 interface CompactStyle {
   radius: string;
-  showType: boolean;  // two-line: type label + name
+  showType: boolean; // two-line: type label + name
   px: string;
   py: string;
   minW?: string;
 }
 
 const COMPACT_STYLES: Record<VisualRole, CompactStyle> = {
-  orchestrator: { radius: "lg", showType: true,  px: "2.5", py: "1",   minW: "60px" },
-  connector:    { radius: "md", showType: true,  px: "2",   py: "1",   minW: "50px" },
-  endpoint:     { radius: "md", showType: true,  px: "2",   py: "0.5", minW: "40px" },
-  resource:     { radius: "full", showType: false, px: "2", py: "0.5" },
-  mapper:       { radius: "xl", showType: false, px: "2",   py: "0.5" },
-  policy:       { radius: "md", showType: true,  px: "2",   py: "0.5" },
-  artifact:     { radius: "sm", showType: false, px: "1.5", py: "0.5" },
+  orchestrator: {
+    radius: "lg",
+    showType: true,
+    px: "2.5",
+    py: "1",
+    minW: "60px",
+  },
+  connector: { radius: "md", showType: true, px: "2", py: "1", minW: "50px" },
+  endpoint: { radius: "md", showType: true, px: "2", py: "0.5", minW: "40px" },
+  resource: { radius: "full", showType: false, px: "2", py: "0.5" },
+  mapper: { radius: "xl", showType: false, px: "2", py: "0.5" },
+  policy: { radius: "md", showType: true, px: "2", py: "0.5" },
+  artifact: { radius: "sm", showType: false, px: "1.5", py: "0.5" },
 };
 
 function CompactNode({
@@ -271,7 +278,13 @@ function CompactNode({
           {ENTITY_LABELS[data.entityType]}
         </Text>
       )}
-      <Text fontSize="2xs" fontWeight="semibold" color="white" lineHeight="1.2" truncate>
+      <Text
+        fontSize="2xs"
+        fontWeight="semibold"
+        color="white"
+        lineHeight="1.2"
+        truncate
+      >
         {data.label}
       </Text>
 

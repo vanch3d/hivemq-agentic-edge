@@ -7,10 +7,9 @@ let resultCallback: ((result: LayoutResult) => void) | null = null;
 
 function getWorker(): Worker {
   if (!worker) {
-    worker = new Worker(
-      new URL("./layout.worker.ts", import.meta.url),
-      { type: "module" },
-    );
+    worker = new Worker(new URL("./layout.worker.ts", import.meta.url), {
+      type: "module",
+    });
     worker.onmessage = (e: MessageEvent<LayoutResult>) => {
       resultCallback?.(e.data);
     };

@@ -16,11 +16,7 @@ import type {
   DomainEntityType,
 } from "./types";
 import { DEFAULT_LAYOUT_DIRECTION } from "./constants";
-import {
-  requestLayout,
-  onResult,
-  getLatestRequestId,
-} from "./layout-bridge";
+import { requestLayout, onResult, getLatestRequestId } from "./layout-bridge";
 import { v2Ontology } from "./ontology";
 import { buildSchemaGraph } from "./schema-graph";
 
@@ -37,34 +33,61 @@ const SCOPE_ENTITY_TYPES: Record<ViewScope, string[] | null> = {
   full: null, // show everything
   dataFlow: [
     // v1
-    "adapter", "domainTag", "topicFilter", "dataPolicy", "schema", "script",
+    "adapter",
+    "domainTag",
+    "topicFilter",
+    "dataPolicy",
+    "schema",
+    "script",
     // v2
-    "otDevice", "tag", "topic", "northboundMapper", "southboundMapper",
-    "edgeBroker", "dataHub",
+    "otDevice",
+    "tag",
+    "topic",
+    "northboundMapper",
+    "southboundMapper",
+    "edgeBroker",
+    "dataHub",
   ],
   adapterTopology: [
     // v1
-    "adapter", "domainTag", "topicFilter",
+    "adapter",
+    "domainTag",
+    "topicFilter",
     // v2
-    "otDevice", "tag", "topic", "northboundMapper", "southboundMapper",
+    "otDevice",
+    "tag",
+    "topic",
+    "northboundMapper",
+    "southboundMapper",
   ],
   policyImpact: [
     // v1
-    "dataPolicy", "behaviorPolicy", "schema", "script", "topicFilter",
+    "dataPolicy",
+    "behaviorPolicy",
+    "schema",
+    "script",
+    "topicFilter",
     // v2
-    "topic", "dataHub",
+    "topic",
+    "dataHub",
   ],
   bridgeTopology: [
     // v1
-    "bridge", "topicFilter",
+    "bridge",
+    "topicFilter",
     // v2
-    "remoteBroker", "bridgeSubscription", "topic",
+    "remoteBroker",
+    "bridgeSubscription",
+    "topic",
   ],
   combinerSources: [
     // v1
-    "combiner", "adapter", "bridge",
+    "combiner",
+    "adapter",
+    "bridge",
     // v2
-    "assetMapper", "topic",
+    "assetMapper",
+    "topic",
   ],
 };
 
@@ -274,7 +297,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
     );
-    log("filterByScope: %d nodes, %d edges (scope=%s, isAssembled=%s)", filtered.length, edges.length, viewScope, isAssembled);
+    log(
+      "filterByScope: %d nodes, %d edges (scope=%s, isAssembled=%s)",
+      filtered.length,
+      edges.length,
+      viewScope,
+      isAssembled,
+    );
 
     // Subsequent assemblies: check if we can preserve all positions (fast path)
     if (isAssembled) {

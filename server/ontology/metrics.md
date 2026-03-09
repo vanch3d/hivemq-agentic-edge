@@ -4,25 +4,25 @@
 
 All metrics follow a hierarchical dot-separated namespace. Parse the name to extract entity context:
 
-| Pattern | Entity | Example |
-| --- | --- | --- |
-| `com.hivemq.edge.protocol-adapters.{type}.{id}.{…}` | Adapter metric | `com.hivemq.edge.protocol-adapters.opcua.my-adapter.read.publish.success.count` |
-| `com.hivemq.edge.bridge.{bridgeId}.{direction}.{…}` | Bridge metric | `com.hivemq.edge.bridge.cloud.local.publish.count` |
-| `com.hivemq.messages.{direction}.{type}.{unit}` | Broker messaging | `com.hivemq.messages.incoming.publish.count` |
-| `com.hivemq.networking.{resource}.{unit}` | Networking | `com.hivemq.networking.connections.current` |
-| `com.hivemq.system.os.{subsystem}.{resource}.{unit}` | System/OS | `com.hivemq.system.os.global.memory.total` |
+| Pattern                                              | Entity           | Example                                                                         |
+| ---------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------- |
+| `com.hivemq.edge.protocol-adapters.{type}.{id}.{…}`  | Adapter metric   | `com.hivemq.edge.protocol-adapters.opcua.my-adapter.read.publish.success.count` |
+| `com.hivemq.edge.bridge.{bridgeId}.{direction}.{…}`  | Bridge metric    | `com.hivemq.edge.bridge.cloud.local.publish.count`                              |
+| `com.hivemq.messages.{direction}.{type}.{unit}`      | Broker messaging | `com.hivemq.messages.incoming.publish.count`                                    |
+| `com.hivemq.networking.{resource}.{unit}`            | Networking       | `com.hivemq.networking.connections.current`                                     |
+| `com.hivemq.system.os.{subsystem}.{resource}.{unit}` | System/OS        | `com.hivemq.system.os.global.memory.total`                                      |
 
 ### Metric Suffixes and Types
 
 The last segment(s) indicate the metric type and unit:
 
-| Suffix | Type | Behavior | Example |
-| --- | --- | --- | --- |
-| `.count` | Counter | Monotonically increasing; value only goes up | `publish.success.count` |
-| `.current` | Gauge | Point-in-time value; can go up or down | `connections.current` |
-| `.total` | Accumulator | Cumulative total (e.g. bytes) | `memory.total` |
-| `.failed.count` | Counter | Error/failure counter | `connection.failed.count` |
-| `.success.count` | Counter | Success counter | `connection.success.count` |
+| Suffix           | Type        | Behavior                                     | Example                    |
+| ---------------- | ----------- | -------------------------------------------- | -------------------------- |
+| `.count`         | Counter     | Monotonically increasing; value only goes up | `publish.success.count`    |
+| `.current`       | Gauge       | Point-in-time value; can go up or down       | `connections.current`      |
+| `.total`         | Accumulator | Cumulative total (e.g. bytes)                | `memory.total`             |
+| `.failed.count`  | Counter     | Error/failure counter                        | `connection.failed.count`  |
+| `.success.count` | Counter     | Success counter                              | `connection.success.count` |
 
 ### Common Adapter Metrics
 

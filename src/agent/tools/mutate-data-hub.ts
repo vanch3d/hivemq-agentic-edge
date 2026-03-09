@@ -39,9 +39,12 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
           body: formResult.data as never,
         });
         if (!error) invalidateQueries();
-        const id = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        const id =
+          (formResult.data as Record<string, unknown>)?.id ?? "unknown";
         return {
-          summary: error ? undefined : `Behavior policy "${id}" created successfully.`,
+          summary: error
+            ? undefined
+            : `Behavior policy "${id}" created successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -67,7 +70,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Behavior policy "${input.resourceId}" updated successfully.`,
+          summary: error
+            ? undefined
+            : `Behavior policy "${input.resourceId}" updated successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -88,7 +93,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Behavior policy "${input.resourceId}" deleted successfully.`,
+          summary: error
+            ? undefined
+            : `Behavior policy "${input.resourceId}" deleted successfully.`,
           data: error ? null : { deleted: input.resourceId },
           error: extractApiError(error),
         };
@@ -111,9 +118,12 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
           body: formResult.data as never,
         });
         if (!error) invalidateQueries();
-        const dpId = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        const dpId =
+          (formResult.data as Record<string, unknown>)?.id ?? "unknown";
         return {
-          summary: error ? undefined : `Data policy "${dpId}" created successfully.`,
+          summary: error
+            ? undefined
+            : `Data policy "${dpId}" created successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -139,7 +149,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Data policy "${input.resourceId}" updated successfully.`,
+          summary: error
+            ? undefined
+            : `Data policy "${input.resourceId}" updated successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -160,7 +172,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Data policy "${input.resourceId}" deleted successfully.`,
+          summary: error
+            ? undefined
+            : `Data policy "${input.resourceId}" deleted successfully.`,
           data: error ? null : { deleted: input.resourceId },
           error: extractApiError(error),
         };
@@ -183,9 +197,12 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
           body: formResult.data as never,
         });
         if (!error) invalidateQueries();
-        const schemaId = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        const schemaId =
+          (formResult.data as Record<string, unknown>)?.id ?? "unknown";
         return {
-          summary: error ? undefined : `Schema "${schemaId}" created successfully.`,
+          summary: error
+            ? undefined
+            : `Schema "${schemaId}" created successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -206,7 +223,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Schema "${input.resourceId}" deleted successfully.`,
+          summary: error
+            ? undefined
+            : `Schema "${input.resourceId}" deleted successfully.`,
           data: error ? null : { deleted: input.resourceId },
           error: extractApiError(error),
         };
@@ -229,9 +248,12 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
           body: formResult.data as never,
         });
         if (!error) invalidateQueries();
-        const scriptId = (formResult.data as Record<string, unknown>)?.id ?? "unknown";
+        const scriptId =
+          (formResult.data as Record<string, unknown>)?.id ?? "unknown";
         return {
-          summary: error ? undefined : `Script "${scriptId}" created successfully.`,
+          summary: error
+            ? undefined
+            : `Script "${scriptId}" created successfully.`,
           data,
           error: extractApiError(error),
         };
@@ -252,7 +274,9 @@ export const mutateDataHub = mutateDataHubDef.client(async (input) => {
         });
         if (!error) invalidateQueries();
         return {
-          summary: error ? undefined : `Script "${input.resourceId}" deleted successfully.`,
+          summary: error
+            ? undefined
+            : `Script "${input.resourceId}" deleted successfully.`,
           data: error ? null : { deleted: input.resourceId },
           error: extractApiError(error),
         };

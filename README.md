@@ -44,25 +44,25 @@ MSW (Mock Service Worker) intercepts API calls in dev, so the app works without 
 
 Configure via `.env` or the in-app settings UI (gear icon).
 
-| Variable | Default | Description |
-|---|---|---|
-| `AI_PROVIDER` | `anthropic` | `anthropic` or `ollama` |
-| `ANTHROPIC_API_KEY` | — | Required for Anthropic |
-| `ANTHROPIC_MODEL` | `claude-sonnet-4-5` | Any Claude model ID |
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama server URL |
-| `OLLAMA_MODEL` | `qwen3:8b` | Any Ollama model with tool support |
+| Variable            | Default                  | Description                        |
+| ------------------- | ------------------------ | ---------------------------------- |
+| `AI_PROVIDER`       | `anthropic`              | `anthropic` or `ollama`            |
+| `ANTHROPIC_API_KEY` | —                        | Required for Anthropic             |
+| `ANTHROPIC_MODEL`   | `claude-sonnet-4-5`      | Any Claude model ID                |
+| `OLLAMA_HOST`       | `http://localhost:11434` | Ollama server URL                  |
+| `OLLAMA_MODEL`      | `qwen3:8b`               | Any Ollama model with tool support |
 
 Settings changed in the UI (localStorage) override `.env` values and take effect on the next chat message.
 
 ### Supported Providers
 
-| Provider | Status | Best Model | Cost |
-|---|---|---|---|
-| **Anthropic Claude** | Primary | `claude-sonnet-4-5` | $3.00 / MTok in |
-| **Ollama (local)** | Experimental | `qwen3:8b` | Free |
-| Google Gemini | Not yet integrated | Gemini 2.5 Flash | $0.30 / MTok in |
-| OpenAI | Not yet integrated | GPT-4o-mini | $0.15 / MTok in |
-| OpenRouter | Not yet integrated | 400+ models | Varies |
+| Provider             | Status             | Best Model          | Cost            |
+| -------------------- | ------------------ | ------------------- | --------------- |
+| **Anthropic Claude** | Primary            | `claude-sonnet-4-5` | $3.00 / MTok in |
+| **Ollama (local)**   | Experimental       | `qwen3:8b`          | Free            |
+| Google Gemini        | Not yet integrated | Gemini 2.5 Flash    | $0.30 / MTok in |
+| OpenAI               | Not yet integrated | GPT-4o-mini         | $0.15 / MTok in |
+| OpenRouter           | Not yet integrated | 400+ models         | Varies          |
 
 Adding a new provider: `pnpm add @tanstack/ai-<provider>` + a new branch in `server/api/chat.ts:resolveAdapterFromSettings()`.
 
@@ -109,29 +109,29 @@ For the full architecture documentation (Mermaid diagrams, tool system, AG-UI pr
 
 ## Build Commands
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Dev server with HMR |
-| `pnpm build` | Production build (`dist/`) |
-| `pnpm lint` | ESLint |
-| `pnpm format:write` | Prettier |
+| Command             | Description                             |
+| ------------------- | --------------------------------------- |
+| `pnpm dev`          | Dev server with HMR                     |
+| `pnpm build`        | Production build (`dist/`)              |
+| `pnpm lint`         | ESLint                                  |
+| `pnpm format:write` | Prettier                                |
 | `pnpm api:generate` | Regenerate API client from OpenAPI spec |
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| UI | React 19 + Chakra UI v3 | Component rendering |
-| Types | TypeScript 5.9 | Static typing (`erasableSyntaxOnly`) |
-| Build | Vite 7 | Dev server + bundling |
-| Routing | TanStack Router | File-based, type-safe routing |
-| AI | TanStack AI | Provider-agnostic LLM streaming |
-| API Client | @hey-api/openapi-ts | Generated from OpenAPI spec |
-| Forms | RJSF + Chakra UI theme | Schema-driven form rendering |
-| Graph | React Flow + WebCola | Interactive topology visualization |
-| Mocking | MSW + @msw/data | Browser-level API interception |
-| Server | Hono | Lightweight HTTP (embedded in Vite) |
-| i18n | react-i18next | Internationalization |
+| Layer      | Technology              | Purpose                              |
+| ---------- | ----------------------- | ------------------------------------ |
+| UI         | React 19 + Chakra UI v3 | Component rendering                  |
+| Types      | TypeScript 5.9          | Static typing (`erasableSyntaxOnly`) |
+| Build      | Vite 7                  | Dev server + bundling                |
+| Routing    | TanStack Router         | File-based, type-safe routing        |
+| AI         | TanStack AI             | Provider-agnostic LLM streaming      |
+| API Client | @hey-api/openapi-ts     | Generated from OpenAPI spec          |
+| Forms      | RJSF + Chakra UI theme  | Schema-driven form rendering         |
+| Graph      | React Flow + WebCola    | Interactive topology visualization   |
+| Mocking    | MSW + @msw/data         | Browser-level API interception       |
+| Server     | Hono                    | Lightweight HTTP (embedded in Vite)  |
+| i18n       | react-i18next           | Internationalization                 |
 
 ---
 

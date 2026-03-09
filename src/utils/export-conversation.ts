@@ -67,11 +67,14 @@ function formatToolResult(content: string): string {
     const table = toMarkdownTable(result.data);
     if (table) {
       lines.push("", table, "");
-    } else if (
-      typeof result.data === "object" &&
-      result.data !== null
-    ) {
-      lines.push("", "```json", JSON.stringify(result.data, null, 2), "```", "");
+    } else if (typeof result.data === "object" && result.data !== null) {
+      lines.push(
+        "",
+        "```json",
+        JSON.stringify(result.data, null, 2),
+        "```",
+        "",
+      );
     }
   }
 

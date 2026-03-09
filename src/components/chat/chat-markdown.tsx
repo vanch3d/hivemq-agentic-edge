@@ -40,4 +40,3 @@ const chatProseOverrides = {
   "& table": { fontSize: "xs" },
   "& blockquote": { pl: 3, borderLeftWidth: "2px", my: 1.5 },
 };
-

@@ -1,4 +1,12 @@
-import { Box, Button, Flex, Heading, Text, IconButton, Badge } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Text,
+  IconButton,
+  Badge,
+} from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@uidotdev/usehooks";
@@ -146,12 +154,7 @@ function FormSplitView({
           borderBottomWidth="1px"
           _hover={{ bg: "bg.subtle" }}
         >
-          <Box
-            w="40px"
-            h="3px"
-            borderRadius="full"
-            bg="border.emphasized"
-          />
+          <Box w="40px" h="3px" borderRadius="full" bg="border.emphasized" />
         </SplitterResizeTrigger>
         <SplitterPanel
           id="form"

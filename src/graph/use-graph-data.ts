@@ -18,7 +18,11 @@ import {
   getAdapterNorthboundMappingsOptions,
   getAdapterSouthboundMappingsOptions,
 } from "@/api/@tanstack/react-query.gen";
-import type { DomainTag, NorthboundMapping, SouthboundMapping } from "@/api/types.gen";
+import type {
+  DomainTag,
+  NorthboundMapping,
+  SouthboundMapping,
+} from "@/api/types.gen";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { assembleFullGraph, type ApiData } from "./assembler";
 import { assembleFullGraphV2 } from "./assembler-v2";
@@ -104,7 +108,8 @@ export function useGraphData() {
     (perAdapterNbQueries.every((q) => !q.isLoading) &&
       perAdapterSbQueries.every((q) => !q.isLoading));
 
-  const allSettled = coreSettled && perAdapterSettled && perAdapterMappingsSettled;
+  const allSettled =
+    coreSettled && perAdapterSettled && perAdapterMappingsSettled;
 
   // Build per-adapter tag map
   const adapterTagMap = useMemo(() => {
@@ -122,7 +127,11 @@ export function useGraphData() {
 
   // Build per-adapter NB mapping map (v2 only)
   const adapterNbMap = useMemo(() => {
-    if (ontologyVersion !== "v2" || !perAdapterMappingsSettled || adapterIds.length === 0)
+    if (
+      ontologyVersion !== "v2" ||
+      !perAdapterMappingsSettled ||
+      adapterIds.length === 0
+    )
       return undefined;
     const map: Record<string, NorthboundMapping[]> = {};
     adapterIds.forEach((id, i) => {
@@ -137,7 +146,11 @@ export function useGraphData() {
 
   // Build per-adapter SB mapping map (v2 only)
   const adapterSbMap = useMemo(() => {
-    if (ontologyVersion !== "v2" || !perAdapterMappingsSettled || adapterIds.length === 0)
+    if (
+      ontologyVersion !== "v2" ||
+      !perAdapterMappingsSettled ||
+      adapterIds.length === 0
+    )
       return undefined;
     const map: Record<string, SouthboundMapping[]> = {};
     adapterIds.forEach((id, i) => {

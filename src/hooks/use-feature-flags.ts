@@ -27,11 +27,8 @@ export function useFeatureFlag<K extends keyof FeatureFlags>(
     {}) as Partial<FeatureFlags>;
 
   // localStorage overrides (same shape as settings formData)
-  const localFlags = ((
-    localSettings as Record<string, Record<string, unknown>>
-  )?.featureFlags ?? {}) as Partial<FeatureFlags>;
+  const localFlags = ((localSettings as Record<string, Record<string, unknown>>)
+    ?.featureFlags ?? {}) as Partial<FeatureFlags>;
 
-  return (
-    localFlags[key] ?? serverFlags[key] ?? FEATURE_FLAG_DEFAULTS[key]
-  );
+  return localFlags[key] ?? serverFlags[key] ?? FEATURE_FLAG_DEFAULTS[key];
 }

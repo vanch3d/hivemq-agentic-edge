@@ -346,8 +346,7 @@ export const adapterTypesList: ProtocolAdaptersList = {
           port: {
             type: "integer",
             title: "Port",
-            description:
-              "The port number on the device you wish to connect to",
+            description: "The port number on the device you wish to connect to",
             minimum: 1,
             maximum: 65535,
           },
@@ -449,8 +448,7 @@ export const adapterTypesList: ProtocolAdaptersList = {
           port: {
             type: "integer",
             title: "Port",
-            description:
-              "The port number on the device you wish to connect to",
+            description: "The port number on the device you wish to connect to",
             default: 102,
             minimum: 1,
             maximum: 65535,
@@ -515,11 +513,7 @@ export const adapterTypesList: ProtocolAdaptersList = {
           {
             id: "s7",
             title: "S7 Device",
-            properties: [
-              "controllerType",
-              "remoteRack",
-              "remoteSlot",
-            ],
+            properties: ["controllerType", "remoteRack", "remoteSlot"],
           },
           {
             id: "subFields",

@@ -122,7 +122,13 @@ export function GraphControls() {
       <HStack gap="2">
         {/* Zoom slider with threshold markers */}
         <HStack gap="2" w="300px" flexShrink={0}>
-          <Text fontSize="2xs" color="fg.muted" whiteSpace="nowrap" w="40px" textAlign="right">
+          <Text
+            fontSize="2xs"
+            color="fg.muted"
+            whiteSpace="nowrap"
+            w="40px"
+            textAlign="right"
+          >
             {zoom.toFixed(2)}
           </Text>
           <Box flex="1" px="2" py="3">

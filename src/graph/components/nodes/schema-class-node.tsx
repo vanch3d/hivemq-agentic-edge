@@ -87,12 +87,14 @@ export function SchemaClassNode({
       <VStack gap="0" align="start">
         {properties.length > 0 && (
           <Text fontSize="2xs" color="fg.muted">
-            {properties.length} {properties.length === 1 ? "property" : "properties"}
+            {properties.length}{" "}
+            {properties.length === 1 ? "property" : "properties"}
           </Text>
         )}
         {relationships.length > 0 && (
           <Text fontSize="2xs" color="fg.muted">
-            {relationships.length} {relationships.length === 1 ? "relationship" : "relationships"}
+            {relationships.length}{" "}
+            {relationships.length === 1 ? "relationship" : "relationships"}
           </Text>
         )}
       </VStack>

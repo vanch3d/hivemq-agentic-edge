@@ -18,11 +18,7 @@ function formatProblemDetails(pd: Record<string, unknown>): string {
   }
 
   // Top-level detail adds context if different from title
-  if (
-    typeof pd.detail === "string" &&
-    pd.detail &&
-    pd.detail !== pd.title
-  ) {
+  if (typeof pd.detail === "string" && pd.detail && pd.detail !== pd.title) {
     parts.push(pd.detail);
   }
 
