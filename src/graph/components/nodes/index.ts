@@ -23,6 +23,7 @@ import { SchemaClassNode } from "./schema-class-node";
 import { PipelineOperationNode } from "./pipeline-operation-node";
 import { FsmTransitionNode } from "./fsm-transition-node";
 import { ValidatorNode } from "./validator-node";
+import { AggregateNode } from "./aggregate-node";
 
 /** Custom node types for React Flow — must be defined at module scope */
 export const nodeTypes: NodeTypes = {
@@ -53,6 +54,8 @@ export const nodeTypes: NodeTypes = {
   pipelineOperation: PipelineOperationNode,
   fsmTransition: FsmTransitionNode,
   validator: ValidatorNode,
+  // Clustering
+  aggregate: AggregateNode,
   // Schema/class view
   schemaClass: SchemaClassNode,
 };

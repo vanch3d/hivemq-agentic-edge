@@ -309,42 +309,53 @@ A data policy attaches to a topic filter and references schemas + scripts. The e
 **Trigger**: Always cluster (policies are few but their resource edges create visual noise).
 **Aggregate node**: Not aggregated by default (policies are low-cardinality), but the cluster membership is used for focus/highlight interactions.
 
+##### Rule 7: Orphan resources (connectivity-based)
+
+Schemas and scripts that are only connected to the DataHub orchestrator (via `owns`) and have no incoming policy edges (`validates`, `serializes`, `invokes`, `deserializes`) are unused. Common in live systems with many pre-loaded schemas.
+
+**Cluster**: Schemas (or scripts) with zero active policy references, grouped by type.
+**Trigger**: >1 orphan of the same type (always cluster).
+**Aggregate node**: "N unused schemas" / "N unused scripts" — visually distinct, dashed border.
+
 ##### Rule priority and overlap
 
 Clusters can overlap (a tag may be orphan AND part of an adapter subtree). Resolution:
 
-1. **Orphan rule wins over adapter subtree** — orphans are separated into their own cluster first.
-2. **Adapter subtree applies to remaining (mapped) tags** — the "active" tags cluster.
-3. **Topic filter fan-in is orthogonal** — it groups across adapters, used primarily in policy/filter-focused views.
-4. **Cluster membership is stored as metadata**, not as exclusive partitioning. A node can belong to multiple clusters for different purposes.
+1. **Orphan tags wins first** — orphan tags are separated into their own cluster.
+2. **Orphan resources next** — unused schemas/scripts clustered before policy chains claim them.
+3. **Adapter subtree applies to remaining (mapped) tags** — the "active" tags cluster.
+4. **Topic filter fan-in is orthogonal** — it groups across adapters, used primarily in policy/filter-focused views.
+5. **Policy chain runs last** — only claims resources with active policy references.
+6. **First-claim wins** — rules run in fixed priority order; once a node is claimed, subsequent rules skip it.
 
 #### 2B. Aggregate Node Implementation
 
-- [ ] **2.1** Define clustering rule engine
-  - Input: assembled graph (nodes + edges)
-  - Output: `ClusterSet` — map of clusterId → { rule, memberNodeIds, parentEntityId, metadata }
-  - Runs as a post-assembly pass (after Stage 8 of assembler)
-  - Rules are composable: each rule function returns candidate clusters, engine merges/resolves overlaps
-- [ ] **2.2** Define `AggregateNode` type
-  - Properties: `clusterId`, `clusterRule`, `memberEntityTypes` (bag of types + counts), `parentEntityId`, `expandable: true`
-  - Renders as: role-colored node with breakdown (e.g., "247 tags · 247 mappers · 42 topics")
-  - Visual distinction by rule: orphan cluster → dimmed/dashed, active cluster → solid, cross-adapter cluster → different shape
-- [ ] **2.3** Modify assembler to emit aggregate nodes when cluster exceeds threshold
-  - Per-adapter: if active tags > N, emit one aggregate for tags+mappers+topics
-  - Orphan tags always aggregated if count > 0
-  - Threshold configurable (default: 10)
-  - Edges rewired: aggregate inherits external edges of its members (e.g., adapter→owns→aggregate instead of adapter→owns→tag×N)
+- [x] **2.1** Define clustering rule engine (`src/graph/clustering/`)
+  - `analyze.ts`: runs 7 rules in priority order, first-claim wins
+  - `graph-index.ts`: lightweight adjacency index shared by all rules
+  - `aggregate.ts`: replaces cluster members with aggregate nodes, rewires + deduplicates edges
+  - `index.ts`: public `clusterGraph()` API combining analyze + aggregate
+  - 7 rules in `rules/`: orphan-tags, orphan-resources, adapter-subtree, topic-filter-fan-in, topic-convergence, bridge-subtree, policy-chain
+- [x] **2.2** Define `AggregateNode` type and component
+  - `"aggregate"` entity type registered in all constant maps (icons, colors, dimensions, ranks)
+  - `AggregateNode` component with 3 zoom levels (dot/compact/full), dashed yellow border, entity breakdown badges
+  - `AggregateRaw` data shape: clusterId, ruleId, memberCount, memberNodeIds, entityBreakdown, anchorLabel
+- [x] **2.3** Integrate clustering into store pipeline
+  - `maybeCluster()` injected between `filterByScope` and `requestLayout` in all store paths
+  - `clusteringEnabled` + `expandedClusters` state in store
+  - `setClusteringEnabled()` and `toggleCluster()` actions
+  - Feature flag `graphClustering` (default: false) in settings UI + `use-feature-flags.ts`
+  - Flag synced from hook → store via `useGraphData`
 - [ ] **2.4** Implement expand/collapse interaction
-  - Click aggregate → store dispatches expansion, assembler re-runs for that scope
-  - Collapse → remove children, restore aggregate node
-  - Layout re-runs on expand/collapse (scoped to affected subgraph if possible)
+  - Click aggregate → `toggleCluster(clusterId)` → re-runs clustering with cluster excluded → re-layout
+  - Store already has `expandedClusters: Set<string>` and `toggleCluster()` — needs UI wiring
 - [ ] **2.5** Defer per-adapter API queries until expansion
   - `useQueries()` for tags/mappings enabled only for expanded adapters
   - Reduces initial data fetch for large deployments
 - [ ] **2.6** Scope-aware clustering
-  - `dataFlow` scope: Rules 1-4 active (adapter subtrees, orphans, topic convergence)
+  - `dataFlow` scope: Rules 1-4, 7 active (adapter subtrees, orphans, topic convergence, orphan resources)
   - `adapterTopology` scope: Rule 1-2 only (adapter-centric)
-  - `policyImpact` scope: Rules 3, 6 active (topic filter fan-in, policy chains)
+  - `policyImpact` scope: Rules 3, 6-7 active (topic filter fan-in, policy chains, orphan resources)
   - `bridgeTopology` scope: Rule 5 active
   - `full` scope: All rules
 
@@ -380,14 +391,31 @@ Clusters can overlap (a tag may be orphan AND part of an adapter subtree). Resol
 
 ## Key Architectural Decisions (pending)
 
-| #    | Question                              | Options                                       | Leaning                                                                 |
-| ---- | ------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
-| AD-1 | Where does aggregation happen?        | Assembler (data layer) vs. store (view layer) | Assembler — clustering is a data concern, post-assembly pass            |
-| AD-2 | How to handle expand/collapse layout? | Full re-layout vs. incremental insert         | Full re-layout initially; incremental is complex                        |
-| AD-3 | Replace WebCola?                      | Keep + optimize vs. switch to ELK vs. Dagre   | Keep for now, evaluate ELK in Phase 4                                   |
-| AD-4 | Semantic zoom scope                   | Node rendering only vs. node visibility       | Both — rendering at all zooms, visibility for extreme cases             |
-| AD-5 | Cluster overlap resolution            | Exclusive partition vs. multi-membership      | Multi-membership — clusters serve different purposes per scope          |
-| AD-6 | Clustering scope                      | Global rules vs. scope-aware rules            | Scope-aware — different view scopes activate different clustering rules |
+| #    | Question                              | Options                                          | Leaning                                                                 |
+| ---- | ------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| AD-1 | Where does aggregation happen?        | Assembler (data layer) vs. store (view layer)    | Assembler — clustering is a data concern, post-assembly pass            |
+| AD-2 | How to handle expand/collapse layout? | Full re-layout vs. incremental insert            | Full re-layout initially; incremental is complex                        |
+| AD-3 | Replace WebCola?                      | Keep + optimize vs. switch to ELK vs. Dagre      | Keep for now, evaluate ELK in Phase 4                                   |
+| AD-4 | Semantic zoom scope                   | Node rendering only vs. node visibility          | Both — rendering at all zooms, visibility for extreme cases             |
+| AD-5 | Cluster overlap resolution            | Exclusive partition vs. multi-membership         | Multi-membership — clusters serve different purposes per scope          |
+| AD-6 | Clustering scope                      | Global rules vs. scope-aware rules               | Scope-aware — different view scopes activate different clustering rules |
+| AD-7 | Aggregate implementation              | Replacement nodes vs. React Flow groups/subflows | **Replacement nodes** — see rationale below                             |
+
+### AD-7: Replacement nodes vs. React Flow groups/subflows
+
+React Flow natively supports compound nodes via `parentId` + `type: "group"`. Children render inside the parent, positions are relative, and expand/collapse becomes show/hide + resize. This is architecturally cleaner for progressive disclosure.
+
+However, **our layout engine (rank grid + WebCola) has no compound node support**. Groups require:
+
+1. Sub-layout of children within parent bounds
+2. Parent auto-sizing to contain children
+3. Surrounding node adjustment on expand/collapse
+
+Neither the rank grid nor WebCola handles these. ELK does (native compound node support), Dagre does not.
+
+**Current decision**: Use replacement nodes (cluster members removed, single aggregate node inserted, edges rewired). This works with the existing layout and delivers the clustering UX behind a feature flag.
+
+**Revisit trigger**: If/when we switch to ELK (Phase 4) or another layout engine with compound node support, migrate aggregates to React Flow groups/subflows. The clustering analysis (`src/graph/clustering/analyze.ts`) and rules are layout-agnostic — only the aggregation step (`aggregate.ts`) and the store integration would change.
 
 ## Files Likely Affected
 

@@ -41,6 +41,15 @@ export function useGraphData() {
   log("render #%d", _graphDataRenderCount);
 
   const ontologyVersion = useFeatureFlag("ontologyVersion");
+  const graphClustering = useFeatureFlag("graphClustering");
+
+  // Sync clustering feature flag → store
+  useEffect(() => {
+    const current = useGraphStore.getState().clusteringEnabled;
+    if (current !== graphClustering) {
+      useGraphStore.getState().setClusteringEnabled(graphClustering);
+    }
+  }, [graphClustering]);
 
   // --- Core entity queries ---
   const adapters = useQuery(getAdaptersOptions());

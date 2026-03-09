@@ -30,6 +30,8 @@ export const ENTITY_TYPES = [
   "pipelineOperation",
   "fsmTransition",
   "validator",
+  // clustering
+  "aggregate",
 ] as const;
 
 export type DomainEntityType = (typeof ENTITY_TYPES)[number];

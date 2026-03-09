@@ -88,6 +88,13 @@ function buildSettingsSchema(ollamaModels: string[]): Record<string, unknown> {
             enum: ["v1", "v2"],
             default: "v1",
           },
+          graphClustering: {
+            type: "boolean",
+            title: "Graph Clustering",
+            description:
+              "Automatically group high-cardinality nodes (tags, mappers, policy chains) into aggregate clusters.",
+            default: false,
+          },
         },
       },
     },

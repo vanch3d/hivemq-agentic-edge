@@ -3,10 +3,12 @@ import { useSettings } from "@/hooks/use-settings";
 
 type FeatureFlags = {
   ontologyVersion: "v1" | "v2";
+  graphClustering: boolean;
 };
 
 const FEATURE_FLAG_DEFAULTS: FeatureFlags = {
   ontologyVersion: "v1",
+  graphClustering: false,
 };
 
 /**

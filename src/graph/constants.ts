@@ -20,6 +20,7 @@ import {
   LuPlay,
   LuGitBranch,
   LuCheck,
+  LuGroup,
 } from "react-icons/lu";
 
 import type { DomainEntityType } from "./types";
@@ -54,6 +55,8 @@ export const ENTITY_ICONS: Record<DomainEntityType, IconType> = {
   pipelineOperation: LuPlay,
   fsmTransition: LuGitBranch,
   validator: LuCheck,
+  // Clustering
+  aggregate: LuGroup,
 };
 
 // --- Entity roles (taxonomy-based grouping for visual identity) ---
@@ -100,6 +103,8 @@ export const VISUAL_ROLE: Record<DomainEntityType, VisualRole> = {
   pipelineOperation: "artifact",
   fsmTransition: "artifact",
   validator: "artifact",
+  // Clustering
+  aggregate: "resource",
 };
 
 // --- Entity colors (role-based, max perceptual distance between roles) ---
@@ -150,6 +155,8 @@ export const ENTITY_COLORS: Record<DomainEntityType, string> = {
   pipelineOperation: "purple.300",
   fsmTransition: "purple.400",
   validator: "purple.300",
+  // Clustering — amber (distinct from all roles)
+  aggregate: "yellow.500",
 };
 
 /** Chakra colorPalette name — used by Badge `colorPalette` + `variant="solid"` for auto contrast. */
@@ -201,6 +208,8 @@ export const ENTITY_COLOR_PALETTE: Record<
   pipelineOperation: "purple",
   fsmTransition: "purple",
   validator: "purple",
+  // Clustering
+  aggregate: "yellow",
 };
 
 export const ENTITY_LABELS: Record<DomainEntityType, string> = {
@@ -231,6 +240,8 @@ export const ENTITY_LABELS: Record<DomainEntityType, string> = {
   pipelineOperation: "Operation",
   fsmTransition: "Transition",
   validator: "Validator",
+  // Clustering
+  aggregate: "Group",
 };
 
 // --- Status colors ---
@@ -291,6 +302,8 @@ export const NODE_DIMENSIONS: Record<
   pipelineOperation: { width: 120, height: 36 },
   fsmTransition: { width: 130, height: 40 },
   validator: { width: 120, height: 36 },
+  // Clustering — larger to show breakdown
+  aggregate: { width: 200, height: 64 },
 };
 
 export const DEFAULT_NODE_DIMENSIONS = { width: 140, height: 44 };
@@ -438,6 +451,8 @@ export const ENTITY_RANK: Record<DomainEntityType, number> = {
   // Layer 10 — Resources (rightmost, past typical pipeline chains)
   schema: 10,
   script: 10,
+  // Aggregate — uses layoutRank per-node; this is a fallback
+  aggregate: 3,
 };
 
 // --- Layout defaults ---
