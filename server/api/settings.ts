@@ -95,6 +95,14 @@ function buildSettingsSchema(ollamaModels: string[]): Record<string, unknown> {
               "Automatically group high-cardinality nodes (tags, mappers, policy chains) into aggregate clusters.",
             default: false,
           },
+          clusterUx: {
+            type: "string",
+            title: "Cluster Expand/Collapse UX",
+            description:
+              "Controls how clusters can be expanded/collapsed. 'anchor' keeps anchor nodes visible with toggle buttons + a controls panel. 'handle' uses interactive handles on neighboring nodes.",
+            enum: ["none", "anchor", "handle"],
+            default: "none",
+          },
         },
       },
     },
@@ -107,6 +115,7 @@ const settingsUiSchema: Record<string, unknown> = {
   },
   featureFlags: {
     ontologyVersion: { "ui:widget": "radio" },
+    clusterUx: { "ui:widget": "radio" },
   },
 };
 

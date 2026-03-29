@@ -6,14 +6,17 @@ import {
   LuNetwork,
   LuDatabase,
   LuSearch,
+  LuUnfoldVertical,
+  LuFoldVertical,
 } from "react-icons/lu";
 import { useReactFlow, useStore } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useGraphStore } from "@/graph/store";
 import type { ViewScope } from "@/graph/types";
 import { VIEW_SCOPES } from "@/graph/types";
+import type { AggregateRaw } from "@/graph/clustering/types";
 import { Slider } from "@/components/ui/slider";
 
 const SCOPE_LABELS: Record<ViewScope, string> = {
@@ -49,7 +52,23 @@ export function GraphControls() {
   const viewMode = useGraphStore((s) => s.viewMode);
   const setViewMode = useGraphStore((s) => s.setViewMode);
   const isLayoutPending = useGraphStore((s) => s.isLayoutPending);
+  const clusterUx = useGraphStore((s) => s.clusterUx);
+  const clusteringEnabled = useGraphStore((s) => s.clusteringEnabled);
+  const expandedClusters = useGraphStore((s) => s.expandedClusters);
+  const toggleCluster = useGraphStore((s) => s.toggleCluster);
+  const nodes = useGraphStore((s) => s.nodes);
   const rf = useReactFlow();
+
+  // Collect aggregate nodes for the cluster panel (A+C mode)
+  const aggregateNodes = useMemo(() => {
+    if (clusterUx !== "anchor" || !clusteringEnabled) return [];
+    return nodes
+      .filter((n) => n.data.entityType === "aggregate")
+      .map((n) => {
+        const raw = n.data.raw as unknown as AggregateRaw;
+        return { id: raw.clusterId, label: n.data.label, raw };
+      });
+  }, [nodes, clusterUx, clusteringEnabled]);
 
   // Live zoom value from React Flow store (rounded to avoid noise)
   const zoom = useStore((s) => round2(s.transform[2]));
@@ -117,6 +136,28 @@ export function GraphControls() {
           </Group>
         )}
       </HStack>
+
+      {/* Center: Cluster panel (A+C mode) */}
+      {clusterUx === "anchor" && aggregateNodes.length > 0 && (
+        <HStack gap="1" flexWrap="wrap">
+          {aggregateNodes.map((cluster) => {
+            const isExpanded = expandedClusters.has(cluster.id);
+            return (
+              <Button
+                key={cluster.id}
+                size="2xs"
+                variant={isExpanded ? "solid" : "outline"}
+                colorPalette="yellow"
+                onClick={() => toggleCluster(cluster.id)}
+                disabled={isLayoutPending}
+              >
+                {isExpanded ? <LuFoldVertical /> : <LuUnfoldVertical />}
+                {cluster.raw.memberCount}
+              </Button>
+            );
+          })}
+        </HStack>
+      )}
 
       {/* Right: Zoom slider + layout controls */}
       <HStack gap="2">

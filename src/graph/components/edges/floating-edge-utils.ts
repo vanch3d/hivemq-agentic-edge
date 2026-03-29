@@ -39,7 +39,10 @@ function getHandleCoords(
   }
 }
 
-function getClosestSide(nodeA: InternalNode, nodeB: InternalNode): Position {
+export function getClosestSide(
+  nodeA: InternalNode,
+  nodeB: InternalNode,
+): Position {
   const centerA = getNodeCenter(nodeA);
   const centerB = getNodeCenter(nodeB);
 

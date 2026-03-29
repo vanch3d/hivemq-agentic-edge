@@ -1,8 +1,19 @@
-import { Box, Badge, HStack, Text, Circle, Icon } from "@chakra-ui/react";
+import { useCallback, useMemo } from "react";
+import {
+  Box,
+  Badge,
+  HStack,
+  Text,
+  Circle,
+  Icon,
+  IconButton,
+} from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { LuFoldVertical, LuUnfoldVertical } from "react-icons/lu";
 
 import type { GraphNodeData } from "@/graph/types";
+import type { AnchorClusterInfo } from "@/graph/clustering/types";
 import {
   ENTITY_COLORS,
   ENTITY_COLOR_PALETTE,
@@ -12,7 +23,9 @@ import {
   STATUS_COLORS,
   type VisualRole,
 } from "@/graph/constants";
+import { getClosestSide } from "@/graph/components/edges/floating-edge-utils";
 import { useZoomDetail } from "@/graph/hooks/use-zoom-level";
+import { useGraphStore } from "@/graph/store";
 
 const pulseKeyframes = keyframes`
   0%, 100% { opacity: 1; }
@@ -168,17 +181,144 @@ const DOT_SHAPES: Record<VisualRole, { w: string; h: string; radius: string }> =
 
 // --- Handles (shared across compact and full) ---
 
-function NodeHandles() {
+/** Style overrides for handles that act as cluster expand/collapse controls. */
+const CLUSTER_HANDLE_STYLE: React.CSSProperties = {
+  width: 14,
+  height: 14,
+  background: "var(--chakra-colors-yellow-500)",
+  border: "2px solid var(--chakra-colors-yellow-700)",
+  borderRadius: "50%",
+  cursor: "pointer",
+  zIndex: 10,
+};
+
+/**
+ * Compute which handle positions face cluster-related neighbors.
+ *
+ * For collapsed clusters: detects edges to aggregate nodes.
+ * For expanded clusters: detects edges to nodes that are members of an expanded cluster.
+ *
+ * Returns a map from Position → Set<clusterId>.
+ */
+function useHandleClusterPositions(nodeId: string): Map<Position, Set<string>> {
+  const rf = useReactFlow();
+  const edges = useGraphStore((s) => s.edges);
+  const latestClusters = useGraphStore((s) => s.latestClusters);
+  const expandedClusters = useGraphStore((s) => s.expandedClusters);
+  // Subscribe to nodes so we recompute after layout positions change
+  const nodes = useGraphStore((s) => s.nodes);
+
+  return useMemo(() => {
+    const result = new Map<Position, Set<string>>();
+
+    const thisNode = rf.getInternalNode(nodeId);
+    if (!thisNode) return result;
+
+    // Build cluster membership: nodeId → clusterId (for expanded clusters)
+    const memberToCluster = new Map<string, string>();
+    for (const [clusterId, cluster] of latestClusters) {
+      if (!expandedClusters.has(clusterId)) continue; // only expanded
+      for (const memberId of cluster.memberNodeIds) {
+        memberToCluster.set(memberId, clusterId);
+      }
+    }
+
+    // Find edges connected to this node
+    for (const edge of edges) {
+      const neighborId =
+        edge.source === nodeId
+          ? edge.target
+          : edge.target === nodeId
+            ? edge.source
+            : null;
+      if (!neighborId) continue;
+
+      let clusterId: string | null = null;
+
+      // Collapsed cluster: neighbor is an aggregate node
+      if (neighborId.startsWith("aggregate:")) {
+        clusterId = neighborId.slice("aggregate:".length);
+      } else {
+        // Expanded cluster: neighbor is a member of an expanded cluster
+        const membership = memberToCluster.get(neighborId);
+        if (membership) clusterId = membership;
+      }
+
+      if (!clusterId) continue;
+
+      // Compute which handle position faces this neighbor
+      const neighborNode = rf.getInternalNode(neighborId);
+      if (!neighborNode) continue;
+
+      const position = getClosestSide(thisNode, neighborNode);
+      if (!result.has(position)) result.set(position, new Set());
+      result.get(position)!.add(clusterId);
+    }
+
+    return result;
+    // nodes is used as a dep to recompute after layout
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, edges, latestClusters, expandedClusters, nodes, rf]);
+}
+
+const ALL_POSITIONS = [
+  Position.Top,
+  Position.Right,
+  Position.Bottom,
+  Position.Left,
+] as const;
+
+function NodeHandles({ nodeId }: { nodeId?: string }) {
+  const clusterUx = useGraphStore((s) => s.clusterUx);
+  const toggleCluster = useGraphStore((s) => s.toggleCluster);
+  const positionClusters = useHandleClusterPositions(nodeId ?? "");
+
+  const isHandleMode = clusterUx === "handle";
+
   return (
     <>
-      <Handle type="source" position={Position.Top} />
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Right} />
-      <Handle type="target" position={Position.Right} />
-      <Handle type="source" position={Position.Bottom} />
-      <Handle type="target" position={Position.Bottom} />
-      <Handle type="source" position={Position.Left} />
-      <Handle type="target" position={Position.Left} />
+      {ALL_POSITIONS.map((pos) => {
+        const clusterIds = isHandleMode ? positionClusters.get(pos) : undefined;
+        const isCluster = clusterIds && clusterIds.size > 0;
+
+        const handleClick = isCluster
+          ? (e: React.MouseEvent) => {
+              e.stopPropagation();
+              for (const id of clusterIds) toggleCluster(id);
+            }
+          : undefined;
+
+        return (
+          <Handle
+            key={`s-${pos}`}
+            type="source"
+            position={pos}
+            style={isCluster ? CLUSTER_HANDLE_STYLE : undefined}
+            onClick={handleClick}
+          />
+        );
+      })}
+      {ALL_POSITIONS.map((pos) => {
+        const clusterIds = isHandleMode ? positionClusters.get(pos) : undefined;
+        const isCluster = clusterIds && clusterIds.size > 0;
+
+        const handleClick = isCluster
+          ? (e: React.MouseEvent) => {
+              e.stopPropagation();
+              for (const id of clusterIds) toggleCluster(id);
+            }
+          : undefined;
+
+        return (
+          <Handle
+            key={`t-${pos}`}
+            type="target"
+            position={pos}
+            style={isCluster ? CLUSTER_HANDLE_STYLE : undefined}
+            onClick={handleClick}
+          />
+        );
+      })}
     </>
   );
 }
@@ -249,9 +389,11 @@ const COMPACT_STYLES: Record<VisualRole, CompactStyle> = {
 function CompactNode({
   data,
   selected,
+  nodeId,
 }: {
   data: GraphNodeData;
   selected?: boolean;
+  nodeId?: string;
 }) {
   const color = ENTITY_COLORS[data.entityType];
   const role = VISUAL_ROLE[data.entityType];
@@ -288,7 +430,7 @@ function CompactNode({
         {data.label}
       </Text>
 
-      <NodeHandles />
+      <NodeHandles nodeId={nodeId} />
     </Box>
   );
 }
@@ -296,6 +438,7 @@ function CompactNode({
 // ─── Full detail level ────────────────────────────────────────────────────────
 
 export function BaseNode({
+  id: nodeId,
   data,
   selected,
   children,
@@ -307,6 +450,27 @@ export function BaseNode({
   leftDecorator?: React.ReactNode;
 }) {
   const zoomDetail = useZoomDetail();
+  const clusterUx = useGraphStore((s) => s.clusterUx);
+  const expandedClusters = useGraphStore((s) => s.expandedClusters);
+  const toggleCluster = useGraphStore((s) => s.toggleCluster);
+
+  // A+C: detect anchor cluster metadata
+  const anchorCluster = (data.raw as Record<string, unknown> | undefined)
+    ?._anchorCluster as AnchorClusterInfo | undefined;
+
+  const isAnchor = clusterUx === "anchor" && !!anchorCluster;
+  const isAnchorExpanded =
+    isAnchor && expandedClusters.has(anchorCluster!.anchorClusterId);
+
+  const handleToggleAnchorCluster = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (anchorCluster?.anchorClusterId) {
+        toggleCluster(anchorCluster.anchorClusterId);
+      }
+    },
+    [anchorCluster, toggleCluster],
+  );
 
   // --- Dot level: colored shape only ---
   if (zoomDetail === "dot") {
@@ -315,7 +479,7 @@ export function BaseNode({
 
   // --- Compact level: color-filled shape with label ---
   if (zoomDetail === "compact") {
-    return <CompactNode data={data} selected={selected} />;
+    return <CompactNode data={data} selected={selected} nodeId={nodeId} />;
   }
 
   // --- Full level: complete rendering ---
@@ -391,7 +555,24 @@ export function BaseNode({
       {/* Type-specific content */}
       {children}
 
-      <NodeHandles />
+      {/* A+C: Anchor cluster toggle — shows collapse/expand button */}
+      {isAnchor && (
+        <IconButton
+          aria-label={isAnchorExpanded ? "Collapse cluster" : "Expand cluster"}
+          size="2xs"
+          variant="surface"
+          colorPalette="yellow"
+          position="absolute"
+          bottom="-3"
+          right="-3"
+          rounded="full"
+          onClick={handleToggleAnchorCluster}
+        >
+          {isAnchorExpanded ? <LuFoldVertical /> : <LuUnfoldVertical />}
+        </IconButton>
+      )}
+
+      <NodeHandles nodeId={nodeId} />
     </Box>
   );
 }

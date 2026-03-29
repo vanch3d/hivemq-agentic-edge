@@ -1,14 +1,18 @@
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { useSettings } from "@/hooks/use-settings";
 
+export type ClusterUx = "none" | "anchor" | "handle";
+
 type FeatureFlags = {
   ontologyVersion: "v1" | "v2";
   graphClustering: boolean;
+  clusterUx: ClusterUx;
 };
 
 const FEATURE_FLAG_DEFAULTS: FeatureFlags = {
   ontologyVersion: "v1",
   graphClustering: false,
+  clusterUx: "none",
 };
 
 /**

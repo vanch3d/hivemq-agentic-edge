@@ -42,14 +42,22 @@ export function useGraphData() {
 
   const ontologyVersion = useFeatureFlag("ontologyVersion");
   const graphClustering = useFeatureFlag("graphClustering");
+  const clusterUx = useFeatureFlag("clusterUx");
 
-  // Sync clustering feature flag → store
+  // Sync clustering feature flags → store
   useEffect(() => {
     const current = useGraphStore.getState().clusteringEnabled;
     if (current !== graphClustering) {
       useGraphStore.getState().setClusteringEnabled(graphClustering);
     }
   }, [graphClustering]);
+
+  useEffect(() => {
+    const current = useGraphStore.getState().clusterUx;
+    if (current !== clusterUx) {
+      useGraphStore.getState().setClusterUx(clusterUx);
+    }
+  }, [clusterUx]);
 
   // --- Core entity queries ---
   const adapters = useQuery(getAdaptersOptions());

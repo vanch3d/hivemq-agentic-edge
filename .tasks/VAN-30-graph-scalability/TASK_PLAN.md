@@ -346,9 +346,13 @@ Clusters can overlap (a tag may be orphan AND part of an adapter subtree). Resol
   - `setClusteringEnabled()` and `toggleCluster()` actions
   - Feature flag `graphClustering` (default: false) in settings UI + `use-feature-flags.ts`
   - Flag synced from hook → store via `useGraphData`
-- [ ] **2.4** Implement expand/collapse interaction
-  - Click aggregate → `toggleCluster(clusterId)` → re-runs clustering with cluster excluded → re-layout
-  - Store already has `expandedClusters: Set<string>` and `toggleCluster()` — needs UI wiring
+- [x] **2.4** Implement expand/collapse interaction (two UX approaches behind feature flag)
+  - Feature flag `clusterUx: "none" | "anchor" | "handle"` in settings + `use-feature-flags.ts`
+  - **A+C (anchor mode)**: Anchor nodes preserved alongside aggregate, anchor gets `_anchorCluster` metadata with expand/collapse button, controls panel in toolbar shows all active clusters
+  - **D (handle mode)**: Neighboring nodes get `_handleClusters` metadata with connected cluster IDs, collapse icon on nodes connected to aggregates
+  - Both modes: Aggregate node has expand button at full zoom level
+  - `aggregate.ts` supports all three modes: "none" (original behavior), "anchor" (preserves anchors, creates anchor→aggregate edges), "handle" (injects neighbor metadata)
+  - `clusterUx` state synced through store → clustering pipeline → aggregate function
 - [ ] **2.5** Defer per-adapter API queries until expansion
   - `useQueries()` for tags/mappings enabled only for expanded adapters
   - Reduces initial data fetch for large deployments

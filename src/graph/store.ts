@@ -15,11 +15,17 @@ import type {
   LayoutDirection,
   DomainEntityType,
 } from "./types";
+import type { ClusterUx } from "@/hooks/use-feature-flags";
 import { DEFAULT_LAYOUT_DIRECTION } from "./constants";
 import { requestLayout, onResult, getLatestRequestId } from "./layout-bridge";
 import { v2Ontology } from "./ontology";
 import { buildSchemaGraph } from "./schema-graph";
-import { clusterGraph, DEFAULT_CLUSTER_CONFIG } from "./clustering";
+import {
+  DEFAULT_CLUSTER_CONFIG,
+  analyzeClusters,
+  aggregateGraph,
+} from "./clustering";
+import type { ClusterSet } from "./clustering";
 
 const log = createDebug("edge:graph:store");
 
@@ -159,7 +165,11 @@ interface GraphState {
 
   // Clustering
   clusteringEnabled: boolean;
+  clusterUx: ClusterUx;
   expandedClusters: Set<string>;
+  /** Full cluster analysis — all clusters from latest analysis, including expanded ones.
+   *  Used by handle-mode UX to determine which nodes belong to which clusters. */
+  latestClusters: ClusterSet;
 
   // Selection
   selectedNodeId: string | null;
@@ -179,6 +189,7 @@ interface GraphState {
   setLayoutDirection: (direction: LayoutDirection) => void;
   toggleEntityType: (type: DomainEntityType) => void;
   setClusteringEnabled: (enabled: boolean) => void;
+  setClusterUx: (ux: ClusterUx) => void;
   toggleCluster: (clusterId: string) => void;
   selectNode: (nodeId: string | null) => void;
   setPendingFocus: (nodeId: string) => void;
@@ -198,7 +209,9 @@ const initialState = {
   highlightedNodeIds: new Set<string>(),
   hiddenEntityTypes: new Set<DomainEntityType>(),
   clusteringEnabled: false,
+  clusterUx: "none" as ClusterUx,
   expandedClusters: new Set<string>(),
+  latestClusters: new Map() as ClusterSet,
   nodes: [] as GraphNode[],
   edges: [] as GraphEdge[],
   layoutDirection: DEFAULT_LAYOUT_DIRECTION as LayoutDirection,
@@ -209,15 +222,32 @@ const initialState = {
   viewport: { x: 0, y: 0, zoom: 1 } as Viewport,
 };
 
-/** Apply clustering if enabled, otherwise pass through. */
+/** Apply clustering if enabled, otherwise pass through.
+ *  Returns the full cluster analysis alongside the aggregated graph
+ *  so that handle-mode UX can determine cluster membership at render time. */
 function maybeCluster(
   nodes: GraphNode[],
   edges: GraphEdge[],
   enabled: boolean,
   expanded: Set<string>,
-): { nodes: GraphNode[]; edges: GraphEdge[] } {
-  if (!enabled) return { nodes, edges };
-  return clusterGraph(nodes, edges, DEFAULT_CLUSTER_CONFIG, expanded);
+  ux: ClusterUx = "none",
+): { nodes: GraphNode[]; edges: GraphEdge[]; latestClusters: ClusterSet } {
+  const empty: ClusterSet = new Map();
+  if (!enabled) return { nodes, edges, latestClusters: empty };
+
+  // Phase 1: analyze all clusters
+  const allClusters = analyzeClusters(nodes, edges, DEFAULT_CLUSTER_CONFIG);
+
+  // Phase 2: remove expanded clusters from aggregation (they stay as individual nodes)
+  const forAggregation: ClusterSet = new Map(allClusters);
+  for (const id of expanded) forAggregation.delete(id);
+
+  if (forAggregation.size === 0) {
+    return { nodes, edges, latestClusters: allClusters };
+  }
+
+  const result = aggregateGraph(nodes, edges, forAggregation, ux);
+  return { ...result, latestClusters: allClusters };
 }
 
 /** Set `hidden` on nodes whose entity type is in the hidden set. */
@@ -269,6 +299,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         focusEntityId,
         layoutDirection,
         clusteringEnabled,
+        clusterUx,
         expandedClusters,
       } = get();
       const scoped = filterByScope(
@@ -277,14 +308,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         viewScope,
         focusEntityId,
       );
-      const { nodes: filtered, edges } = maybeCluster(
+      const {
+        nodes: filtered,
+        edges,
+        latestClusters,
+      } = maybeCluster(
         scoped.nodes,
         scoped.edges,
         clusteringEnabled,
         expandedClusters,
+        clusterUx,
       );
       set({
         viewMode,
+        latestClusters,
         nodes: [],
         edges,
         selectedNodeId: null,
@@ -310,6 +347,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       nodes: existingNodes,
       hiddenEntityTypes,
       clusteringEnabled,
+      clusterUx,
       expandedClusters,
     } = get();
 
@@ -327,11 +365,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
     );
-    const { nodes: filtered, edges } = maybeCluster(
+    const {
+      nodes: filtered,
+      edges,
+      latestClusters,
+    } = maybeCluster(
       scoped.nodes,
       scoped.edges,
       clusteringEnabled,
       expandedClusters,
+      clusterUx,
     );
     log(
       "filterByScope: %d nodes, %d edges (scope=%s, isAssembled=%s)",
@@ -360,6 +403,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         }));
         set({
           ...base,
+          latestClusters,
           nodes: applyHidden(positioned, hiddenEntityTypes),
           edges,
         });
@@ -384,6 +428,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Need layout — dispatch to worker
     set({
       ...base,
+      latestClusters,
       edges,
       isLayoutPending: true,
     });
@@ -401,6 +446,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       fullEdges,
       layoutDirection,
       clusteringEnabled,
+      clusterUx,
       expandedClusters,
     } = get();
     const scoped = filterByScope(
@@ -409,15 +455,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
     );
-    const { nodes: filtered, edges } = maybeCluster(
+    const {
+      nodes: filtered,
+      edges,
+      latestClusters,
+    } = maybeCluster(
       scoped.nodes,
       scoped.edges,
       clusteringEnabled,
       expandedClusters,
+      clusterUx,
     );
     set({
       viewScope,
       focusEntityId,
+      latestClusters,
       edges,
       selectedNodeId: null,
       isLayoutPending: true,
@@ -436,6 +488,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
       clusteringEnabled,
+      clusterUx,
       expandedClusters,
     } = get();
     const scoped = filterByScope(
@@ -444,14 +497,60 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
     );
-    const { nodes: filtered, edges } = maybeCluster(
+    const {
+      nodes: filtered,
+      edges,
+      latestClusters,
+    } = maybeCluster(
       scoped.nodes,
       scoped.edges,
       clusteringEnabled,
       expandedClusters,
+      clusterUx,
     );
     set({
       layoutDirection,
+      latestClusters,
+      edges,
+      isLayoutPending: true,
+    });
+    requestLayout({
+      nodes: filtered,
+      edges,
+      direction: layoutDirection,
+    });
+  },
+
+  setClusterUx: (ux) => {
+    const {
+      fullNodes,
+      fullEdges,
+      viewScope,
+      focusEntityId,
+      layoutDirection,
+      clusteringEnabled,
+      expandedClusters,
+    } = get();
+    const scoped = filterByScope(
+      fullNodes,
+      fullEdges,
+      viewScope,
+      focusEntityId,
+    );
+    const {
+      nodes: filtered,
+      edges,
+      latestClusters,
+    } = maybeCluster(
+      scoped.nodes,
+      scoped.edges,
+      clusteringEnabled,
+      expandedClusters,
+      ux,
+    );
+    set({
+      clusterUx: ux,
+      latestClusters,
       edges,
       isLayoutPending: true,
     });
@@ -469,6 +568,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
       layoutDirection,
+      clusterUx,
       expandedClusters,
     } = get();
     const scoped = filterByScope(
@@ -477,14 +577,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
     );
-    const { nodes: filtered, edges } = maybeCluster(
+    const {
+      nodes: filtered,
+      edges,
+      latestClusters,
+    } = maybeCluster(
       scoped.nodes,
       scoped.edges,
       enabled,
       expandedClusters,
+      clusterUx,
     );
     set({
       clusteringEnabled: enabled,
+      latestClusters,
       edges,
       isLayoutPending: true,
     });
@@ -503,6 +609,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       focusEntityId,
       layoutDirection,
       clusteringEnabled,
+      clusterUx,
       expandedClusters,
     } = get();
     const next = new Set(expandedClusters);
@@ -515,14 +622,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       viewScope,
       focusEntityId,
     );
-    const { nodes: filtered, edges } = maybeCluster(
+    const {
+      nodes: filtered,
+      edges,
+      latestClusters,
+    } = maybeCluster(
       scoped.nodes,
       scoped.edges,
       clusteringEnabled,
       next,
+      clusterUx,
     );
     set({
       expandedClusters: next,
+      latestClusters,
       edges,
       isLayoutPending: true,
     });

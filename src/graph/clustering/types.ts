@@ -70,3 +70,13 @@ export interface AggregateRaw {
   /** Anchor node label (adapter name, policy id, etc.) */
   anchorLabel: string | null;
 }
+
+// ── Anchor / neighbor metadata (attached to node.data.raw) ──────────────
+
+/** Metadata injected into anchor nodes in "anchor" UX mode. */
+export interface AnchorClusterInfo {
+  /** The cluster this anchor represents */
+  anchorClusterId: string;
+  memberCount: number;
+  entityBreakdown: Record<string, number>;
+}

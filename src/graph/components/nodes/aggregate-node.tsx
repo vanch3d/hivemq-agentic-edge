@@ -1,12 +1,13 @@
-import { memo } from "react";
-import { Box, HStack, Text, Icon, Badge } from "@chakra-ui/react";
+import { memo, useCallback } from "react";
+import { Box, HStack, Text, Icon, Badge, IconButton } from "@chakra-ui/react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { LuGroup } from "react-icons/lu";
+import { LuGroup, LuUnfoldVertical } from "react-icons/lu";
 
 import type { GraphNodeData } from "@/graph/types";
 import type { AggregateRaw } from "@/graph/clustering/types";
 import { ENTITY_LABELS, ENTITY_COLOR_PALETTE } from "@/graph/constants";
 import { useZoomDetail } from "@/graph/hooks/use-zoom-level";
+import { useGraphStore } from "@/graph/store";
 
 /** Format entity breakdown as compact pills, e.g. "12 tags · 3 mappers" */
 function formatBreakdown(
@@ -28,6 +29,17 @@ export const AggregateNode = memo(function AggregateNode(
 ) {
   const raw = props.data.raw as unknown as AggregateRaw;
   const detail = useZoomDetail();
+  const clusterUx = useGraphStore((s) => s.clusterUx);
+  const toggleCluster = useGraphStore((s) => s.toggleCluster);
+
+  const canExpand = clusterUx !== "none" && raw?.clusterId;
+  const handleExpand = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (raw?.clusterId) toggleCluster(raw.clusterId);
+    },
+    [raw, toggleCluster],
+  );
 
   // ── Dot level ──
   if (detail === "dot") {
@@ -60,13 +72,14 @@ export const AggregateNode = memo(function AggregateNode(
         border="2px dashed"
         borderColor="yellow.700"
         maxW="200px"
+        cursor={canExpand ? "pointer" : undefined}
+        onClick={canExpand ? handleExpand : undefined}
       >
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
         <HStack gap={1}>
           <Icon as={LuGroup} boxSize={3} color="white" />
           <Text fontSize="xs" color="white" fontWeight="semibold" truncate>
-            {/* eslint-disable-next-line i18next/no-literal-string */}
             {raw?.memberCount ?? "?"}
             {" entities"}
           </Text>
@@ -92,9 +105,20 @@ export const AggregateNode = memo(function AggregateNode(
 
       <HStack gap={1.5} mb={1}>
         <Icon as={LuGroup} boxSize={3.5} color="yellow.500" />
-        <Text fontSize="xs" fontWeight="bold" truncate>
+        <Text fontSize="xs" fontWeight="bold" truncate flex="1">
           {raw?.anchorLabel ?? props.data.label}
         </Text>
+        {canExpand && (
+          <IconButton
+            aria-label="Expand cluster"
+            size="2xs"
+            variant="ghost"
+            onClick={handleExpand}
+            color="yellow.600"
+          >
+            <LuUnfoldVertical />
+          </IconButton>
+        )}
       </HStack>
 
       <HStack gap={1} flexWrap="wrap">
